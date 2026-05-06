@@ -1,0 +1,31 @@
+{
+  "name": "@seoulgaok/bim-visualizer",
+  "version": "0.0.1",
+  "description": "Seoulgaok BIM React + R3F 3D viewer",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "peerDependencies": {
+    "@react-three/drei": ">=9.0.0",
+    "@react-three/fiber": ">=8.0.0",
+    "@seoulgaok/bim-core": "workspace:*",
+    "react": ">=18.0.0",
+    "three": ">=0.148.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/three": "^0.148.0",
+    "typescript": "^5.0.0"
+  }
+}

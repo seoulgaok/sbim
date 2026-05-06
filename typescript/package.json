@@ -1,0 +1,40 @@
+{
+  "name": "@seoulgaok/bim-core",
+  "version": "0.0.1",
+  "description": "Seoulgaok BIM core — types, IO, operations for scheme.json",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types.js",
+      "types": "./dist/types.d.ts"
+    },
+    "./operations": {
+      "import": "./dist/operations.js",
+      "types": "./dist/operations.d.ts"
+    },
+    "./geometry": {
+      "import": "./dist/geometry.js",
+      "types": "./dist/geometry.d.ts"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "three": ">=0.148.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.148.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}

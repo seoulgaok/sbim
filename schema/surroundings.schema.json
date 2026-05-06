@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://seoulgaok.com/sbim/surroundings.schema.json",
+  "title": "Surroundings",
+  "description": "주변 건물 컨텍스트. 일조권 분석·시각화에 사용.",
+  "type": "array",
+  "items": { "$ref": "#/$defs/SurroundingBuilding" },
+  "$defs": {
+    "SurroundingBuilding": {
+      "type": "object",
+      "required": ["geom", "data"],
+      "properties": {
+        "geom": { "$ref": "#/$defs/SurroundingGeometry" },
+        "data": { "$ref": "#/$defs/SurroundingData" }
+      }
+    },
+    "SurroundingGeometry": {
+      "type": "object",
+      "required": ["boundary"],
+      "properties": {
+        "boundary": {
+          "type": "array",
+          "items": { "$ref": "buffer-geometry.schema.json" }
+        }
+      }
+    },
+    "SurroundingData": {
+      "type": "object",
+      "required": ["height", "floor"],
+      "properties": {
+        "address": { "type": "string", "description": "예: '57-22대'" },
+        "height": { "type": "number", "description": "건물 높이 (m)" },
+        "floor": { "type": "integer", "description": "층수" }
+      }
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://seoulgaok.com/sbim/units.schema.json",
+  "title": "Units",
+  "description": "세대 정보 배열. scheme.json과 별도 파일로 관리.",
+  "type": "array",
+  "items": { "$ref": "#/$defs/Unit" },
+  "$defs": {
+    "Unit": {
+      "type": "object",
+      "required": ["geom", "data"],
+      "properties": {
+        "geom": { "$ref": "#/$defs/UnitGeometry" },
+        "data": { "$ref": "#/$defs/UnitData" }
+      }
+    },
+    "UnitGeometry": {
+      "type": "object",
+      "required": ["boundary"],
+      "properties": {
+        "boundary": {
+          "type": "array",
+          "items": { "$ref": "buffer-geometry.schema.json" }
+        }
+      }
+    },
+    "UnitData": {
+      "type": "object",
+      "required": ["id", "floor_id"],
+      "properties": {
+        "id": { "type": "string", "description": "UUID" },
+        "name": { "type": "string", "description": "세대명 (예: 도생 A, 도생 B)" },
+        "price": { "type": "number", "description": "분양/임대 가격 (원)" },
+        "floor_id": { "type": "integer" },
+        "floor_height": { "type": "number" },
+        "floor_bottom_height": { "type": "number" },
+        "area_net": { "type": "number", "description": "전용면적 (㎡)" },
+        "area_common": { "type": "number", "description": "공용면적 (㎡)" },
+        "land_portion": { "type": "number", "description": "대지지분 (㎡)" },
+        "area_service": { "type": "number", "description": "서비스면적 (㎡)" },
+        "area_contract": { "type": "number", "description": "계약면적 (㎡)" }
+      }
+    }
+  }
+}
