@@ -14,18 +14,24 @@
   "files": ["dist", "src"],
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "prepare": "tsc"
   },
   "peerDependencies": {
     "@react-three/drei": ">=9.0.0",
     "@react-three/fiber": ">=8.0.0",
-    "@seoulgaok/bim-core": "workspace:*",
+    "@seoulgaok/bim-core": "*",
     "react": ">=18.0.0",
     "three": ">=0.148.0"
   },
   "devDependencies": {
-    "@types/react": "^18.0.0",
-    "@types/three": "^0.148.0",
+    "@react-three/drei": "^10.0.0",
+    "@react-three/fiber": "^9.0.0",
+    "@seoulgaok/bim-core": "file:../typescript",
+    "@types/react": "^19.0.0",
+    "@types/three": "^0.160.0",
+    "react": "^19.0.0",
+    "three": "^0.160.0",
     "typescript": "^5.0.0"
   }
 }
