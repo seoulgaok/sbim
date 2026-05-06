@@ -14,8 +14,7 @@
   "files": ["dist", "src"],
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch",
-    "prepare": "tsc"
+    "dev": "tsc --watch"
   },
   "peerDependencies": {
     "@react-three/drei": ">=9.0.0",

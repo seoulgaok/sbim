@@ -1,6 +1,6 @@
 node_modules/
-dist/
 *.tsbuildinfo
+# dist/ — git URL install 호환을 위해 빌드 산출물 포함
 
 # Python
 __pycache__/

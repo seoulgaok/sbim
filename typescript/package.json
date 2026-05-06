@@ -27,7 +27,6 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "prepare": "tsc",
     "test": "vitest run"
   },
   "peerDependencies": {
