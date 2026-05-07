@@ -1,14 +1,8 @@
 """Seoulgaok BIM core — Python types, IO, operations, validators."""
 
 from .options import (
-    AmenitiesSpec,
     BuildOptions,
-    BusinessGoals,
-    CoreSpec,
-    FacadeSpec,
-    FinancialSpec,
     Massing,
-    ParkingSpec,
     RegulationOverrides,
     UnitSpec,
 )
@@ -28,7 +22,7 @@ from .types import (
     UnitGeometry,
 )
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 
 __all__ = [
     # Output types (Scheme 등)
@@ -47,13 +41,7 @@ __all__ = [
     "UnitGeometry",
     # Input options (BuildOptions 등)
     "BuildOptions",
-    "BusinessGoals",
     "Massing",
-    "CoreSpec",
     "UnitSpec",
-    "FacadeSpec",
-    "ParkingSpec",
-    "AmenitiesSpec",
     "RegulationOverrides",
-    "FinancialSpec",
 ]
