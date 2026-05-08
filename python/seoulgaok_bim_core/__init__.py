@@ -2,6 +2,7 @@
 
 from .options import (
     BuildOptions,
+    Core,
     Massing,
     RegulationOverrides,
     UnitSpec,
@@ -43,5 +44,6 @@ __all__ = [
     "BuildOptions",
     "Massing",
     "UnitSpec",
+    "Core",
     "RegulationOverrides",
 ]

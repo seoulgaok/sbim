@@ -81,6 +81,31 @@ class UnitSpec(BaseModel):
 
 
 # ═════════════════════════════════════════════════════════════════════
+# Core — 코어 (계단·EV)
+# ═════════════════════════════════════════════════════════════════════
+
+
+class Core(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    width: Optional[float] = Field(
+        default=None,
+        description=(
+            "코어(계단·EV) 너비 (m, 로컬 X축 = 건물 장변 방향). "
+            "None=자동(units_per_floor 기반). "
+            "프리셋: 2.8(계단만) / 5.0(계단+EV)."
+        ),
+    )
+    depth: Optional[float] = Field(
+        default=None,
+        description=(
+            "코어 깊이 (m, 로컬 Y축). None=자동. "
+            "다세대 기준 5.5 권장."
+        ),
+    )
+
+
+# ═════════════════════════════════════════════════════════════════════
 # RegulationOverrides — 법규 오버라이드
 # ═════════════════════════════════════════════════════════════════════
 
@@ -123,6 +148,7 @@ class BuildOptions(BaseModel):
 
     massing: Massing = Field(default_factory=Massing)
     units: UnitSpec = Field(default_factory=UnitSpec)
+    core: Core = Field(default_factory=Core)
     regulations: RegulationOverrides = Field(default_factory=RegulationOverrides)
 
     # ─── 헬퍼 ───────────────────────────────────────────────────────
