@@ -119,7 +119,7 @@ class Windows(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     style: WindowStyle = Field(
-        default="standard",
+        default="open",
         description=(
             "창 스타일 (크기·WWR·sill 톤). "
             "open=통창형(WWR↑·낮은 sill·높은 창), "
@@ -128,7 +128,7 @@ class Windows(BaseModel):
         ),
     )
     pattern: WindowPattern = Field(
-        default="punched",
+        default="corner",
         description=(
             "창 배치 디자인 언어. "
             "punched=벽에 구멍식 통창(다세대 표준), "
@@ -137,7 +137,7 @@ class Windows(BaseModel):
         ),
     )
     alignment: WindowAlignment = Field(
-        default="varied",
+        default="aligned",
         description=(
             "층별 창 위치 정렬. "
             "aligned=모든 층 같은 위치(차분, 전통), "
