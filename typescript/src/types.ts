@@ -50,8 +50,6 @@ export interface FloorGeometry {
   roof?: BufferGeometryData[][];
   /** 외벽 면별 창. 향별 WWR 기반 quad face. wall과 같은 평면에 ±epsilon. */
   windows?: BufferGeometryData[][];
-  /** 외벽 외측 발코니 슬래브 + 난간. 향별(남·동·서) 외벽 edge별로 생성. */
-  balconies?: BufferGeometryData[][];
 }
 
 export interface FloorPlan {
