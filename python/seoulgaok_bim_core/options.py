@@ -111,6 +111,8 @@ class Core(BaseModel):
 
 
 WindowStyle = Literal["open", "standard", "closed"]
+WindowPattern = Literal["punched", "horizontal_strip", "corner"]
+WindowAlignment = Literal["aligned", "varied"]
 
 
 class Windows(BaseModel):
@@ -119,17 +121,34 @@ class Windows(BaseModel):
     style: WindowStyle = Field(
         default="standard",
         description=(
-            "창 스타일. "
+            "창 스타일 (크기·WWR·sill 톤). "
             "open=통창형(WWR↑·낮은 sill·높은 창), "
             "standard=다세대 표준, "
             "closed=보수형(WWR↓·작은 창)."
         ),
     )
+    pattern: WindowPattern = Field(
+        default="punched",
+        description=(
+            "창 배치 디자인 언어. "
+            "punched=벽에 구멍식 통창(다세대 표준), "
+            "horizontal_strip=가로 띠 창(르 코르뷔지에 fenêtre en longueur), "
+            "corner=코너 통창 강조(모더니즘)."
+        ),
+    )
+    alignment: WindowAlignment = Field(
+        default="varied",
+        description=(
+            "층별 창 위치 정렬. "
+            "aligned=모든 층 같은 위치(차분, 전통), "
+            "varied=층별 jitter(자연 리듬)."
+        ),
+    )
     seed: Optional[int] = Field(
         default=None,
         description=(
-            "창 위치·폭 jitter용 random seed. None=land 단위로 결정적 자동. "
-            "같은 seed면 같은 패턴 재현."
+            "varied jitter용 random seed. None=land 단위로 결정적 자동. "
+            "같은 seed면 같은 패턴 재현. aligned면 영향 없음."
         ),
     )
 
