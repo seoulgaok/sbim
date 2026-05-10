@@ -7,6 +7,7 @@ from .options import (
     Pillars,
     RegulationOverrides,
     UnitSpec,
+    Windows,
 )
 from .types import (
     BufferAttributeData,
@@ -47,5 +48,6 @@ __all__ = [
     "UnitSpec",
     "Core",
     "Pillars",
+    "Windows",
     "RegulationOverrides",
 ]

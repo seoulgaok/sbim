@@ -106,6 +106,35 @@ class Core(BaseModel):
 
 
 # ═════════════════════════════════════════════════════════════════════
+# Windows — 외벽 창문
+# ═════════════════════════════════════════════════════════════════════
+
+
+WindowStyle = Literal["open", "standard", "closed"]
+
+
+class Windows(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    style: WindowStyle = Field(
+        default="standard",
+        description=(
+            "창 스타일. "
+            "open=통창형(WWR↑·낮은 sill·높은 창), "
+            "standard=다세대 표준, "
+            "closed=보수형(WWR↓·작은 창)."
+        ),
+    )
+    seed: Optional[int] = Field(
+        default=None,
+        description=(
+            "창 위치·폭 jitter용 random seed. None=land 단위로 결정적 자동. "
+            "같은 seed면 같은 패턴 재현."
+        ),
+    )
+
+
+# ═════════════════════════════════════════════════════════════════════
 # Pillars — 필로티 기둥
 # ═════════════════════════════════════════════════════════════════════
 
@@ -171,6 +200,7 @@ class BuildOptions(BaseModel):
     units: UnitSpec = Field(default_factory=UnitSpec)
     core: Core = Field(default_factory=Core)
     pillars: Pillars = Field(default_factory=Pillars)
+    windows: Windows = Field(default_factory=Windows)
     regulations: RegulationOverrides = Field(default_factory=RegulationOverrides)
 
     # ─── 헬퍼 ───────────────────────────────────────────────────────
