@@ -48,6 +48,8 @@ export interface FloorGeometry {
   walls: BufferGeometryData[][];
   floors: BufferGeometryData[][];
   roof?: BufferGeometryData[][];
+  /** 외벽 면별 창. 향별 WWR 기반 quad face. wall과 같은 평면에 ±epsilon. */
+  windows?: BufferGeometryData[][];
 }
 
 export interface FloorPlan {
