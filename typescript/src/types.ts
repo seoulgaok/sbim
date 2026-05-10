@@ -50,6 +50,8 @@ export interface FloorGeometry {
   roof?: BufferGeometryData[][];
   /** 외벽 면별 창. 향별 WWR 기반 quad face. wall과 같은 평면에 ±epsilon. */
   windows?: BufferGeometryData[][];
+  /** 파라펫(난간). step-back 노출 외곽 + 최상층 옥상 외곽에 1.1m 높이 wall. */
+  parapets?: BufferGeometryData[][];
 }
 
 export interface FloorPlan {
