@@ -175,6 +175,43 @@ class Pillars(BaseModel):
 
 
 # ═════════════════════════════════════════════════════════════════════
+# Parking — 1층 piloti 주차장
+# ═════════════════════════════════════════════════════════════════════
+
+
+ParkingType = Literal["perpendicular", "parallel", "angled_60", "angled_45"]
+
+
+class Parking(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    count: Optional[int] = Field(
+        default=None,
+        description=(
+            "주차 stall 수 명시. None=가능한 만큼 자동 배치. "
+            "법정 대수(도시형생활주택: 60㎡↓ 0.5대/세대, 60㎡↑ 0.7대/세대)는 "
+            "building_info.required_parking_count로 별도 산출."
+        ),
+    )
+    stall_width: float = Field(
+        default=2.5,
+        description="stall 너비 (m). 법정 일반형 2.5, 확장형 2.6.",
+    )
+    stall_depth: float = Field(
+        default=5.0,
+        description="stall 길이 (m). 법정 일반형 5.0.",
+    )
+    aisle_width: float = Field(
+        default=6.0,
+        description="통로 너비 (m). 직각주차 양방향 6.0.",
+    )
+    type: ParkingType = Field(
+        default="perpendicular",
+        description="배치 형식. perpendicular=직각주차(default).",
+    )
+
+
+# ═════════════════════════════════════════════════════════════════════
 # RegulationOverrides — 법규 오버라이드
 # ═════════════════════════════════════════════════════════════════════
 
@@ -220,6 +257,7 @@ class BuildOptions(BaseModel):
     core: Core = Field(default_factory=Core)
     pillars: Pillars = Field(default_factory=Pillars)
     windows: Windows = Field(default_factory=Windows)
+    parking: Parking = Field(default_factory=Parking)
     regulations: RegulationOverrides = Field(default_factory=RegulationOverrides)
 
     # ─── 헬퍼 ───────────────────────────────────────────────────────

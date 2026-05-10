@@ -4,6 +4,7 @@ from .options import (
     BuildOptions,
     Core,
     Massing,
+    Parking,
     Pillars,
     RegulationOverrides,
     UnitSpec,
@@ -49,5 +50,6 @@ __all__ = [
     "Core",
     "Pillars",
     "Windows",
+    "Parking",
     "RegulationOverrides",
 ]

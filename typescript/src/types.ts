@@ -54,6 +54,8 @@ export interface FloorGeometry {
   parapets?: BufferGeometryData[][];
   /** 필로티 기둥. 1층 piloti 층에서만 채워짐. 0.4×0.4m × 1층 floor_height prism. */
   columns?: BufferGeometryData[][];
+  /** 주차 stall 외곽선. 1층 piloti에 배치. base_z 살짝 위 quad. */
+  parking_stalls?: BufferGeometryData[][];
 }
 
 export interface FloorPlan {
