@@ -106,6 +106,27 @@ class Core(BaseModel):
 
 
 # ═════════════════════════════════════════════════════════════════════
+# Pillars — 필로티 기둥
+# ═════════════════════════════════════════════════════════════════════
+
+
+class Pillars(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    count: Optional[int] = Field(
+        default=None,
+        description=(
+            "1층 필로티 기둥 개수. None=자동(외곽 길이 기반). "
+            "프리셋: 4(코너), 6(코너+장변 중간), 8(코너+장변 분할)."
+        ),
+    )
+    size: Optional[float] = Field(
+        default=None,
+        description="기둥 한 변 크기 (m). None=0.4 (다세대 철골 표준).",
+    )
+
+
+# ═════════════════════════════════════════════════════════════════════
 # RegulationOverrides — 법규 오버라이드
 # ═════════════════════════════════════════════════════════════════════
 
@@ -149,6 +170,7 @@ class BuildOptions(BaseModel):
     massing: Massing = Field(default_factory=Massing)
     units: UnitSpec = Field(default_factory=UnitSpec)
     core: Core = Field(default_factory=Core)
+    pillars: Pillars = Field(default_factory=Pillars)
     regulations: RegulationOverrides = Field(default_factory=RegulationOverrides)
 
     # ─── 헬퍼 ───────────────────────────────────────────────────────

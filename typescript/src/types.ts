@@ -52,6 +52,8 @@ export interface FloorGeometry {
   windows?: BufferGeometryData[][];
   /** 파라펫(난간). step-back 노출 외곽 + 최상층 옥상 외곽에 1.1m 높이 wall. */
   parapets?: BufferGeometryData[][];
+  /** 필로티 기둥. 1층 piloti 층에서만 채워짐. 0.4×0.4m × 1층 floor_height prism. */
+  columns?: BufferGeometryData[][];
 }
 
 export interface FloorPlan {
