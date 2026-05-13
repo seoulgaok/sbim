@@ -2,6 +2,7 @@
 
 from .options import (
     BuildOptions,
+    Concrete,
     Core,
     Massing,
     Parking,
@@ -51,5 +52,6 @@ __all__ = [
     "Pillars",
     "Windows",
     "Parking",
+    "Concrete",
     "RegulationOverrides",
 ]

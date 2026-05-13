@@ -180,6 +180,7 @@ class Pillars(BaseModel):
 
 
 ParkingType = Literal["perpendicular", "parallel", "angled_60", "angled_45"]
+ParkingRatioMode = Literal["multi_family", "non_residential"]
 
 
 class Parking(BaseModel):
@@ -189,8 +190,7 @@ class Parking(BaseModel):
         default=None,
         description=(
             "주차 stall 수 명시. None=가능한 만큼 자동 배치. "
-            "법정 대수(도시형생활주택: 60㎡↓ 0.5대/세대, 60㎡↑ 0.7대/세대)는 "
-            "building_info.required_parking_count로 별도 산출."
+            "법정 대수는 ratio_mode·세대별 전용면적 기반으로 별도 산출."
         ),
     )
     stall_width: float = Field(
@@ -208,6 +208,49 @@ class Parking(BaseModel):
     type: ParkingType = Field(
         default="perpendicular",
         description="배치 형식. perpendicular=직각주차(default).",
+    )
+    ratio_mode: ParkingRatioMode = Field(
+        default="multi_family",
+        description=(
+            "법정 주차대수 산정 기준 (서울시 주차장 조례). "
+            "multi_family=공동주택(도시형생활주택·다세대): "
+            "30㎡↓ 0.5대, 30~60㎡ 0.8대, 60㎡↑ 1.0대, 합계 올림. "
+            "non_residential=비공동주택(근생·다가구·다중): "
+            "60㎡↓ 0.5대, 60㎡↑ 0.7대, 합계 반올림."
+        ),
+    )
+
+
+# ═════════════════════════════════════════════════════════════════════
+# Concrete — 콘크리트 두께·단가
+# ═════════════════════════════════════════════════════════════════════
+
+
+class Concrete(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    wall_thickness: float = Field(
+        default=0.20,
+        description="외벽 두께 (m). 다세대 표준 0.20 (단열 포함).",
+    )
+    slab_thickness: float = Field(
+        default=0.20,
+        description="슬래브 두께 (m). 5층↑ 표준 0.20.",
+    )
+    interior_wall_thickness: float = Field(
+        default=0.10,
+        description="내벽 두께 (m). 표준 0.10. LOD 200엔 미반영.",
+    )
+    column_size: float = Field(
+        default=0.40,
+        description="기둥 단면 한 변 (m). 다세대 철골 표준 0.40 정사각.",
+    )
+    price_per_m3: int = Field(
+        default=3_500_000,
+        description=(
+            "콘크리트 ㎥당 단가 (원). 다세대 표준 350만원. "
+            "공사비 = total_m3 × price_per_m3."
+        ),
     )
 
 
@@ -258,6 +301,7 @@ class BuildOptions(BaseModel):
     pillars: Pillars = Field(default_factory=Pillars)
     windows: Windows = Field(default_factory=Windows)
     parking: Parking = Field(default_factory=Parking)
+    concrete: Concrete = Field(default_factory=Concrete)
     regulations: RegulationOverrides = Field(default_factory=RegulationOverrides)
 
     # ─── 헬퍼 ───────────────────────────────────────────────────────
