@@ -290,9 +290,19 @@ class BuildOptions(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    land_id: str = Field(
+    land_ids: list[str] = Field(
+        default_factory=list,
+        description=(
+            "합필 필지 PNU 리스트 (19자리). 단일 필지면 [pnu] 1개. "
+            "다중 필지는 합필(union) 전제 — 컴파일러가 geometry union 후 처리."
+        ),
+    )
+    primary_land_id: str = Field(
         default="",
-        description="필지 ID (PNU 19자리).",
+        description=(
+            "대표 필지 PNU. 보고서·Studio의 '대표 주소' 출처. "
+            "land_ids 중 하나여야 함. 빈 문자열이면 land_ids[0] 사용."
+        ),
     )
 
     massing: Massing = Field(default_factory=Massing)
