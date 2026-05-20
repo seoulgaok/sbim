@@ -255,6 +255,28 @@ class Concrete(BaseModel):
 
 
 # ═════════════════════════════════════════════════════════════════════
+# Exterior — 외장재 색상 (시각화 전용, 비용·구조 영향 X)
+# ═════════════════════════════════════════════════════════════════════
+
+
+ExteriorStyle = Literal["white", "beige", "brick", "concrete", "dark"]
+
+
+class Exterior(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    style: ExteriorStyle = Field(
+        default="brick",
+        description=(
+            "외장재 preset (외벽·천장/테라스 색 페어). "
+            "white=화이트·라이트그레이, beige=베이지·웜그레이, "
+            "brick=벽돌브라운·라이트그레이(default), concrete=노출콘크리트·짙은회색, "
+            "dark=다크그레이·블랙. visualizer가 hex로 매핑."
+        ),
+    )
+
+
+# ═════════════════════════════════════════════════════════════════════
 # RegulationOverrides — 법규 오버라이드
 # ═════════════════════════════════════════════════════════════════════
 
@@ -312,6 +334,7 @@ class BuildOptions(BaseModel):
     windows: Windows = Field(default_factory=Windows)
     parking: Parking = Field(default_factory=Parking)
     concrete: Concrete = Field(default_factory=Concrete)
+    exterior: Exterior = Field(default_factory=Exterior)
     regulations: RegulationOverrides = Field(default_factory=RegulationOverrides)
 
     # ─── 헬퍼 ───────────────────────────────────────────────────────
