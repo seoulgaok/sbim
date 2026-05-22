@@ -259,7 +259,7 @@ class Concrete(BaseModel):
 # ═════════════════════════════════════════════════════════════════════
 
 
-ExteriorStyle = Literal["white", "beige", "brick", "concrete", "dark"]
+ExteriorStyle = Literal["white", "sandstone", "brick", "concrete"]
 
 
 class Exterior(BaseModel):
@@ -269,9 +269,9 @@ class Exterior(BaseModel):
         default="brick",
         description=(
             "외장재 preset (외벽·천장/테라스 색 페어). "
-            "white=화이트·라이트그레이, beige=베이지·웜그레이, "
-            "brick=벽돌브라운·라이트그레이(default), concrete=노출콘크리트·짙은회색, "
-            "dark=다크그레이·블랙. visualizer가 hex로 매핑."
+            "white=화이트·라이트그레이, sandstone=사암·웜그레이, "
+            "brick=벽돌브라운·라이트그레이(default), concrete=노출콘크리트·짙은회색. "
+            "visualizer가 hex로 매핑."
         ),
     )
 
