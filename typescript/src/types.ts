@@ -97,16 +97,22 @@ export interface UnitData {
   floor_id: number;
   floor_height: number;
   floor_bottom_height: number;
-  /** 전용면적 ㎡ */
+  /** 전용 ㎡ — 발코니 차감 후 (주차 산정 기준) */
   area_net: number;
-  /** 공용면적 ㎡ */
+  /** 공용 ㎡ — 계단·EV·복도 지분 안분 */
   area_common: number;
   /** 대지지분 ㎡ */
   land_portion: number;
-  /** 서비스면적 ㎡ */
-  area_service: number;
-  /** 계약면적 ㎡ */
+  /** 분양 ㎡ = net + common */
   area_contract: number;
+  /** 베란다 ㎡ — 위층 step-back 슬래브 (건축법 정의) */
+  area_veranda: number;
+  /** 발코니 ㎡ — 외벽 캔틸레버 (목적: 전용 임계 하향 → 주차 절감) */
+  area_balcony: number;
+  /** 발코니 실효 폭 (m, ≤ 1.5 법정) */
+  balcony_depth: number;
+  /** legacy alias = area_veranda (신규 코드는 area_veranda 사용) */
+  area_service: number;
 }
 
 export interface Unit {

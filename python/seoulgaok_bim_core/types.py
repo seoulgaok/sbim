@@ -105,11 +105,14 @@ class UnitData(_Base):
     floor_id: int
     floor_height: float = 0
     floor_bottom_height: float = 0
-    area_net: float = 0
-    area_common: float = 0
+    area_net: float = 0           # 전용 (발코니 차감 후 — 주차 산정 기준)
+    area_common: float = 0        # 공용 (계단·EV·복도 지분 안분)
     land_portion: float = 0
-    area_service: float = 0
-    area_contract: float = 0
+    area_contract: float = 0      # 분양 = net + common
+    area_veranda: float = 0       # 베란다 — 위층 step-back 슬래브 (건축법 정의)
+    area_balcony: float = 0       # 발코니 — 외벽 캔틸레버 (목적: 전용 임계 하향 → 주차 절감)
+    balcony_depth: float = 0      # 발코니 실효 폭 (m, ≤ 1.5 법정)
+    area_service: float = 0       # legacy alias = area_veranda (호환용, 신규 코드는 area_veranda 사용)
 
 
 class Unit(_Base):
