@@ -299,95 +299,6 @@ class RegulationOverrides(BaseModel):
 
 
 # ═════════════════════════════════════════════════════════════════════
-# Spatial Layout — 1층 piloti의 코어·기둥·주차·입구 직접 지정 (round-trip)
-# ═════════════════════════════════════════════════════════════════════
-#
-# 모든 좌표계: sBIM Local CRS
-#   origin = parcel_center (lat/lng → projected EPSG:5186)
-#   +x = 동, +y = 북
-#   unit = meter
-#
-# scheme.json output의 `_core_layout` / `_parking_stalls` / `_column_centers`
-# 형식과 동일 → compile 결과를 그대로 BuildOptions input으로 재사용 가능.
-# 사용자/LLM이 GUI에서 drag로 편집한 결과도 같은 형식.
-#
-# None 또는 빈 값이면 컴파일러가 자동 결정 (현재 동작).
-# ═════════════════════════════════════════════════════════════════════
-
-
-class CoreLayout(BaseModel):
-    """코어 세분 polygon — EV·계단·복도. parcel_center 상대 local m."""
-    model_config = ConfigDict(extra="forbid")
-
-    ev: list[tuple[float, float]] = Field(
-        default_factory=list,
-        description="EV polygon (closed ring). 예: [[x1,y1], [x2,y2], ...].",
-    )
-    stair: list[tuple[float, float]] = Field(
-        default_factory=list,
-        description="계단 polygon (closed ring).",
-    )
-    corridor: list[tuple[float, float]] = Field(
-        default_factory=list,
-        description="복도 polygon (closed ring). 각 세대가 corridor edge 공유 필요.",
-    )
-
-
-class Entrance(BaseModel):
-    """보행자 입구 — 도로 → 코어 동선 (선분).
-
-    LOD 200: 시각·평면도 표시용. compile 영향 X (다음 라운드 4각 검증 도입 시).
-    """
-    model_config = ConfigDict(extra="forbid")
-
-    line: list[tuple[float, float]] = Field(
-        default_factory=list,
-        description=(
-            "도로면 → 코어 진입 동선. [(start_x, start_y), (end_x, end_y)]. "
-            "start는 도로면, end는 코어 경계 권장."
-        ),
-    )
-
-
-class SpatialLayout(BaseModel):
-    """선택 spatial input — scheme.json output 형식 그대로 받음 (round-trip).
-
-    각 필드 None/빈 값 → 컴파일러 자동 결정 (현재 동작 유지).
-    명시 → 컴파일러가 그대로 사용 + 충돌 검증.
-
-    좌표계: parcel_center 원점, +x 동, +y 북, 단위 m (sBIM Local CRS).
-    """
-    model_config = ConfigDict(extra="forbid")
-
-    core_layout: Optional[CoreLayout] = Field(
-        default=None,
-        description=(
-            "코어 EV/계단/복도 polygon. None=자동 (Core.width·depth 기반). "
-            "명시 시 Core.width·depth 무시하고 직접 사용."
-        ),
-    )
-    column_centers: list[tuple[float, float]] = Field(
-        default_factory=list,
-        description=(
-            "필로티 기둥 중심점 list. 빈 list=자동 (Pillars.count 기반). "
-            "명시 시 Pillars.count 무시하고 직접 사용."
-        ),
-    )
-    parking_stalls: list[list[tuple[float, float]]] = Field(
-        default_factory=list,
-        description=(
-            "주차 stall polygon list. 각 stall = closed ring (보통 4점). "
-            "빈 list=자동 (Parking.count + grid packing). "
-            "명시 시 Parking.count 무시하고 직접 사용."
-        ),
-    )
-    entrance: Optional[Entrance] = Field(
-        default=None,
-        description="보행자 입구 (도로→코어 동선). None=시각 표시 안 함.",
-    )
-
-
-# ═════════════════════════════════════════════════════════════════════
 # Top-level — BuildOptions
 # ═════════════════════════════════════════════════════════════════════
 
@@ -425,13 +336,6 @@ class BuildOptions(BaseModel):
     concrete: Concrete = Field(default_factory=Concrete)
     exterior: Exterior = Field(default_factory=Exterior)
     regulations: RegulationOverrides = Field(default_factory=RegulationOverrides)
-    spatial: SpatialLayout = Field(
-        default_factory=SpatialLayout,
-        description=(
-            "1층 piloti의 코어·기둥·주차·입구 polygon 직접 지정 (round-trip). "
-            "각 필드 비우면 자동, 명시하면 그대로 사용."
-        ),
-    )
 
     # ─── 헬퍼 ───────────────────────────────────────────────────────
 
