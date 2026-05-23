@@ -1,5 +1,6 @@
 """Seoulgaok BIM core — Python types, IO, operations, validators."""
 
+from .errors import CompileError, CompileErrorType
 from .options import (
     BuildOptions,
     Concrete,
@@ -54,4 +55,7 @@ __all__ = [
     "Parking",
     "Concrete",
     "RegulationOverrides",
+    # CompileError (CSP 명제 위반)
+    "CompileError",
+    "CompileErrorType",
 ]
