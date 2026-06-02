@@ -86,6 +86,7 @@ class UnitSpec(BaseModel):
 
 
 CorePosition = Literal["auto", "entry", "central", "rear"]
+CoreLateral = Literal["center", "left", "right"]
 CoreComposition = Literal["stair", "stair_elevator"]
 
 
@@ -110,10 +111,20 @@ class Core(BaseModel):
     position: CorePosition = Field(
         default="auto",
         description=(
-            "코어 배치 의도 (1층 평면에서 코어를 고정 배치할 위치). "
+            "코어 배치 의도 — **깊이축**(전면도로↔안쪽, 로컬 Y). lateral과 직교. "
             "주차 대수와 무관하게 설계 의도로 결정된다(주차는 고정된 코어를 회피). "
             "auto=합리적 기본(주출입 frontage 측 또는 common centroid 정렬), "
             "entry=진입도로 측, central=상층 매스 중앙, rear=진입 반대(안쪽)."
+        ),
+    )
+    lateral: CoreLateral = Field(
+        default="center",
+        description=(
+            "코어 배치 의도 — **좌우축**(건물 장변=전면도로 따라, 로컬 X). position(깊이)과 직교해 "
+            "둘이 2D 배치 의도를 이룬다(예: entry+left=진입측 모서리). 주차 무관 설계 의도. "
+            "center=장변 중앙(기본), left/right=한쪽 측변에 붙임(전면도로 along 기준 좌/우). "
+            "측변 hug는 반대편을 비워 주차·진입 동선을 확보하려는 의도 — GT 코어가 한쪽으로 "
+            "치우친 필지(삼전·상도) 정합에 필요한 자유도."
         ),
     )
     composition: CoreComposition = Field(
