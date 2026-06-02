@@ -85,6 +85,10 @@ class UnitSpec(BaseModel):
 # ═════════════════════════════════════════════════════════════════════
 
 
+CorePosition = Literal["auto", "entry", "central", "rear"]
+CoreComposition = Literal["stair", "stair_elevator"]
+
+
 class Core(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -92,7 +96,7 @@ class Core(BaseModel):
         default=None,
         description=(
             "코어(계단·EV) 너비 (m, 로컬 X축 = 건물 장변 방향). "
-            "None=자동(units_per_floor 기반). "
+            "None=자동(composition·units_per_floor 기반). "
             "프리셋: 2.8(계단만) / 5.0(계단+EV)."
         ),
     )
@@ -101,6 +105,23 @@ class Core(BaseModel):
         description=(
             "코어 깊이 (m, 로컬 Y축). None=자동. "
             "다세대 기준 5.5 권장."
+        ),
+    )
+    position: CorePosition = Field(
+        default="auto",
+        description=(
+            "코어 배치 의도 (1층 평면에서 코어를 고정 배치할 위치). "
+            "주차 대수와 무관하게 설계 의도로 결정된다(주차는 고정된 코어를 회피). "
+            "auto=합리적 기본(주출입 frontage 측 또는 common centroid 정렬), "
+            "entry=진입도로 측, central=상층 매스 중앙, rear=진입 반대(안쪽)."
+        ),
+    )
+    composition: CoreComposition = Field(
+        default="stair_elevator",
+        description=(
+            "코어 구성 — width 자동값 유도용 (width 명시 시 무시). "
+            "stair=계단실만(폭 2.8 프리셋), "
+            "stair_elevator=계단+승강기(폭 5.0 프리셋)."
         ),
     )
 
