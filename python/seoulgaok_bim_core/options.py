@@ -93,21 +93,9 @@ CoreComposition = Literal["stair", "stair_elevator"]
 class Core(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    width: Optional[float] = Field(
-        default=None,
-        description=(
-            "코어(계단·EV) 너비 (m, 로컬 X축 = 건물 장변 방향). "
-            "None=자동(composition·units_per_floor 기반). "
-            "프리셋: 2.8(계단만) / 5.0(계단+EV)."
-        ),
-    )
-    depth: Optional[float] = Field(
-        default=None,
-        description=(
-            "코어 깊이 (m, 로컬 Y축). None=자동. "
-            "다세대 기준 5.5 권장."
-        ),
-    )
+    # width/depth(코어 치수 raw scalar) 제거됨 — 코어 크기/형상은 입력이 아니라
+    # **세대분할의 산출물**로 derive(삼전 정답: 계단·EV가 16.4m 분리 = 세대 배치 결과).
+    # 의도는 composition(계단실/계단+EV)·position·lateral로만 표현, 치수는 동선타입×세대수에서 유도.
     position: CorePosition = Field(
         default="auto",
         description=(
@@ -130,9 +118,8 @@ class Core(BaseModel):
     composition: CoreComposition = Field(
         default="stair_elevator",
         description=(
-            "코어 구성 — width 자동값 유도용 (width 명시 시 무시). "
-            "stair=계단실만(폭 2.8 프리셋), "
-            "stair_elevator=계단+승강기(폭 5.0 프리셋)."
+            "코어 구성 의도 — 계단·EV 유무. 코어 치수/형상 derive의 입력(세대수와 함께). "
+            "stair=계단실만, stair_elevator=계단+승강기."
         ),
     )
 
