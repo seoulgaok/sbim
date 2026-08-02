@@ -69,7 +69,7 @@ sbim/
 │       ├── io.py              # load/save
 │       ├── config.py          # 사업 설정값 오버레이
 │       ├── site_filter.py     # 필지 선별 구조
-│       └── ifc.py             # IFC4 내보내기 (건축)
+│       └── ifc.py             # IFC4 내보내기·되읽기 (건축)
 ├── typescript/                # TS 패키지 (@seoulgaok/bim-core)
 │   └── src/
 │       ├── types.ts
@@ -157,6 +157,32 @@ generate_ifc(scheme, units, out_path="out.ifc")
 **범위 — 건축 모델만.** 설비(우수·오수·급수 계통, 위생기구)는 욕실·주방
 배치에서 계통을 derive하는 별개 문제이고, 분야별 모델을 나누는 실무 관행상
 으로도 다른 모델입니다. 이 저장소에서는 다루지 않습니다.
+
+### 되읽기 (IFC → scheme)
+
+```python
+from seoulgaok_bim_core import load_ifc
+scheme, units = load_ifc("out.ifc")
+```
+
+`generate_ifc`가 쓴 파일을 되읽습니다. `IfcTriangulatedFaceSet`은 그대로,
+`IfcExtrudedAreaSolid`는 프로파일+깊이에서 프리즘 메시로 복원하므로 뷰어가
+바로 그릴 수 있습니다.
+
+**왕복으로 지켜지는 것** — 층 구성(id·표고, `옥탑층`·`지붕층` 포함),
+세대 id·polygon·전용면적, 사업개요(대지·건축면적·용적률·건폐율·PNU),
+모든 부재 형상.
+
+**지켜지지 않는 것** — 재질·색, 타입 객체, 개구 관계(`IfcRelVoids`/`Fills`),
+그리고 **LOD300 세그먼트 분할**. 벽·창·문은 내보낼 때 `userData` 기반으로
+부재 단위가 쪼개지는데(중형 샘플 기준 벽 131개), 되읽으면 형상은 남지만
+그 분할 정보가 없어 재수출 시 그룹당 1개로 합쳐집니다. 난간살·계단 부재
+(`IfcMember`)는 원본 메시에서 파생된 것이라 의도적으로 건너뜁니다 —
+되읽으면 형상이 중복됩니다.
+
+이 저장소가 쓴 IFC를 되읽기 위한 것이지, 레빗·아키캐드가 만든 임의의 IFC를
+받는 범용 임포터가 아닙니다. 남의 IFC는 표현 방식(BRep·CSG·매핑된 표현)이
+훨씬 다양해서 별개 문제입니다.
 
 ---
 
@@ -246,7 +272,8 @@ Surroundings (배열)
 - [ ] visualizer 이식 (프론트엔드 → 패키지)
 - [ ] LoD 200 룰 (건축사 합류 후)
 - [x] IFC export (건축) — `generate_ifc`
-- [ ] IFC import (IFC → scheme) — 미착수
+- [x] IFC import (자체 왕복) — `load_ifc`
+- [ ] 범용 IFC import (외부 도구 산출물 수용)
 
 ---
 

@@ -110,6 +110,7 @@ __all__ = [
     # 원클릭 대상 필지 필터
     "build_options",
     "generate_ifc",
+    "load_ifc",
     "load_config",
     "SiteFilterNotConfigured",
     "build_site_where",
@@ -131,3 +132,17 @@ def generate_ifc(*args, **kwargs):
             "pip install -e ./python[ifc]"
         ) from e
     return _impl(*args, **kwargs)
+
+
+def load_ifc(path):
+    """IFC4 → (scheme, units). generate_ifc가 쓴 파일을 되읽는다.
+
+    ifcopenshell 필요 (선택 의존) — generate_ifc와 같은 이유로 지연 import.
+    """
+    try:
+        from .ifc import load_ifc as _impl
+    except ModuleNotFoundError as e:  # pragma: no cover
+        raise ModuleNotFoundError(
+            "IFC 읽기에는 ifcopenshell이 필요합니다: pip install -e ./python[ifc]"
+        ) from e
+    return _impl(path)

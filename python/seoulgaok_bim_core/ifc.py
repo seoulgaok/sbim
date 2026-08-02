@@ -1281,3 +1281,267 @@ def ifc_filename(land_id, design_id=None, suffix=""):
     stamp = time.strftime("%Y%m%d")
     tag = (design_id or land_id)[:8]
     return f"sbim_{tag}_{stamp}{suffix}.ifc"
+
+
+# ══════════════════════════════════════════════════════════════════════
+# Import — IFC4 → scheme/units
+# ══════════════════════════════════════════════════════════════════════
+#
+# generate_ifc의 역방향. 이 모듈이 쓴 IFC를 되읽는 것이 목적이고,
+# 임의의 IFC(레빗·아키캐드 산출물)를 받는 범용 임포터가 아니다.
+# 남의 IFC는 표현 방식이 훨씬 다양해서(BRep·CSG·매핑된 표현) 별개 문제다.
+#
+# 되읽는 표현은 두 가지:
+#   IfcTriangulatedFaceSet  → BufferGeometry 그대로
+#   IfcExtrudedAreaSolid    → 프로파일 폴리라인 + 깊이 → 프리즘 메시로 복원
+#
+# 복원되지 않는 것: 재질·색, 타입 객체, 개구 관계(RelVoids/RelFills),
+# 난간살·계단 부재 분해(IfcMember — 원본 메시에서 파생된 것이라 되읽으면 중복).
+
+# IFC 클래스 → scheme geom 키 (GEOM_MAP의 역)
+_IFC_TO_GEOM = {
+    "IfcWall": "walls",
+    "IfcWindow": "windows",
+    "IfcRailing": "parapets",
+    "IfcColumn": "columns",
+    "IfcBeam": "beams",
+    "IfcDoor": "doors",
+    "IfcStair": "stairs",
+    "IfcCovering": "coverings",
+    "IfcBuildingElementProxy": "parking_stalls",
+}
+_SLAB_ROLE = {"ROOF": "roof", "FLOOR": "floors", "BASESLAB": "floors"}
+
+
+def _storey_floor_id(name, previous: int | None) -> int | None:
+    """storey 이름 → floor_id. 'B1'→-1, '3F'→3.
+
+    옥탑층·지붕층처럼 숫자가 없는 이름은 직전 층 +1로 잇는다 — 내보내기가
+    floor_name을 쓸 때 숫자 id를 남기지 않기 때문. storey를 표고 순으로 훑는
+    한 이 추론이 원본 순서를 복원한다.
+    """
+    n = (name or "").strip()
+    if n.upper().startswith("B") and n[1:].isdigit():
+        return -int(n[1:])
+    if n.upper().endswith("F") and n[:-1].isdigit():
+        return int(n[:-1])
+    if previous is None:
+        return None
+    return previous + 1 if previous != -1 else 1   # B1 다음은 1F
+
+
+def _placement_z(placement) -> float:
+    """중첩 IfcLocalPlacement 체인을 따라 누적 z."""
+    z = 0.0
+    seen = 0
+    while placement is not None and seen < 32:      # 순환 방어
+        rel = getattr(placement, "RelativePlacement", None)
+        loc = getattr(getattr(rel, "Location", None), "Coordinates", None)
+        if loc and len(loc) >= 3:
+            z += float(loc[2])
+        placement = getattr(placement, "PlacementRelTo", None)
+        seen += 1
+    return z
+
+
+def _mesh_from_faceset(fs, dz: float) -> dict | None:
+    """IfcTriangulatedFaceSet → BufferGeometry (z에 층 표고를 되더한다)."""
+    coords = getattr(getattr(fs, "Coordinates", None), "CoordList", None)
+    tris = getattr(fs, "CoordIndex", None)
+    if not coords or not tris:
+        return None
+    positions: list[float] = []
+    for c in coords:
+        positions += [float(c[0]), float(c[1]), float(c[2]) + dz]
+    indices: list[int] = []
+    for t in tris:
+        indices += [int(t[0]) - 1, int(t[1]) - 1, int(t[2]) - 1]   # 1-based → 0-based
+    if len(positions) < 9 or len(indices) < 3:
+        return None
+    return create_buffer_geometry_data(positions, indices)
+
+
+def _mesh_from_extrusion(solid, dz: float) -> dict | None:
+    """IfcExtrudedAreaSolid → 프리즘 메시. +Z 압출만 다룬다 (내보내기가 쓰는 형태)."""
+    direction = getattr(getattr(solid, "ExtrudedDirection", None),
+                        "DirectionRatios", (0.0, 0.0, 1.0))
+    if abs(float(direction[2])) < 1e-6:
+        return None                                  # 수직 압출이 아니면 대상 밖
+    curve = getattr(getattr(solid, "SweptArea", None), "OuterCurve", None)
+    pts = getattr(curve, "Points", None)
+    if not pts or len(pts) < 4:
+        return None
+    corners = [(float(p.Coordinates[0]), float(p.Coordinates[1])) for p in pts]
+    if len(corners) > 2 and corners[0] == corners[-1]:
+        corners = corners[:-1]                       # 닫힘점 제거
+    depth = float(getattr(solid, "Depth", 0.0) or 0.0)
+    if depth <= 0 or len(corners) < 3:
+        return None
+    base = dz
+    pos = getattr(getattr(solid, "Position", None), "Location", None)
+    if pos is not None and len(pos.Coordinates) >= 3:
+        base += float(pos.Coordinates[2])
+    sign = 1.0 if float(direction[2]) > 0 else -1.0
+    z0, z1 = base, base + depth * sign
+    return _prism_geometry(corners, min(z0, z1), max(z0, z1))
+
+
+def _element_meshes(element, dz: float) -> list:
+    """요소의 Body 표현 → BufferGeometry 목록."""
+    out = []
+    rep = getattr(element, "Representation", None)
+    for r in (getattr(rep, "Representations", None) or []):
+        if getattr(r, "RepresentationIdentifier", None) not in (None, "Body"):
+            continue                                  # Axis(중심선) 등은 건너뜀
+        for item in (getattr(r, "Items", None) or []):
+            if item.is_a("IfcTriangulatedFaceSet"):
+                m = _mesh_from_faceset(item, dz)
+            elif item.is_a("IfcExtrudedAreaSolid"):
+                m = _mesh_from_extrusion(item, dz)
+            else:
+                m = None
+            if m:
+                out.append(m)
+    return out
+
+
+def _space_polygon(space) -> list | None:
+    """IfcSpace의 압출 프로파일 → 세대 polygon (링, parcel_center 상대 로컬 프레임).
+
+    내보내기가 절대좌표(EPSG)에서 parcel_center를 빼 기록했으므로, 절대 좌표로
+    되돌리려면 호출부가 중심을 더해야 한다 — load_ifc가 그 값을 알 방법은 없다.
+    """
+    rep = getattr(space, "Representation", None)
+    for r in (getattr(rep, "Representations", None) or []):
+        for item in (getattr(r, "Items", None) or []):
+            if not item.is_a("IfcExtrudedAreaSolid"):
+                continue
+            curve = getattr(getattr(item, "SweptArea", None), "OuterCurve", None)
+            pts = getattr(curve, "Points", None)
+            if not pts or len(pts) < 4:
+                continue
+            ring = [[float(pt.Coordinates[0]), float(pt.Coordinates[1])]
+                    for pt in pts]
+            if ring[0] != ring[-1]:
+                ring.append(list(ring[0]))
+            return ring
+    return None
+
+
+def _pset_values(obj) -> dict:
+    """요소에 붙은 IfcPropertySingleValue를 {이름: 값}으로."""
+    vals = {}
+    for rel in (getattr(obj, "IsDefinedBy", None) or []):
+        if not rel.is_a("IfcRelDefinesByProperties"):
+            continue
+        pdef = rel.RelatingPropertyDefinition
+        for prop in (getattr(pdef, "HasProperties", None) or []):
+            nominal = getattr(prop, "NominalValue", None)
+            if nominal is not None:
+                vals[prop.Name] = nominal.wrappedValue
+    return vals
+
+
+_PSET_TO_DATA = {
+    "대지면적(㎡)": "lot_area", "건축면적(㎡)": "build_area",
+    "용적률(%)": "far", "건폐율(%)": "bcr", "PNU": "pnu",
+}
+
+
+def load_ifc(path):
+    """IFC4 → (scheme_dict, units_list). generate_ifc의 역방향.
+
+    이 모듈이 쓴 IFC를 되읽기 위한 것이다. 재질·색·타입 객체·개구 관계는
+    복원하지 않으며, 난간살·계단 부재(IfcMember)는 원본 메시에서 파생된
+    것이라 건너뛴다 — 되읽으면 형상이 중복된다.
+    """
+    import ifcopenshell
+
+    model = ifcopenshell.open(str(path))
+
+    scheme = {"data": {}, "floor_plans": [], "unit_ids": []}
+    buildings = model.by_type("IfcBuilding")
+    if buildings:
+        for k, v in _pset_values(buildings[0]).items():
+            if k in _PSET_TO_DATA:
+                scheme["data"][_PSET_TO_DATA[k]] = v
+
+    storeys = sorted(model.by_type("IfcBuildingStorey"),
+                     key=lambda s: float(getattr(s, "Elevation", 0.0) or 0.0))
+    units: list = []
+
+    previous_fid: int | None = None
+    for i, storey in enumerate(storeys, start=1):
+        elevation = float(getattr(storey, "Elevation", 0.0) or 0.0)
+        fid = _storey_floor_id(getattr(storey, "Name", None), previous_fid)
+        if fid is None:
+            fid = i
+        previous_fid = fid
+        geom: dict = {}
+
+        contained = []
+        for rel in (getattr(storey, "ContainsElements", None) or []):
+            contained.extend(rel.RelatedElements or [])
+
+        for el in contained:
+            if el.is_a("IfcSlab"):
+                key = _SLAB_ROLE.get(getattr(el, "PredefinedType", None), "floors")
+            elif el.is_a("IfcMember") or el.is_a("IfcGrid"):
+                continue                       # 파생 부재·보조 요소는 제외
+            else:
+                key = next((v for k, v in _IFC_TO_GEOM.items() if el.is_a(k)), None)
+            if key is None:
+                continue
+            meshes = _element_meshes(el, elevation)
+            if meshes:
+                geom.setdefault(key, []).append(meshes)
+
+        floor_height = 3.0
+        for nxt in storeys[i:]:
+            floor_height = max(
+                0.1, float(getattr(nxt, "Elevation", 0.0) or 0.0) - elevation)
+            break
+
+        scheme["floor_plans"].append({
+            "data": {
+                "floor_id": fid,
+                "floor_bottom_height": elevation,
+                "floor_height": floor_height,
+                "floor_name": getattr(storey, "Name", None),
+            },
+            "geom": geom,
+        })
+
+        # 세대 IfcSpace — 이름이 "201호" 형태인 것만 (계단실·기계실 등 제외)
+        for rel in (getattr(storey, "IsDecomposedBy", None) or []):
+            for space in (rel.RelatedObjects or []):
+                if not space.is_a("IfcSpace"):
+                    continue
+                name = getattr(space, "Name", None) or ""
+                if not name.endswith("호"):
+                    continue
+                area = None
+                for q in (getattr(space, "IsDefinedBy", None) or []):
+                    if not q.is_a("IfcRelDefinesByProperties"):
+                        continue
+                    qdef = q.RelatingPropertyDefinition
+                    for quant in (getattr(qdef, "Quantities", None) or []):
+                        if quant.is_a("IfcQuantityArea") and quant.Name == "NetFloorArea":
+                            area = float(quant.AreaValue)
+                # 내보내기가 Name = f"{id}호"로 썼으므로 접미사를 떼어 id를 복원
+                unit_id = name[:-1] if name.endswith("호") else name
+                ring = _space_polygon(space)
+                # generate_ifc가 읽는 것과 같은 flat UnitRecord 형태로 낸다.
+                # 중첩 {data:{...}}로 내면 재수출 시 조용히 무시된다.
+                units.append({
+                    "id": unit_id,
+                    "floor": fid,
+                    "floor_bottom_height": elevation,
+                    # area는 중첩 계약 {net, common, ...}. IFC가 담고 있는 건
+                    # NetFloorArea 하나뿐이라 net만 채운다.
+                    "area": {"net": area} if area is not None else {},
+                    "polygon": ring,
+                })
+
+    scheme["unit_ids"] = [u["id"] for u in units]
+    return scheme, units

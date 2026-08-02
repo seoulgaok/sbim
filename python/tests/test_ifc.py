@@ -70,3 +70,90 @@ def test_derive_parcel_center_matches_explicit(tmp_path):
 def test_derive_parcel_center_rejects_empty():
     with pytest.raises(ValueError):
         derive_parcel_center({"data": {"lot_area": 100}})
+
+
+# ── Import (IFC → scheme/units) ──────────────────────────────────────────
+
+@pytest.fixture(scope="module")
+def roundtrip(tmp_path_factory):
+    """sample → IFC → scheme/units 복원."""
+    from seoulgaok_bim_core.ifc import load_ifc
+
+    scheme = json.loads((SAMPLE / "scheme.json").read_text(encoding="utf-8"))
+    units = json.loads((SAMPLE / "units.json").read_text(encoding="utf-8"))
+    out = tmp_path_factory.mktemp("rt") / "rt.ifc"
+    generate_ifc(scheme, units, out_path=str(out))
+    return load_ifc(str(out)), scheme, units
+
+
+def test_import_recovers_building_data(roundtrip):
+    (got_scheme, _), scheme, _ = roundtrip
+    for key in ("lot_area", "build_area", "far", "bcr", "pnu"):
+        assert got_scheme["data"][key] == scheme["data"][key], key
+
+
+def test_import_recovers_storeys(roundtrip):
+    (got_scheme, _), scheme, _ = roundtrip
+    got = {fp["data"]["floor_id"] for fp in got_scheme["floor_plans"]}
+    want = {fp["data"]["floor_id"] for fp in scheme["floor_plans"]}
+    assert got == want
+    for fp in got_scheme["floor_plans"]:
+        src = next(s for s in scheme["floor_plans"]
+                   if s["data"]["floor_id"] == fp["data"]["floor_id"])
+        assert fp["data"]["floor_bottom_height"] == pytest.approx(
+            src["data"]["floor_bottom_height"], abs=1e-6)
+
+
+def test_import_recovers_unit_ids_and_polygons(roundtrip):
+    """세대는 flat UnitRecord로 복원돼야 한다 — generate_ifc가 읽는 그 형태."""
+    (_, got_units), _, units = roundtrip
+    want = [str(u["id"]) for u in units if not str(u["id"]).startswith("core")]
+    assert [u["id"] for u in got_units] == want
+    assert all(u.get("polygon") for u in got_units), "세대 polygon이 복원되지 않았다"
+    assert all(u["area"]["net"] > 0 for u in got_units)
+
+
+def test_import_produces_renderable_geometry(roundtrip):
+    """복원된 메시가 BufferGeometry 형태를 갖추는지 — 뷰어가 바로 그릴 수 있어야."""
+    (got_scheme, _), _, _ = roundtrip
+    meshes = [m
+              for fp in got_scheme["floor_plans"]
+              for groups in fp["geom"].values()
+              for group in groups
+              for m in group]
+    assert meshes, "복원된 메시가 없다"
+    for m in meshes[:50]:
+        attrs = m["data"]["attributes"]
+        assert m["type"] == "BufferGeometry"
+        assert len(attrs["position"]["array"]) % 3 == 0
+        assert len(attrs["position"]["array"]) >= 9
+        assert len(m["data"]["index"]["array"]) % 3 == 0
+
+
+def test_import_skips_derived_members(roundtrip):
+    """IfcMember(난간살·계단 부재)는 원본 메시에서 파생된 것 — 되읽으면 중복."""
+    (got_scheme, _), _, _ = roundtrip
+    keys = {k for fp in got_scheme["floor_plans"] for k in fp["geom"]}
+    assert "members" not in keys
+    # 난간은 parapets 한 벌로만 들어와야 한다
+    parapets = sum(len(fp["geom"].get("parapets", []))
+                   for fp in got_scheme["floor_plans"])
+    assert 0 < parapets < 50, parapets
+
+
+def test_reexport_is_stable(roundtrip, tmp_path):
+    """복원한 scheme을 다시 내보내도 층·슬래브·계단·세대 수가 유지되는지.
+
+    벽/창/문 개수는 줄어든다 — LOD300 userData(세그먼트 분할·재질 레이어)가
+    복원 대상이 아니라, 재수출 시 그룹당 1개 요소로 합쳐지기 때문. 형상은
+    남고 요소 단위만 거칠어진다. 아래 항목은 그 영향을 받지 않는다.
+    """
+    (got_scheme, got_units), _, _ = roundtrip
+    out = tmp_path / "again.ifc"
+    generate_ifc(got_scheme, got_units, parcel_center=[0, 0], out_path=str(out))
+    again = ifcopenshell.open(str(out))
+    assert len(again.by_type("IfcBuildingStorey")) == 9
+    assert len(again.by_type("IfcSlab")) == 15
+    assert len(again.by_type("IfcStair")) == 7
+    assert len(again.by_type("IfcSpace")) == len(got_units)
+    assert not again.by_type("IfcPipeSegment")
