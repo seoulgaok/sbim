@@ -83,9 +83,7 @@ where, params = build_site_where(alias="l")
 [Apache 2.0]. 상업적 이용을 포함해 자유롭게 쓸 수 있습니다. 재배포 시 라이선스
 사본과 [NOTICE](NOTICE)를 포함하고, 변경한 파일은 변경 사실을 표시해야 합니다.
 
-`examples/`의 샘플은 실제 필지의 설계 결과를 익명화한 것입니다. 절대좌표는 임의
-원점으로 평행이동했고, 지번·PNU·분양가는 제거했습니다.
-
+`examples/`의 샘플은 실제 필지의 설계 결과를 익명화한 것입니다. 
 [Apache 2.0]: LICENSE "Apache License 2.0"
 [IFC4]: https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/ "IFC4 Add2 TC1"
 [three.js]: https://threejs.org "three.js"
