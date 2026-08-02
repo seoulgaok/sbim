@@ -1,0 +1,13 @@
+{
+  "financing": {
+    "land_loan_ltv": 0.6,
+    "land_loan_rate": 0.06,
+    "fac_loan_ltv": 0.6,
+    "fac_loan_rate": 0.06,
+    "fac_efficiency": 0.5,
+    "post_loan_rate": 0.06,
+    "post_months": 6.0,
+    "handling_fee_rate": 0.01,
+    "handling_fee_on": false
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "@seoulgaok/bim-core": ["../typescript/src/index.ts"],
+      "@seoulgaok/bim-visualizer": ["../visualizer/src/index.ts"]
+    }
+  },
+  "include": ["src", "vite.config.ts"]
+}

@@ -1,0 +1,8 @@
+{
+  "min_garea": 100,
+  "max_garea": 500,
+  "min_age": 20,
+  "zones": ["제1종일반주거지역", "제2종일반주거지역"],
+  "terrain": "평지",
+  "use_keywords": ["주택"]
+}
