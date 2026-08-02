@@ -18,6 +18,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+ifc = [
+    "ifcopenshell>=0.8",
+]
 dev = [
     "pytest>=7.0",
     "datamodel-code-generator>=0.25",

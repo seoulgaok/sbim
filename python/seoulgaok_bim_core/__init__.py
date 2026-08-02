@@ -109,8 +109,25 @@ __all__ = [
     "CompileErrorType",
     # 원클릭 대상 필지 필터
     "build_options",
+    "generate_ifc",
     "load_config",
     "SiteFilterNotConfigured",
     "build_site_where",
     "load_site_criteria",
 ]
+
+
+def generate_ifc(*args, **kwargs):
+    """scheme + units → IFC4 파일. ifcopenshell 필요 (선택 의존).
+
+    무거운 의존이라 지연 import 한다 — 미설치 환경에서 패키지 import 자체가
+    깨지면 안 된다.
+    """
+    try:
+        from .ifc import generate_ifc as _impl
+    except ModuleNotFoundError as e:  # pragma: no cover
+        raise ModuleNotFoundError(
+            "IFC 내보내기에는 ifcopenshell이 필요합니다: "
+            "pip install -e ./python[ifc]"
+        ) from e
+    return _impl(*args, **kwargs)

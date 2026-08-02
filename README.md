@@ -65,8 +65,11 @@ sbim/
 ├── python/                    # Python 패키지 (pip install -e .)
 │   └── seoulgaok_bim_core/
 │       ├── types.py           # pydantic 모델
+│       ├── options.py         # BuildOptions (설계 의도)
 │       ├── io.py              # load/save
-│       └── geometry.py        # BufferGeometry 헬퍼
+│       ├── config.py          # 사업 설정값 오버레이
+│       ├── site_filter.py     # 필지 선별 구조
+│       └── ifc.py             # IFC4 내보내기 (건축)
 ├── typescript/                # TS 패키지 (@seoulgaok/bim-core)
 │   └── src/
 │       ├── types.ts
@@ -75,9 +78,10 @@ sbim/
 │       └── geometry.ts        # convertToThreeGeometry
 ├── visualizer/                # React + R3F (@seoulgaok/bim-visualizer)
 │   └── src/
-│       ├── BuildingMeshVisualizer.tsx
-│       ├── MapFloor.tsx
+│       ├── BimCanvas.tsx
 │       └── hooks/useBuildingData.ts
+├── viewer/                    # 드래그앤드롭 뷰어 (샘플 내장)
+├── sbim-editor/               # Tauri 평면도 벡터 에디터
 └── examples/samples/          # 샘플 scheme.json, units.json
 ```
 
@@ -114,6 +118,45 @@ pnpm dev              # 뷰어 개발 서버
 ```bash
 cd sbim-editor && npm ci && npm run build
 ```
+
+---
+
+## IFC 내보내기
+
+`scheme.json` + `units.json` → **IFC4** 파일. 아키캐드·레빗·BIM 뷰어에서 엽니다.
+
+```bash
+pip install -e "./python[ifc]"      # ifcopenshell (선택 의존)
+```
+
+```python
+import json
+from seoulgaok_bim_core import generate_ifc
+
+scheme = json.load(open("examples/samples/sample-medium/scheme.json"))
+units  = json.load(open("examples/samples/sample-medium/units.json"))
+generate_ifc(scheme, units, out_path="out.ifc")
+```
+
+뷰어가 그리는 바로 그 삼각 메시를 `IfcTriangulatedFaceSet`으로 1:1 변환하므로
+화면과 IFC가 어긋나지 않습니다. 세대는 `IfcSpace`로 나가고 `NetFloorArea`
+수량이 붙어 적산에 바로 쓸 수 있습니다.
+
+중형 샘플 기준 산출물:
+
+| 요소 | 개수 | | 요소 | 개수 |
+|---|---:|---|---|---:|
+| IfcBuildingStorey | 9 | | IfcMember (난간살·계단) | 920 |
+| IfcWall | 131 | | IfcStair | 7 |
+| IfcSlab | 15 | | IfcSpace (세대·코어실) | 28 |
+| IfcWindow / IfcDoor | 24 / 24 | | IfcColumn / IfcBeam | 4 / 22 |
+
+`parcel_center`를 넘기지 않으면 scheme의 절대좌표에서 추정합니다.
+파이프라인이 값을 들고 있으면 그쪽이 정확하니 명시하세요.
+
+**범위 — 건축 모델만.** 설비(우수·오수·급수 계통, 위생기구)는 욕실·주방
+배치에서 계통을 derive하는 별개 문제이고, 분야별 모델을 나누는 실무 관행상
+으로도 다른 모델입니다. 이 저장소에서는 다루지 않습니다.
 
 ---
 
@@ -202,7 +245,8 @@ Surroundings (배열)
 - [ ] operations 함수 (move_core, set_unit_count, set_floor_type, ...)
 - [ ] visualizer 이식 (프론트엔드 → 패키지)
 - [ ] LoD 200 룰 (건축사 합류 후)
-- [ ] IFC import/export (Phase 2)
+- [x] IFC export (건축) — `generate_ifc`
+- [ ] IFC import (IFC → scheme) — 미착수
 
 ---
 
