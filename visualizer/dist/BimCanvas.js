@@ -55,7 +55,7 @@ function BuildingScene({ schemeData, unitsData, surroundingsData, selectedFloor,
     }, [schemeData.floor_plans, selectedFloor]);
     return (_jsxs(_Fragment, { children: [_jsxs("group", { ref: buildingRef, children: [_jsx(SurroundingBuildingsMesh, { data: surroundingsData }), visibleFloorPlans.map((floorPlan) => {
                         const unitsOnThisFloor = unitsData.filter((u) => u.data?.floor_id === floorPlan.data.floor_id);
-                        return (_jsx(FloorGroup, { floorPlan: floorPlan, unitsOnThisFloor: unitsOnThisFloor }, `floor-${floorPlan.data.floor_id}`));
+                        return (_jsx(FloorGroup, { floorPlan: floorPlan, unitsOnThisFloor: unitsOnThisFloor, cutaway: selectedFloor != null }, `floor-${floorPlan.data.floor_id}`));
                     })] }), _jsx(Sky, { distance: 450000, sunPosition: [100, 100, 100], inclination: 0.6, azimuth: 0.25, turbidity: 10, rayleigh: 0.5 }), _jsx("directionalLight", { position: [500, 500, 0], intensity: 1.2, castShadow: true, "shadow-mapSize-width": 2048, "shadow-mapSize-height": 2048, "shadow-camera-far": 1000, "shadow-camera-left": -500, "shadow-camera-right": 500, "shadow-camera-top": 500, "shadow-camera-bottom": -500, "shadow-bias": -0.0001, color: "#FDF4DC" }), _jsx("directionalLight", { position: [-100, 80, -100], intensity: 0.3, color: "#CCDFFF" }), _jsx("ambientLight", { intensity: 0.4, color: "#E6F0FF" }), _jsx(ContactShadows, { position: [0, 0.01, 0], opacity: 0.4, scale: 200, blur: 3, far: 300, resolution: 1024, color: "#000000" })] }));
 }
 /* ============================================================
@@ -80,7 +80,7 @@ function SurroundingBuildingsMesh({ data, }) {
 /* ============================================================
  * FloorGroup — 한 층의 walls / floors / roof
  * ============================================================ */
-function FloorGroup({ floorPlan, unitsOnThisFloor, }) {
+function FloorGroup({ floorPlan, unitsOnThisFloor, cutaway = false, }) {
     const wallMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
         color: 0xffffff,
         side: THREE.DoubleSide,
@@ -103,12 +103,15 @@ function FloorGroup({ floorPlan, unitsOnThisFloor, }) {
         roughness: 0.8,
         metalness: 0.2,
     }), []);
+    // 전체 보기에서는 매스를 가리지 않도록 거의 투명, 단일 층에서는 세대 구획이
+    // 읽히도록 진하게. 0.1은 층 하나만 볼 때 사실상 보이지 않는다.
     const unitMaterial = useMemo(() => new THREE.MeshStandardMaterial({
-        color: 0x00ff00,
+        color: cutaway ? 0x4da6ff : 0x00ff00,
         transparent: true,
-        opacity: 0.1,
-    }), []);
-    return (_jsxs("group", { rotation: [-Math.PI / 2, 0, 0], children: [_jsx(GeometryGroup, { groups: floorPlan.geom.walls, material: wallMaterial, groupName: "wall" }), _jsx(GeometryGroup, { groups: floorPlan.geom.floors, material: floorMaterial, groupName: "floor" }), floorPlan.geom.roof && (_jsx(GeometryGroup, { groups: floorPlan.geom.roof, material: roofMaterial, groupName: "roof" })), unitsOnThisFloor.map((unit, i) => {
+        opacity: cutaway ? 0.35 : 0.1,
+        side: THREE.DoubleSide,
+    }), [cutaway]);
+    return (_jsxs("group", { rotation: [-Math.PI / 2, 0, 0], children: [_jsx(GeometryGroup, { groups: floorPlan.geom.walls, material: wallMaterial, groupName: "wall" }), _jsx(GeometryGroup, { groups: floorPlan.geom.floors, material: floorMaterial, groupName: "floor" }), floorPlan.geom.roof && !cutaway && (_jsx(GeometryGroup, { groups: floorPlan.geom.roof, material: roofMaterial, groupName: "roof" })), unitsOnThisFloor.map((unit, i) => {
                 const id = unit.data?.id ?? `unit-${i}`;
                 if (!unit.geom?.boundary)
                     return null;

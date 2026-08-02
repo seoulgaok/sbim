@@ -133,6 +133,7 @@ function BuildingScene({
               key={`floor-${floorPlan.data.floor_id}`}
               floorPlan={floorPlan}
               unitsOnThisFloor={unitsOnThisFloor}
+              cutaway={selectedFloor != null}
             />
           );
         })}
@@ -233,9 +234,12 @@ function SurroundingBuildingsMesh({
 function FloorGroup({
   floorPlan,
   unitsOnThisFloor,
+  cutaway = false,
 }: {
   floorPlan: FloorPlan;
   unitsOnThisFloor: Unit[];
+  /** 단일 층 보기 — 지붕(천장)을 걷어내 내부를 들여다본다 */
+  cutaway?: boolean;
 }) {
   const wallMaterial = useMemo(
     () =>
@@ -274,14 +278,17 @@ function FloorGroup({
     [],
   );
 
+  // 전체 보기에서는 매스를 가리지 않도록 거의 투명, 단일 층에서는 세대 구획이
+  // 읽히도록 진하게. 0.1은 층 하나만 볼 때 사실상 보이지 않는다.
   const unitMaterial = useMemo(
     () =>
       new THREE.MeshStandardMaterial({
-        color: 0x00ff00,
+        color: cutaway ? 0x4da6ff : 0x00ff00,
         transparent: true,
-        opacity: 0.1,
+        opacity: cutaway ? 0.35 : 0.1,
+        side: THREE.DoubleSide,
       }),
-    [],
+    [cutaway],
   );
 
   return (
@@ -296,7 +303,8 @@ function FloorGroup({
         material={floorMaterial}
         groupName="floor"
       />
-      {floorPlan.geom.roof && (
+      {/* cutaway: 지붕을 그리면 위에서 내려다볼 때 층 내부가 통째로 가려진다 */}
+      {floorPlan.geom.roof && !cutaway && (
         <GeometryGroup
           groups={floorPlan.geom.roof}
           material={roofMaterial}
