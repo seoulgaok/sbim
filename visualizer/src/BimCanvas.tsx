@@ -50,7 +50,13 @@ export function BimCanvas({
 
   return (
     <div className={className} style={{ width: "100%", height: "100%" }}>
-      <Canvas shadows camera={{ position: [80, 80, 80], fov: 45 }}>
+      <Canvas
+        shadows
+        camera={{ position: [80, 80, 80], fov: 45 }}
+        // preserveDrawingBuffer: 캔버스 픽셀을 스왑 후에도 유지 — 스크린샷·
+        // toDataURL 캡처가 검은 화면으로 나오는 것을 막는다 (약간의 메모리 비용)
+        gl={{ preserveDrawingBuffer: true }}
+      >
         <BuildingScene
           schemeData={schemeData}
           unitsData={unitsData ?? []}
@@ -82,14 +88,29 @@ function BuildingScene({
   selectedFloor: number | null;
   controlsRef: React.RefObject<CameraControls | null>;
 }) {
-  // 첫 등장 시 시점 부드럽게 이동
+  const buildingRef = useRef<THREE.Group>(null);
+
+  // 첫 등장 시 건물이 화면에 담기도록 시점 이동.
+  // 고정 좌표(80,80,80)를 쓰면 소형 필지는 점처럼, 대형은 잘려 보인다.
+  // Sky·바닥 plane은 박스에 넣으면 안 되므로 건물 그룹만 잰다.
   React.useEffect(() => {
     const id = setTimeout(() => {
-      controlsRef.current?.setLookAt(80, 80, 80, 0, 5, 0, true);
+      const g = buildingRef.current;
+      if (!g) return;
+      const box = new THREE.Box3().setFromObject(g);
+      if (box.isEmpty()) return;
+      const size = box.getSize(new THREE.Vector3());
+      const radius = Math.max(size.x, size.y, size.z);
+      if (!Number.isFinite(radius) || radius <= 0) return;
+      const c = box.getCenter(new THREE.Vector3());
+      const d = radius * 1.25 + 6;   // 여백
+      void controlsRef.current?.setLookAt(
+        c.x + d, c.y + d * 0.7, c.z + d, c.x, c.y, c.z, true,
+      );
     }, 600);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [schemeData]);
 
   const visibleFloorPlans = useMemo(() => {
     if (selectedFloor == null) return schemeData.floor_plans;
@@ -100,20 +121,22 @@ function BuildingScene({
 
   return (
     <>
-      <SurroundingBuildingsMesh data={surroundingsData} />
+      <group ref={buildingRef}>
+        <SurroundingBuildingsMesh data={surroundingsData} />
 
-      {visibleFloorPlans.map((floorPlan) => {
-        const unitsOnThisFloor = unitsData.filter(
-          (u) => u.data?.floor_id === floorPlan.data.floor_id,
-        );
-        return (
-          <FloorGroup
-            key={`floor-${floorPlan.data.floor_id}`}
-            floorPlan={floorPlan}
-            unitsOnThisFloor={unitsOnThisFloor}
-          />
-        );
-      })}
+        {visibleFloorPlans.map((floorPlan) => {
+          const unitsOnThisFloor = unitsData.filter(
+            (u) => u.data?.floor_id === floorPlan.data.floor_id,
+          );
+          return (
+            <FloorGroup
+              key={`floor-${floorPlan.data.floor_id}`}
+              floorPlan={floorPlan}
+              unitsOnThisFloor={unitsOnThisFloor}
+            />
+          );
+        })}
+      </group>
 
       {/* 환경광·태양·역광·접지 그림자 */}
       <Sky

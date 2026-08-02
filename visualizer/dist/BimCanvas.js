@@ -16,29 +16,47 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 export function BimCanvas({ schemeData, unitsData, surroundingsData, selectedFloor, className, }) {
     const controlsRef = useRef(null);
-    return (_jsx("div", { className: className, style: { width: "100%", height: "100%" }, children: _jsxs(Canvas, { shadows: true, camera: { position: [80, 80, 80], fov: 45 }, children: [_jsx(BuildingScene, { schemeData: schemeData, unitsData: unitsData ?? [], surroundingsData: surroundingsData ?? [], selectedFloor: selectedFloor ?? null, controlsRef: controlsRef }), _jsx(CameraControls, { ref: controlsRef, makeDefault: true }), _jsx(Environment, { preset: "city" })] }) }));
+    return (_jsx("div", { className: className, style: { width: "100%", height: "100%" }, children: _jsxs(Canvas, { shadows: true, camera: { position: [80, 80, 80], fov: 45 }, 
+            // preserveDrawingBuffer: 캔버스 픽셀을 스왑 후에도 유지 — 스크린샷·
+            // toDataURL 캡처가 검은 화면으로 나오는 것을 막는다 (약간의 메모리 비용)
+            gl: { preserveDrawingBuffer: true }, children: [_jsx(BuildingScene, { schemeData: schemeData, unitsData: unitsData ?? [], surroundingsData: surroundingsData ?? [], selectedFloor: selectedFloor ?? null, controlsRef: controlsRef }), _jsx(CameraControls, { ref: controlsRef, makeDefault: true }), _jsx(Environment, { preset: "city" })] }) }));
 }
 /* ============================================================
  * BuildingScene — 환경 + 빌딩 + 주변 건물
  * ============================================================ */
 function BuildingScene({ schemeData, unitsData, surroundingsData, selectedFloor, controlsRef, }) {
-    // 첫 등장 시 시점 부드럽게 이동
+    const buildingRef = useRef(null);
+    // 첫 등장 시 건물이 화면에 담기도록 시점 이동.
+    // 고정 좌표(80,80,80)를 쓰면 소형 필지는 점처럼, 대형은 잘려 보인다.
+    // Sky·바닥 plane은 박스에 넣으면 안 되므로 건물 그룹만 잰다.
     React.useEffect(() => {
         const id = setTimeout(() => {
-            controlsRef.current?.setLookAt(80, 80, 80, 0, 5, 0, true);
+            const g = buildingRef.current;
+            if (!g)
+                return;
+            const box = new THREE.Box3().setFromObject(g);
+            if (box.isEmpty())
+                return;
+            const size = box.getSize(new THREE.Vector3());
+            const radius = Math.max(size.x, size.y, size.z);
+            if (!Number.isFinite(radius) || radius <= 0)
+                return;
+            const c = box.getCenter(new THREE.Vector3());
+            const d = radius * 1.25 + 6; // 여백
+            void controlsRef.current?.setLookAt(c.x + d, c.y + d * 0.7, c.z + d, c.x, c.y, c.z, true);
         }, 600);
         return () => clearTimeout(id);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [schemeData]);
     const visibleFloorPlans = useMemo(() => {
         if (selectedFloor == null)
             return schemeData.floor_plans;
         return schemeData.floor_plans.filter((fp) => fp.data.floor_id === selectedFloor);
     }, [schemeData.floor_plans, selectedFloor]);
-    return (_jsxs(_Fragment, { children: [_jsx(SurroundingBuildingsMesh, { data: surroundingsData }), visibleFloorPlans.map((floorPlan) => {
-                const unitsOnThisFloor = unitsData.filter((u) => u.data?.floor_id === floorPlan.data.floor_id);
-                return (_jsx(FloorGroup, { floorPlan: floorPlan, unitsOnThisFloor: unitsOnThisFloor }, `floor-${floorPlan.data.floor_id}`));
-            }), _jsx(Sky, { distance: 450000, sunPosition: [100, 100, 100], inclination: 0.6, azimuth: 0.25, turbidity: 10, rayleigh: 0.5 }), _jsx("directionalLight", { position: [500, 500, 0], intensity: 1.2, castShadow: true, "shadow-mapSize-width": 2048, "shadow-mapSize-height": 2048, "shadow-camera-far": 1000, "shadow-camera-left": -500, "shadow-camera-right": 500, "shadow-camera-top": 500, "shadow-camera-bottom": -500, "shadow-bias": -0.0001, color: "#FDF4DC" }), _jsx("directionalLight", { position: [-100, 80, -100], intensity: 0.3, color: "#CCDFFF" }), _jsx("ambientLight", { intensity: 0.4, color: "#E6F0FF" }), _jsx(ContactShadows, { position: [0, 0.01, 0], opacity: 0.4, scale: 200, blur: 3, far: 300, resolution: 1024, color: "#000000" })] }));
+    return (_jsxs(_Fragment, { children: [_jsxs("group", { ref: buildingRef, children: [_jsx(SurroundingBuildingsMesh, { data: surroundingsData }), visibleFloorPlans.map((floorPlan) => {
+                        const unitsOnThisFloor = unitsData.filter((u) => u.data?.floor_id === floorPlan.data.floor_id);
+                        return (_jsx(FloorGroup, { floorPlan: floorPlan, unitsOnThisFloor: unitsOnThisFloor }, `floor-${floorPlan.data.floor_id}`));
+                    })] }), _jsx(Sky, { distance: 450000, sunPosition: [100, 100, 100], inclination: 0.6, azimuth: 0.25, turbidity: 10, rayleigh: 0.5 }), _jsx("directionalLight", { position: [500, 500, 0], intensity: 1.2, castShadow: true, "shadow-mapSize-width": 2048, "shadow-mapSize-height": 2048, "shadow-camera-far": 1000, "shadow-camera-left": -500, "shadow-camera-right": 500, "shadow-camera-top": 500, "shadow-camera-bottom": -500, "shadow-bias": -0.0001, color: "#FDF4DC" }), _jsx("directionalLight", { position: [-100, 80, -100], intensity: 0.3, color: "#CCDFFF" }), _jsx("ambientLight", { intensity: 0.4, color: "#E6F0FF" }), _jsx(ContactShadows, { position: [0, 0.01, 0], opacity: 0.4, scale: 200, blur: 3, far: 300, resolution: 1024, color: "#000000" })] }));
 }
 /* ============================================================
  * SurroundingBuildingsMesh — 주변 건물

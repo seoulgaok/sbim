@@ -1,8 +1,17 @@
 import { BimCanvas } from "@seoulgaok/bim-visualizer";
 import type { Scheme, Unit } from "@seoulgaok/bim-core";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type DropZoneId = "scheme" | "units";
+
+/** public/samples/ 에 들어 있는 익명화 샘플 — 실제 필지 기반, 좌표·식별자 치환됨 */
+const SAMPLES = [
+  { id: "sample-small", label: "소형 179㎡", desc: "8세대 · 9층" },
+  { id: "sample-medium", label: "중형 270㎡", desc: "12세대 · 9층" },
+  { id: "sample-large", label: "대형 537㎡", desc: "11세대 · 9층 · 저밀" },
+] as const;
+
+type SampleId = (typeof SAMPLES)[number]["id"];
 
 function readJsonFile<T>(file: File): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -77,6 +86,35 @@ export function App() {
   );
 
   const handleDragLeave = useCallback(() => setDragOver(null), []);
+
+  const loadSample = useCallback(async (id: SampleId) => {
+    setErrors({});
+    try {
+      const [s, u] = await Promise.all([
+        fetch(`${import.meta.env.BASE_URL}samples/${id}/scheme.json`),
+        fetch(`${import.meta.env.BASE_URL}samples/${id}/units.json`),
+      ]);
+      if (!s.ok || !u.ok) throw new Error(`샘플 ${id} 로드 실패 (${s.status}/${u.status})`);
+      setScheme((await s.json()) as Scheme);
+      setUnits((await u.json()) as Unit[]);
+      setSelectedFloor(null);
+    } catch (err) {
+      setErrors({ scheme: String(err) });
+    }
+  }, []);
+
+  // ?sample=sample-small&floor=3 로 열면 바로 로드 (스크린샷·링크 공유용)
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const id = q.get("sample");
+    if (!id || !SAMPLES.some((s) => s.id === id)) return;
+    void loadSample(id as SampleId).then(() => {
+      const f = q.get("floor");
+      if (f !== null && f !== "" && Number.isFinite(Number(f))) {
+        setSelectedFloor(Number(f));
+      }
+    });
+  }, [loadSample]);
 
   const floors =
     scheme?.floor_plans
@@ -158,6 +196,7 @@ export function App() {
             onDragOver={handleDragOver("scheme")}
             onDragLeave={handleDragLeave}
             active={dragOver === "scheme"}
+            onLoadSample={loadSample}
           />
         ) : (
           <div style={{ width: "100%", height: "100%" }}>
@@ -266,11 +305,13 @@ function DropPrompt({
   onDragOver,
   onDragLeave,
   active,
+  onLoadSample,
 }: {
   onDrop: React.DragEventHandler;
   onDragOver: React.DragEventHandler;
   onDragLeave: React.DragEventHandler;
   active: boolean;
+  onLoadSample: (id: SampleId) => void;
 }) {
   return (
     <div
@@ -298,12 +339,42 @@ function DropPrompt({
       <p style={{ fontSize: 13, color: "#444" }}>
         units.json은 선택 사항 — scheme 로드 후 추가 가능
       </p>
+
+      <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+        {SAMPLES.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => onLoadSample(s.id)}
+            style={styles.sampleBtn}
+            title={`${s.label} — ${s.desc}`}
+          >
+            <strong style={{ color: "#ddd" }}>{s.label}</strong>
+            <span style={{ fontSize: 11, color: "#777" }}>{s.desc}</span>
+          </button>
+        ))}
+      </div>
+      <p style={{ fontSize: 12, color: "#3a3a3a" }}>
+        샘플은 실제 필지 기반이며 좌표·식별자는 익명화되어 있습니다
+      </p>
     </div>
   );
 }
 
 /* ─── 스타일 ─── */
 const styles: Record<string, React.CSSProperties> = {
+  sampleBtn: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 2,
+    padding: "10px 18px",
+    borderRadius: 8,
+    border: "1px solid #333",
+    background: "#161616",
+    color: "#ddd",
+    cursor: "pointer",
+    font: "inherit",
+  },
   root: {
     width: "100%",
     height: "100%",
