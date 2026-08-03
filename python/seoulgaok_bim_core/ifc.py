@@ -911,8 +911,20 @@ def generate_ifc(scheme_json, units, parcel_center=None, out_path=None, meta=Non
         _qto(f, door, "Qto_DoorBaseQuantities", [
             ("L", "Width", w), ("L", "Height", hgt), ("A", "Area", w * hgt),
         ])
+        # 실스윙 → 좌/우 타입 분화. 힌지=p0, 스윙면=swing_into 방향이고,
+        # 스윙면에서 문을 바라볼 때 힌지가 왼쪽이면 LEFT ⟺ cross(u, s) < 0.
+        # 이게 없으면 2D 뷰어(아키캐드 등)가 **모든 문을 왼여닫이로** 그린다 —
+        # 스윙은 문짝 지오메트리에만 있고 타입엔 안 실리기 때문.
+        _hand = "L"
+        _into = ud.get("swing_into")
+        if _into:
+            sx = float(_into[0]) - cx - (p0[0] + p1[0]) / 2.0
+            sy = float(_into[1]) - cy - (p0[1] + p1[1]) / 2.0
+            if (ux * sy - uy * sx) >= 0:
+                _hand = "R"
         _typed(door, "IfcDoorType",
-               f"{'FD' if _fire else 'D'}{round(w*1000)}x{round(hgt*1000)}",
+               f"{'FD' if _fire else 'D'}{round(w*1000)}x{round(hgt*1000)}"
+               f"-{_hand}",
                "DOOR")
         return door
     for fp in floor_plans:
@@ -1282,14 +1294,40 @@ def generate_ifc(scheme_json, units, parcel_center=None, out_path=None, meta=Non
         pass
 
     # ── 타입 객체 방출 (IfcRelDefinesByType) ──
-    _TYPE_EXTRA = {  # 필수 속성이 더 있는 타입 클래스
-        "IfcDoorType": {"OperationType": "SINGLE_SWING_LEFT"},
-        "IfcWindowType": {"PartitioningType": "SINGLE_PANEL"},
-    }
     for (tcls, tname, tpredef), members in _type_reg.items():
+        extra = {}
+        if tcls == "IfcDoorType":
+            # 좌/우 = 타입명 접미사(-L/-R). 위 _opening에서 실스윙으로 분화된다.
+            extra["OperationType"] = ("SINGLE_SWING_RIGHT"
+                                      if tname.endswith("-R")
+                                      else "SINGLE_SWING_LEFT")
+            # 문틀·문짝 상세 — 2D 뷰어가 창호 심볼을 그리는 근거. 문틀 40×110 관행.
+            extra["HasPropertySets"] = [
+                f.create_entity(
+                    "IfcDoorLiningProperties", GlobalId=_gid(),
+                    Name=f"{tname} 문틀",
+                    LiningDepth=0.11, LiningThickness=0.04),
+                f.create_entity(
+                    "IfcDoorPanelProperties", GlobalId=_gid(),
+                    Name=f"{tname} 문짝",
+                    PanelOperation="SWINGING", PanelPosition="MIDDLE"),
+            ]
+        elif tcls == "IfcWindowType":
+            extra["PartitioningType"] = "SINGLE_PANEL"
+            extra["HasPropertySets"] = [
+                f.create_entity(
+                    "IfcWindowLiningProperties", GlobalId=_gid(),
+                    Name=f"{tname} 창틀",
+                    LiningDepth=0.15, LiningThickness=0.05),
+                f.create_entity(
+                    "IfcWindowPanelProperties", GlobalId=_gid(),
+                    Name=f"{tname} 창짝",
+                    OperationType="SLIDINGHORIZONTAL",
+                    PanelPosition="MIDDLE"),
+            ]
         t_ent = f.create_entity(
             tcls, GlobalId=_gid(), Name=tname, PredefinedType=tpredef,
-            **_TYPE_EXTRA.get(tcls, {}))
+            **extra)
         f.create_entity(
             "IfcRelDefinesByType", GlobalId=_gid(),
             RelatedObjects=members, RelatingType=t_ent)
