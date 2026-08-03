@@ -513,6 +513,37 @@ def generate_ifc(scheme_json, units, parcel_center=None, out_path=None, meta=Non
     floor_plans = scheme_json.get("floor_plans", []) or []
     fdata = {fp.get("data", {}).get("floor_id"): fp.get("data", {}) for fp in floor_plans}
 
+    # ── 난간 중복 층 판정 ──
+    # 난간은 절대 z(base_z·top_z)로 기술된다. 같은 좌표·같은 라인의 난간이 두 층
+    # floor_plan에 함께 등재돼 있으면 같은 실물을 두 번 세는 것이고, 그대로 두면
+    # 동자·손스침 IfcMember가 2배로 나가 물량이 틀어진다.
+    # 배치 규칙은 "N층 난간 = N층 지붕(= 층 천장)"이므로, 층 천장과 base_z가 맞는
+    # 층을 정본으로 삼는다. 맞는 층이 없으면 층 번호가 낮은 쪽.
+    def _railing_key(ud):
+        return (round(float(ud.get("base_z", 0) or 0), 3),
+                round(float(ud.get("top_z", 0) or 0), 3),
+                repr(ud.get("lines")))
+
+    _railing_owner: dict = {}
+    for _fp in floor_plans:
+        _d = _fp.get("data", {})
+        _fid = _d.get("floor_id")
+        if _fid is None:
+            continue
+        _top = _num(_d.get("floor_bottom_height"), (_fid - 1) * 3.0) + \
+            _num(_d.get("floor_height"), 3.0)
+        for _g in _iter_geoms((_fp.get("geom") or {}).get("parapets")):
+            _ud = _g.get("userData") or {}
+            if _ud.get("kind") != "railing":
+                continue
+            _k = _railing_key(_ud)
+            _fits = abs(_k[0] - _top) < 0.01
+            _cur = _railing_owner.get(_k)
+            if _cur is None or (_fits and not _cur[1]) or \
+                    (_fits == _cur[1] and _fid < _cur[0]):
+                _railing_owner[_k] = (_fid, _fits)
+
+
     # ── storey 생성 (지하 -1 포함, floor_id 순) ──
     storey_by_floor: dict[int, object] = {}
     storeys = []
@@ -1010,7 +1041,8 @@ def generate_ifc(scheme_json, units, parcel_center=None, out_path=None, meta=Non
             elems.append(ent)
         # ── 난간동자·손스침 → IfcMember (살 간격 ≤10cm, 시행령 40조②) ──
         _rl = [g for g in _iter_geoms(geom.get("parapets"))
-               if (g.get("userData") or {}).get("kind") == "railing"]
+               if (g.get("userData") or {}).get("kind") == "railing"
+               and _railing_owner.get(_railing_key(g["userData"]), (fid,))[0] == fid]
         _rseq = 0
         for g in _rl:
             _ud = g["userData"]

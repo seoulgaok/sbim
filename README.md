@@ -142,6 +142,12 @@ generate_ifc(scheme, units, out_path="out.ifc")
 화면과 IFC가 어긋나지 않습니다. 세대는 `IfcSpace`로 나가고 `NetFloorArea`
 수량이 붙어 적산에 바로 쓸 수 있습니다.
 
+![IFC 뷰 그리드](docs/images/ifc-views.png)
+
+위 그림은 내보낸 `.ifc`를 `ifcopenshell.geom`으로 다시 삼각화해 그린 것입니다 —
+scheme이 아니라 **IFC 파일 자체**를 읽은 결과입니다. 정북 사선을 따라 깎인
+계단식 매스가 입면에서 그대로 확인됩니다.
+
 중형 샘플 기준 산출물:
 
 | 요소 | 개수 | | 요소 | 개수 |

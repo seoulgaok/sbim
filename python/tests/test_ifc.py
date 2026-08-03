@@ -157,3 +157,37 @@ def test_reexport_is_stable(roundtrip, tmp_path):
     assert len(again.by_type("IfcStair")) == 7
     assert len(again.by_type("IfcSpace")) == len(got_units)
     assert not again.by_type("IfcPipeSegment")
+
+
+def test_railing_not_duplicated_across_floors(model):
+    """같은 절대 위치의 난간동자가 두 번 나가지 않아야 한다.
+
+    샘플 3건 모두 6F 난간(base_z = 6F 천장)이 옥탑층에도 그대로 등재돼 있다.
+    그대로 내보내면 같은 실물이 두 벌 나가 적산 물량이 2배가 된다.
+
+    층별 개수 비교는 못 쓴다 — 서로 다른 난간이 우연히 같은 개수일 수 있다
+    (sample-small은 3·4·5F가 모두 66개다). 절대 좌표로 판정한다.
+    """
+    elevation_of = {}
+    for rel in model.by_type("IfcRelContainedInSpatialStructure"):
+        structure = rel.RelatingStructure
+        if structure.is_a("IfcBuildingStorey"):
+            for el in rel.RelatedElements:
+                elevation_of[el.id()] = float(structure.Elevation or 0.0)
+
+    positions = []
+    for member in model.by_type("IfcMember"):
+        if member.PredefinedType != "POST":
+            continue
+        dz = elevation_of.get(member.id(), 0.0)
+        for rep in (member.Representation.Representations or []):
+            for item in (rep.Items or []):
+                if not item.is_a("IfcTriangulatedFaceSet"):
+                    continue
+                first = item.Coordinates.CoordList[0]
+                positions.append((round(first[0], 3), round(first[1], 3),
+                                  round(first[2] + dz, 3)))
+
+    assert positions, "동자가 하나도 없다"
+    duplicates = len(positions) - len(set(positions))
+    assert duplicates == 0, f"같은 자리에 동자가 겹쳐 있다: {duplicates}개"
