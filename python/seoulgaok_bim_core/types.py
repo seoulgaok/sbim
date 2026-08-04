@@ -255,7 +255,7 @@ class Scheme(_Base):
     생성기가 방출하는 밑줄 키 계약(TS SchemeSpatial 동일):
     _core_layout(CoreLayout)·_parking_stalls·_column_centers·_basement_outline·
     _floor_outlines·_pedestrian_path·_penthouse_outline·_common_footprint·
-    _validation·_north_ref_edges·_column_size."""
+    _validation·_north_ref_edges·_north_datum_offset·_column_size."""
     data: SchemeData
     floor_plans: list[FloorPlan]
     unit_ids: list[str]

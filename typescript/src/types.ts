@@ -305,6 +305,11 @@ export interface SchemeSpatial {
    *  북향 변마다 별도 엣지(상업 인접 면제·도로 인접은 중심선 offset),
    *  매스 깎기(apply_north_setback)와 동일 기준. 면제면 []. */
   _north_ref_edges?: [Point2, Point2][];
+  /** 정북일조 기산면 보정 (m) — 영 119조①5호 나목: 높이는 본 대지와 북측
+   *  인접대지의 평균 수평면 기준. z0 − 본 대지 지표면 = 고저차의 1/2.
+   *  천공면 그리기: 유효높이 h' = z − 이 값 (경사지에서 프로파일이 수직으로
+   *  이동). 미방출·null이면 0(평지 가정). */
+  _north_datum_offset?: number | null;
 }
 
 export interface Scheme extends SchemeSpatial {
