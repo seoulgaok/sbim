@@ -28,6 +28,14 @@ export function buildSiteFilterUrlParams(criteria) {
     if (criteria.useKeywords?.length) {
         params.useEtc = criteria.useKeywords.join(",");
     }
+    if (criteria.excludeZoneProjects?.length) {
+        // 값에 쉼표·괄호가 들어간다(`재개발(주택정비형)`). PostgREST 배열 리터럴은
+        // 쉼표가 구분자라 각 항목을 큰따옴표로 감싸야 한 항목이 둘로 쪼개지지 않는다.
+        const items = criteria.excludeZoneProjects
+            .map((v) => `"${v.replace(/(["\\])/g, "\\$1")}"`)
+            .join(",");
+        params.zoneProjects = `not.ov.{${items}}`;
+    }
     return params;
 }
 //# sourceMappingURL=siteFilter.js.map

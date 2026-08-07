@@ -30,7 +30,8 @@ CONFIG_NAME = "site_filter.json"
 
 # 인식하는 키 — 설정 파일 오타를 조용히 무시하지 않기 위한 목록
 CRITERIA_KEYS = frozenset(
-    {"min_garea", "max_garea", "min_age", "zones", "terrain", "use_keywords"}
+    {"min_garea", "max_garea", "min_age", "zones", "terrain", "use_keywords",
+     "exclude_zone_projects"}
 )
 
 
@@ -105,6 +106,20 @@ def build_where(
         ors = " OR ".join([f"{alias}.use_etc ILIKE %s"] * len(f["use_keywords"]))
         clauses.append(f"({ors})")
         params += [f"%{k}%" for k in f["use_keywords"]]
+    if f.get("exclude_zone_projects"):
+        # 재개발·재건축 정비구역 제외 — 조합/사업시행자가 통째로 개발할 땅이라
+        # 개별 신축 제안이 성립하지 않는다. 정비예정지역은 권리산정기준일 이후
+        # 신축분이 현금청산 대상이 될 수 있어 실질 위험도 있다(류상호 소장 확인).
+        #
+        # 미리 물질화한 `zone_projects text[]`(pipeline)를 본다. 질의 시점에
+        # district_zones로 공간 조인하면 **41.6초 vs 0.34초, 121배** 느리다
+        # (실측 2026-08-07, 원클릭 대상 105,324필지). 지도 화면은 매 조회라
+        # 쓸 수 없는 수치다. ETL 1회 154초로 끝내는 게 맞다.
+        #
+        # NULL(구역 밖)은 통과 — 배열 겹침은 NULL에서 NULL이라 IS NOT TRUE로
+        # 받는다. `NOT (... && ...)`만 쓰면 구역 밖 필지가 전부 탈락한다.
+        clauses.append(f"({alias}.zone_projects && %s) IS NOT TRUE")
+        params.append(list(f["exclude_zone_projects"]))
     return " AND ".join(clauses), params
 
 

@@ -24,6 +24,9 @@ export interface SiteFilterCriteria {
     terrain?: string;
     /** 용도 부분일치 키워드 (OR) */
     useKeywords?: readonly string[];
+    /** 제외할 정비구역 유형 — `lands.zone_projects`(물질화 배열)와 겹치면 뺀다.
+     *  재개발·재건축은 조합이 통째로 개발할 땅이라 개별 신축 제안이 성립하지 않는다. */
+    excludeZoneProjects?: readonly string[];
 }
 /** 필지 화면 URL 파라미터 — criteria에 있는 항목만 채운다. */
 export interface SiteFilterUrlParams {
@@ -32,6 +35,10 @@ export interface SiteFilterUrlParams {
     zone?: string;
     terrainHeight?: string;
     useEtc?: string;
+    /** PostgREST 배열 겹침의 부정 — `not.ov.{...}`.
+     *  구역 밖(NULL) 필지도 통과해야 하므로 PostgREST의 `not.ov`를 쓴다
+     *  (NULL은 ov가 false라 not.ov가 참). */
+    zoneProjects?: string;
 }
 /**
  * 선별 기준 → 필지 화면 URL 파라미터 프리셋.
