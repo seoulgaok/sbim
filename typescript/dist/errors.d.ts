@@ -7,7 +7,7 @@
  * 부정 변증법:
  *   silent invalid 금지. 모든 도메인 명제 위반은 explicit CompileError로 표면화.
  */
-export type CompileErrorType = "ZoningError" | "EnvelopeError" | "AccessError" | "ParkingError" | "CirculationError" | "StructureError" | "HabitabilityError" | "GeometryError";
+export type CompileErrorType = "UnitsInfeasible" | "UnitUnreachable" | "UnitAreaExceeded" | "ParkingSufficiency" | "FloorCountInfeasible";
 export interface CompileError {
     type: CompileErrorType;
     reason: string;
