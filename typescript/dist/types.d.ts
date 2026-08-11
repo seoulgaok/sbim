@@ -269,6 +269,26 @@ export interface SchemeSpatial {
      *  천공면 그리기: 유효높이 h' = z − 이 값 (경사지에서 프로파일이 수직으로
      *  이동). 미방출·null이면 0(평지 가정). */
     _north_datum_offset?: number | null;
+    /** 법규 체크리스트 33항목 판정 실값 (giga legal_checklist.yaml SSOT, #16).
+     *
+     *  합격/불합격이 아니라 **적용여부 + 산출값**이다 — 엔진은 규제를 생성
+     *  단계에서 지켜버리므로(사선은 매스를 깎고, 미충족은 compile_errors)
+     *  완성 설계에 '미달' 항목이 존재할 수 없다. law-graph가 결정 노드에서
+     *  근거 조문으로 엣지를 이을 때 이 실값을 쓴다.
+     *  key는 legal_checklist.yaml의 key와 일치(변경 금지 — 그래프 노드 id).
+     *  구 scheme엔 없다 — 소비처는 부재를 "구 버전"으로 처리할 것. */
+    _legal_checks?: {
+        key: string;
+        group: string;
+        item: string;
+        /** '적용' | '해당없음' | '검토' | '참고' 또는 실값 포함('적용 (확폭 12㎡)') */
+        status: string;
+        /** 적용 내용 — 산출값 채워진 문장 */
+        apply: string;
+        /** 근거 조문 */
+        law: string;
+        note?: string;
+    }[];
 }
 export interface Scheme extends SchemeSpatial {
     data: SchemeData;
