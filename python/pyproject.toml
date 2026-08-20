@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "seoulgaok-bim-core"
 version = "0.0.1"
 description = "Seoulgaok BIM core — types, IO, operations, validators for scheme.json"
-readme = "../README.md"
+readme = "README.md"
 requires-python = ">=3.11"
 authors = [
     { name = "서울가옥", email = "desk@seoulgaok.com" }
