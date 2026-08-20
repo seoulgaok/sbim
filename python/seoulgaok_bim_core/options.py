@@ -276,6 +276,14 @@ class GroundFloor(BaseModel):
         default=None,
         description="백칸 깊이 오프셋 BK (m). None=stall_depth (전면 바로 뒤).",
     )
+    core_entries: Optional[int] = Field(
+        default=None,
+        description=(
+            "코어(복도) 보행 출입구 수 1|2. 2=코어 문 반대편에도 문 — 보행로가 도로에서 "
+            "꼬이는 필지(합정동 441-31). None=자동: 둘째 문의 보행로가 첫째보다 뚜렷이 "
+            "짧을 때만 2. scheme `_pedestrian_paths`로 전부 방출. (entry2는 차량 진입 옵션 — 별개)"
+        ),
+    )
     interior_aisle: Optional[bool] = Field(
         default=None,
         description=(
