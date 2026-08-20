@@ -288,6 +288,17 @@ class GroundFloor(BaseModel):
             "GT 추출은 이 값을 방출하지 않음(자동 트리거로 재현 — 순수 사용자 의도)."
         ),
     )
+    parking_angle: Optional[Literal[45, 60, 90]] = Field(
+        default=None,
+        description=(
+            "내부차로(interior_aisle) 주차 각도. 45/60=사선(fishbone) — 차로폭은 "
+            "주차장법 시행규칙 11조⑤1호 법정값(45° 3.5m·60° 4.0m), 연접(back) 없음, "
+            "막다른 차로라 일방 진입·후진 퇴출 전제. 90=직각(차로 6m). "
+            "None=자동: 외부 도로변 배치가 필요 대수 미달일 때 90→60→45 순차 평가, "
+            "대수 엄격 우위만 채택(동률 90). 외부 도로변 주차는 항상 직각(11조⑤2호 — "
+            "도로를 차로로 쓰는 형식은 직각·평행뿐)이라 inner 모드에만 의미."
+        ),
+    )
     parking_axis: Optional[Literal["road", "core", "auto"]] = Field(
         default="auto",
         description=(
