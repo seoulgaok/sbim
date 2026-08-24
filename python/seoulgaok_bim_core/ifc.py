@@ -845,8 +845,34 @@ def generate_ifc(scheme_json, units, parcel_center=None, out_path=None, meta=Non
             host_key = (tuple(round(v, 2) for v in host.get("p0", [])),
                         tuple(round(v, 2) for v in host.get("p1", [])))
         host_wall = wall_registry.get(host_key) if host_key else None
+        # 이 개구가 관통하는 벽 전부 — 중심선까지 거리 ≤ (벽두께/2 + 여유)이고
+        # 개구 구간이 벽 구간과 겹치면 같은 자리다. host는 항상 포함.
+        mx, my = (p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2
+        hosts, seen_id = [], set()
         if host_wall is not None:
-            ot = float(host.get("t", 0.1)) / 2.0 + 0.05
+            hosts.append((host_wall, float(host.get("t", 0.2))))
+            seen_id.add(id(host_wall))
+        for (wp0, wp1, wt, wall) in wall_registry.get("_all", []):
+            if id(wall) in seen_id:
+                continue
+            ax, ay = float(wp0[0]) - cx, float(wp0[1]) - cy
+            bx, by = float(wp1[0]) - cx, float(wp1[1]) - cy
+            wdx, wdy = bx - ax, by - ay
+            wl = (wdx * wdx + wdy * wdy) ** 0.5
+            if wl < 1e-6:
+                continue
+            t_ = max(0.0, min(1.0, ((mx - ax) * wdx + (my - ay) * wdy) / (wl * wl)))
+            px_, py_ = ax + wdx * t_, ay + wdy * t_
+            if ((mx - px_) ** 2 + (my - py_) ** 2) ** 0.5 > wt / 2.0 + 0.35:
+                continue
+            # 방향이 대체로 같아야(수직 교차벽에 구멍 내지 않게) — |cos| ≥ 0.87
+            if abs((wdx * ux + wdy * uy) / wl) < 0.87:
+                continue
+            hosts.append((wall, wt))
+            seen_id.add(id(wall))
+        if hosts:
+            host_wall = hosts[0][0]
+            ot = max(t for _w2, t in hosts) / 2.0 + 0.05
             opts = [(p0[0] + nx * ot, p0[1] + ny * ot),
                     (p1[0] + nx * ot, p1[1] + ny * ot),
                     (p1[0] - nx * ot, p1[1] - ny * ot),
@@ -863,9 +889,10 @@ def generate_ifc(scheme_json, units, parcel_center=None, out_path=None, meta=Non
                 Name=f"{fid}F 개구-{seq:02d}",
                 ObjectPlacement=_on_storey(f, st),
                 Representation=oshape)
-            f.create_entity(
-                "IfcRelVoidsElement", GlobalId=_gid(),
-                RelatingBuildingElement=host_wall, RelatedOpeningElement=opening)
+            for _hw, _ in hosts:
+                f.create_entity(
+                    "IfcRelVoidsElement", GlobalId=_gid(),
+                    RelatingBuildingElement=_hw, RelatedOpeningElement=opening)
         # 창짝·문짝 (얇은 패널)
         hw = 0.015 if is_window else 0.04
         dpts = [(p0[0] + nx * hw, p0[1] + ny * hw),
@@ -951,6 +978,12 @@ def generate_ifc(scheme_json, units, parcel_center=None, out_path=None, meta=Non
                         wall_registry[
                             (tuple(round(v, 2) for v in ud["p0"]),
                              tuple(round(v, 2) for v in ud["p1"]))] = w
+                        # 개구는 host 하나가 아니라 **겹치는 벽 전부**에 뚫어야
+                        # 한다 — 외벽이 두 겹인 필지에서 바깥 벽이 안 뚫려
+                        # 창이 통째로 가려졌다(구의 57-93: 창 14/14가 앞 0.15m
+                        # 개구 0개 벽에 막힘, 2026-08-24 IFC 렌더로 발견).
+                        wall_registry.setdefault("_all", []).append(
+                            (ud["p0"], ud["p1"], float(ud.get("t", 0.2)), w))
                 geoms = [g for g in geoms if g not in lod300]
             elif key == "doors":
                 lod300 = [g for g in geoms
