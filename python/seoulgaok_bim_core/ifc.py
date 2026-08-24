@@ -872,7 +872,14 @@ def generate_ifc(scheme_json, units, parcel_center=None, out_path=None, meta=Non
             seen_id.add(id(wall))
         if hosts:
             host_wall = hosts[0][0]
-            ot = max(t for _w2, t in hosts) / 2.0 + 0.05
+            # 개구 두께는 **마감 포함 벽 두께**(wall_total) 기준 — 구조 t(0.2)로
+            # 잡으면 마감까지 두꺼운 벽(0.41)을 관통하지 못해 바깥 표면이 남고
+            # 창이 벽 속에 갇힌다(구의 57-93: 창 14/14 불가시, 2026-08-24).
+            # 벽은 emitter의 마이터 quad로 만들어져 t보다 두꺼울 수 있다.
+            _wt = max([float(ud.get("wall_total") or 0.0),
+                       float(ud.get("wall_t") or 0.0)]
+                      + [t for _w2, t in hosts])
+            ot = _wt / 2.0 + 0.15
             opts = [(p0[0] + nx * ot, p0[1] + ny * ot),
                     (p1[0] + nx * ot, p1[1] + ny * ot),
                     (p1[0] - nx * ot, p1[1] - ny * ot),
