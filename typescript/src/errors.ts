@@ -23,7 +23,8 @@ export type CompileErrorType =
   | "UnitUnreachable"       // 문에서 폭 1.2m 경로로 못 닿는 전용 면적 (도달률 < 90%)
   | "UnitAreaExceeded"      // 세대 전용면적 > units.max_net_area (기본 84㎡)
   | "ParkingSufficiency"    // 법정 주차대수 > 이 대지에 배치 가능한 stall 수
-  | "FloorCountInfeasible"; // 목표 층수를 정북일조·용적률 아래 못 세움
+  | "FloorCountInfeasible"  // 목표 층수를 정북일조·용적률 아래 못 세움
+  | "CoreTypeInfeasible";   // 선택한 코어 타입이 정북컷 최상층에 안 들어감
 
 export interface CompileError {
   type: CompileErrorType;
