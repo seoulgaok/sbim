@@ -552,7 +552,12 @@ class Schedule(BaseModel):
     )
 
     # ── 단계 기간 (개월) — 설계자 조정용 default ──
-    basic_design: float = Field(default=3.0, description="기본설계 기간 (개월).")
+    # 합계 = 6.0 (심의 없는 기본 경로: 2 + 1 + 1 + 1.5 + 0.5).
+    # 소장 aug28 지시 "사업기간 산정을 착공전 6개월, 공사 9개월로". 종전 합 8.0에서
+    # 기본설계 3→2 · 시공사선정 2→1.5 · 착공신고 1→0.5로 줄였다 — 허가·실시설계는
+    # 법정/실무 최소라 유지, 심의(건축 1.5·구조 1.5)는 법정 절차라 줄이지 않는다
+    # (6층↑ 자동 ON이면 착공전이 8.0으로 늘어나는 게 정직하다).
+    basic_design: float = Field(default=2.0, description="기본설계 기간 (개월).")
     arch_review_mo: float = Field(
         default=1.5, description="건축심의 기간 (개월). arch_review=True일 때만 가산.")
     build_permit: float = Field(default=1.0, description="건축허가 기간 (개월).")
@@ -560,8 +565,8 @@ class Schedule(BaseModel):
     struct_review_mo: float = Field(
         default=1.5, description="구조·굴토심의 기간 (개월). 실시설계와 병렬.")
     constructor_select: float = Field(
-        default=2.0, description="시공사 선정 기간 (개월).")
-    constr_notice: float = Field(default=1.0, description="착공신고 기간 (개월).")
+        default=1.5, description="시공사 선정 기간 (개월).")
+    constr_notice: float = Field(default=0.5, description="착공신고 기간 (개월).")
     construction_months: Optional[int] = Field(
         default=None,
         description="공사기간 (개월). None=2+지상층+지하층×2 자동 derive.",
