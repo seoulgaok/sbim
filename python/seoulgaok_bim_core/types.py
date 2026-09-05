@@ -103,6 +103,7 @@ class ColumnUserData(_Base):
     base_z: float = 0
     top_z: float = 0
     transfer: bool = False  # 전이보와 만나는 기둥
+    on_beams: int | None = None  # 이 기둥 위를 지나는 보 개수 — 구조 프레임 술어(≥1). None=미방출
 
 
 class BeamUserData(_Base):
@@ -112,7 +113,7 @@ class BeamUserData(_Base):
     w: float = 0
     h: float = 0            # 춤 — top_z에서 하향
     top_z: float = 0
-    role: str = "transfer"  # transfer | sloped
+    role: str = "transfer"  # transfer(필로티 외곽 전이보) | sloped(사선꺾임) | girder(기둥↔기둥 주보) | beam(작은보)
 
 
 class HostWallRef(_Base):

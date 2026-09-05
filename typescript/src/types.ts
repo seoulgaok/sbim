@@ -96,6 +96,8 @@ export interface ColumnUserData {
   top_z: number;
   /** 전이보와 만나는 기둥인가 */
   transfer: boolean;
+  /** 이 기둥 위를 지나는 보 개수 — 구조 프레임 술어(≥1이어야 지지 성립). 미방출=undefined */
+  on_beams?: number;
 }
 
 export interface BeamUserData {
@@ -107,7 +109,8 @@ export interface BeamUserData {
   /** 춤 (m) — top_z에서 하향 */
   h: number;
   top_z: number;
-  role: "transfer" | "sloped";
+  /** transfer=필로티 천장 외곽 전이보 · sloped=사선꺾임 보 · girder=기둥↔기둥(코어벽) 주보 · beam=작은보 */
+  role: "transfer" | "sloped" | "girder" | "beam";
 }
 
 /** 개구부 호스트 벽 (IFC RelVoids·2D gap 매칭용) */
