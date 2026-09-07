@@ -103,7 +103,7 @@ class UnitSpec(BaseModel):
 
 
 CoreComposition = Literal["stair", "stair_elevator"]
-CoreType = Literal[1, 2, 3, 4, 5, 6]
+CoreType = Literal[1, 2, 3, 4, 5, 6, 7]
 
 
 class Core(BaseModel):
@@ -117,9 +117,11 @@ class Core(BaseModel):
     type: Optional[CoreType] = Field(
         default=None,
         description=(
-            "코어 형상 타입 (DWG→sbim 6코어 라이브러리). None=auto(매스 형상 prior). "
+            "코어 형상 타입 (DWG→sbim 코어 라이브러리 — giga core_library.json이 진실). "
+            "None=auto(매스 형상 prior). "
             "1=좁은타워(직선계단)·2=좁은타워(꺾인계단)·3=좌우나란히(계단A)·"
-            "4=좌우나란히(계단B)·5=ㄱ자(코너·EV측면)·6=넓은코어. "
+            "4=좌우나란히(계단B)·5=ㄱ자(코너·EV측면)·6=넓은코어·"
+            "7=편복도(직선계단·복도 내장 2.8×10.15, 층당 5~7세대 — 류상호 '코어 유형 추가' 2026-09). "
             "대부분 type1(좁은 타워, 회전 fit), 넓은 단독 장변접도만 type3/4."
         ),
     )
