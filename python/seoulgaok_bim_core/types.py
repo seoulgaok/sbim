@@ -256,7 +256,7 @@ class Scheme(_Base):
     생성기가 방출하는 밑줄 키 계약(TS SchemeSpatial 동일):
     _core_layout(CoreLayout)·_parking_stalls·_column_centers·_basement_outline·
     _floor_outlines·_pedestrian_path·_pedestrian_paths(보행로 전부, [0]=_pedestrian_path —
-    코어 문 2개 #35)·_halls({level: ring} D4 편복도(공용) — 접면 연결계 = 복도∪편복도)·
+    코어 문 2개 #35)·_halls({level: [ring, …]} DH 공용 홀 — 코어 복도 띠를 늘인 팔·EV 로비(연희 75-9 GT), 접면 연결계 = 복도∪홀)·
     _penthouse_outline·_common_footprint·_validation·_north_ref_edges·_north_datum_offset·
     _column_size·_legal_checks(법규 33항목 판정 실값 — key는 legal_checklist.yaml, #16)."""
     data: SchemeData

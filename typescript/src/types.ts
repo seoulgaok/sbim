@@ -297,8 +297,9 @@ export interface SchemeSpatial {
   _pedestrian_path?: Ring | null;
   /** 보행 출입로 전부 — 코어 문 2개(#35)면 2개. [0] === _pedestrian_path (호환) */
   _pedestrian_paths?: Ring[];
-  /** D4 편복도(공용) — {level: ring}. 세대에서 차감된 공용 띠, 접면 연결계 = 코어 복도 ∪ 편복도 */
-  _halls?: Record<string, Ring> | null;
+  /** DH 공용 홀 — {level: ring[]}. 코어 복도 띠를 양옆으로 늘인 팔·EV 로비(연희 75-9 GT T자 홀 —
+   *  코어로 갈라진 2조각이라 링 목록). 세대에서 차감된 공용, 접면 연결계 = 코어 복도 ∪ 홀 */
+  _halls?: Record<string, Ring[]> | null;
   /** 옥탑(계단탑) 외곽 — 옥탑층·지붕층 평면이 공유 */
   _penthouse_outline?: Ring | null;
   /** 전층 교집합 — 코어 탐색공간 */
