@@ -310,11 +310,11 @@ class GroundFloor(BaseModel):
             "도로를 차로로 쓰는 형식은 직각·평행뿐)이라 inner 모드에만 의미."
         ),
     )
-    parking_axis: Optional[Literal["road", "core", "auto"]] = Field(
+    parking_axis: Optional[Literal["road", "core", "inner", "auto"]] = Field(
         default="auto",
         description=(
             "주차 행 배치 축 — road=주접도 프레임, core=코어 그리드 정렬(회전 매스 대응), "
-            "auto=둘 다 평가해 대수 최대 채택(#6 최적화). 대부분 auto."
+            "inner=내부 차로(aisle) 기준 정렬, auto=둘 다 평가해 대수 최대 채택(#6 최적화). 대부분 auto."
         ),
     )
     exit_road: Optional[int] = Field(
