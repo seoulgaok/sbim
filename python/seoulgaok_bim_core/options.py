@@ -344,14 +344,52 @@ class GroundFloor(BaseModel):
             "(명시적 중앙 의도). None=estim argmax 자동."
         ),
     )
+    core_rotation: Optional[Literal[0, 90, 180, 270]] = Field(
+        default=None,
+        description=(
+            "코어 배향 — core_side로 정해진 변 기준 절대 회전각. "
+            "0=코어 기준자세 그대로 변에 밀착, 90/180/270=그만큼 회전. "
+            "코어는 점대칭이 아니라(계단·EV 한쪽 편재, 복도 한 면 접합, 출입구 "
+            "면이 방향별로 달라 0·90·180·270이 전부 다른 결과) 절반 지정인 "
+            "core_axis(road/depth)로는 같은 축 위 180° 뒤집기를 표현할 수 없어 "
+            "네 방위를 전부 받는다. 라이브러리 형상 가로세로와 무관한 앉은 변 "
+            "기준 절대 표현이라 코어 형상이 바뀌어도 뜻이 유지된다. "
+            "None=estim argmax 자동. 명시 시 core_axis로 자동 동기화 "
+            "(0/180→road, 90/270→depth)."
+        ),
+    )
     core_axis: Optional[Literal["road", "depth"]] = Field(
         default=None,
         description=(
-            "코어 장축 배향 — road=주접도변과 평행(눕힘), depth=직교(깊이 "
-            "방향으로 세움). 정답 9필지 실측 6:3으로 갈려 derive 불가한 "
-            "설계 의도. None=estim argmax 자동."
+            "[deprecated — core_rotation으로 대체] 코어 장축 배향 — "
+            "road=주접도변과 평행(눕힘), depth=직교(깊이 방향으로 세움). "
+            "절반 지정이라 road=0/180·depth=90/270 중 엔진이 자동 선택 — "
+            "구 _build_options.json 17필지가 쓰는 값이라 유지하며, 정밀 지정은 "
+            "core_rotation. core_rotation과 모순되면 에러(road↔{0,180}, "
+            "depth↔{90,270}). None=estim argmax 자동."
         ),
     )
+
+    @model_validator(mode="after")
+    def _sync_core_axis(self):
+        """core_axis(deprecated) ↔ core_rotation 정합 — 신규 core_rotation이 정본.
+
+        core_rotation 명시 시 legacy core_axis로 동기화(0/180→road, 90/270→depth),
+        둘 다 주고 모순되면 거부한다. core_axis만 있으면(기존에 심긴 17필지)
+        그대로 절반 지정으로 남겨 뜻을 바꾸지 않는다 — core_rotation=None이면 no-op.
+        """
+        if self.core_rotation is None:
+            return self
+        coarse = "road" if self.core_rotation in (0, 180) else "depth"
+        if self.core_axis is None:
+            self.core_axis = coarse
+        elif self.core_axis != coarse:
+            raise ValueError(
+                f"ground_floor.core_axis={self.core_axis!r}는 core_rotation="
+                f"{self.core_rotation}과 모순입니다 (road↔{{0,180}}, "
+                f"depth↔{{90,270}})."
+            )
+        return self
 
     # ── 동선 (C단계) ──
     corridor_mode: CorridorMode = Field(
