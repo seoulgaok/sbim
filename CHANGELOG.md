@@ -56,6 +56,14 @@
   `True`를 "강제"로 해석하면 대수가 오히려 줄어드는 회귀가 있었다.
 - `road_setback` — 주차 전면선 도로셋백. `None`이면 주차장법 시행규칙
   11조⑤2호의 도로 산입 규칙으로 derive.
+- `core_axis` → `core_rotation`(2026-09, #4) — 코어 배향을 **앉은 변 기준 절대
+  회전각**(0/90/180/270)으로. 코어는 점대칭이 아니라 같은 축 위 180° 뒤집기를
+  `core_axis`의 road/depth로 표현할 수 없었다. 이행은 **deprecated 유지** 쪽 —
+  `core_rotation`이 정본(명시 시 legacy `core_axis`로 자동 동기화), `core_axis`만
+  있으면(구 `_build_options.json` 17필지) 절반 지정으로 뜻 그대로 남기고, 둘 다
+  주고 모순되면 거부(road↔{0,180}, depth↔{90,270}). building-generator 소비처
+  (`prior.py`·`core_stage.py`)가 `core_rotation`으로 정규화한 뒤 `core_axis` 제거는
+  별도 작업.
 - `core_entries`(2026-08, #35) — 코어 보행 출입구 2개. 계약은 `_pedestrian_paths`(복수,
   [0]=기존 `_pedestrian_path` 호환). `_halls`(2026-08, #30 D4) — 편복도(공용) 층별 ring:
   세대가 코어 복도에 직접 못 닿을 때 1.5m 띠를 뻗는다. 복도=유도값 규약은 유지하되
