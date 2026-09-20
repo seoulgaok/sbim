@@ -12,6 +12,17 @@
   (그 소비처 마이그레이션은 별도 작업: `shared/modules/aaro/prior.py`,
   `core_stage.py`).
 
+## 코어 유형 번호 — 2026-09 개번 (#2)
+
+- 번호의 정본은 building-generator `shared/modules/aaro/core_library.json`이다.
+  2026-09 DWG 시트 순서 개번(#190)은 **그 저장소에서 머지된 뒤**에 유효하다.
+- 옛→새 표는 `options.CORE_TYPE_RENUMBER_2026_09`(`migrate_core_type()`)가 정본.
+  값 집합이 1~7로 같아 검증에 걸리지 않으니, 저장된 값은 반드시 이 표로 옮긴다.
+- 구 `reference/sbim/*/_build_options.json` 중 `core.type=2`인 2필지가 여기 해당한다
+  (옛 2 = 새 1).
+- 라이브러리 캡션은 아직 옛 이름이다 — sbim 설명은 외곽 형태(세장형·정방형·ㄱ자형)
+  + 괄호 계단 형식으로 통일했고, 라이브러리 캡션 정렬은 별도 작업.
+
 ## Maintaining this file
 
 Keep this file for knowledge useful to almost every future agent session in this project.

@@ -8,6 +8,7 @@ from .site_filter import (
     load_criteria as load_site_criteria,
 )
 from .options import (
+    CORE_TYPE_RENUMBER_2026_09,
     BuildOptions,
     Concrete,
     Core,
@@ -20,6 +21,7 @@ from .options import (
     Structure,
     UnitSpec,
     Windows,
+    migrate_core_type,
 )
 from .types import (
     BeamUserData,
@@ -96,6 +98,8 @@ __all__ = [
     "Massing",
     "UnitSpec",
     "Core",
+    "CORE_TYPE_RENUMBER_2026_09",
+    "migrate_core_type",
     "Structure",
     "Windows",
     "GroundFloor",
