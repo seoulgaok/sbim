@@ -1,5 +1,15 @@
 # sbim — agent memory
 
+## `BuildOptions`는 속성 창이다 (#8)
+
+- 서울가옥 = 게임메이커, Revit = 유니티. 무엇이든 만들게 하지 않고 **만들 수 있는 것을 정해
+  두고 고르게** 한다. `BuildOptions`는 그 속성 창, giga 어휘는 오브젝트 라이브러리.
+- 그래서 값·필드 이름은 **고르는 사람의 말**로 짓는다 — 엔진 구현이 이름으로 새면 안 된다
+  (`parking_axis="core"`가 그 사례). 설명도 엔진 동작이 아니라 도면에서 보이는 생김새로 쓴다.
+- *라이브러리에 있는데 속성 창에 없으면 버그.* giga에 새 어휘가 생기고 그게 소장이 고르는
+  것이면 sbim에 이름을 함께 준다. 반대로 엔진이 계산해 고르는 변종(좌/우 등)은 값이 아니다.
+- `parking_axis`의 `inner_*`는 `split_parking_axis()`로 (축, 방식)으로 나눠 읽는다.
+
 ## 코어 배향 — `GroundFloor.core_rotation` (#4)
 
 - `core_rotation`(0/90/180/270)이 코어 배향의 정본이다. `core_axis`(road/depth)는

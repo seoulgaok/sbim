@@ -21,7 +21,10 @@ from .options import (
     Structure,
     UnitSpec,
     Windows,
+    InnerLayout,
+    ParkingAxis,
     migrate_core_type,
+    split_parking_axis,
 )
 from .types import (
     BeamUserData,
@@ -100,6 +103,9 @@ __all__ = [
     "Core",
     "CORE_TYPE_RENUMBER_2026_09",
     "migrate_core_type",
+    "ParkingAxis",
+    "InnerLayout",
+    "split_parking_axis",
     "Structure",
     "Windows",
     "GroundFloor",
