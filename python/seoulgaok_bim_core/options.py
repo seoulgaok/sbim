@@ -268,35 +268,11 @@ class Parking(BaseModel):
 
 CorridorMode = Literal["carve", "edge"]
 
-# 주차 행 배치 축. `inner_*`는 내부 차로 안쪽을 **어떤 방식으로 까느냐**까지 정한 값 —
-# giga 어휘(aaro/inner.py)에 구현된 네 방식에 이름을 준 것이다(#8 ⑨: 라이브러리에 있는데
-# 속성 창에 없으면 버그). `inner`는 "내부 차로, 방식은 엔진이"로 남는다.
-# 좌/우(single_l·r)와 par_ec·par_fs는 엔진이 계산해 고르는 변종이라 값으로 두지 않는다.
-ParkingAxis = Literal[
-    "road", "core", "inner",
-    "inner_perp", "inner_par", "inner_single", "inner_court",
-    "auto",
-]
-InnerLayout = Literal["perp", "par", "single", "court"]
-
-_INNER_PREFIX = "inner_"
-
-
-def split_parking_axis(value: Optional[str]) -> tuple[Optional[str], Optional[str]]:
-    """`parking_axis` → (축, 내부 배치 방식). 소비처가 문자열을 직접 쪼개지 않게 한다.
-
-    "inner_court" → ("inner", "court") · "inner" → ("inner", None) ·
-    "road" → ("road", None) · "auto"/None → (None, None).
-    None은 어느 자리에서든 "엔진이 정한다"는 뜻이다.
-    """
-    if value is None or value == "auto":
-        return None, None
-    if value in ("road", "core", "inner"):
-        return value, None
-    layout = value[len(_INNER_PREFIX):] if value.startswith(_INNER_PREFIX) else None
-    if layout not in ("perp", "par", "single", "court"):
-        raise ValueError(f"parking_axis 값이 아니다: {value!r}")
-    return "inner", layout
+# 주차 행 배치 축. 축은 둘이다 — 도로에 기대느냐(road), 대지 안에 차로를 내느냐(inner).
+# 내부 차로 안쪽을 어떤 방식으로 까는지는 **고르는 게 아니라 섞는 것**이라 값이 아니다
+# (소장 GT 30필지 중 대지 안쪽 12필지의 9필지가 직각과 평행을 섞는다 — #10 ④).
+# None = 자동. 「자동」의 표기는 None 하나뿐이고, legacy "auto"는 받아서 None으로 접는다.
+ParkingAxis = Literal["road", "inner"]
 
 
 class GroundFloor(BaseModel):
@@ -363,16 +339,16 @@ class GroundFloor(BaseModel):
         ),
     )
     parking_axis: Optional[ParkingAxis] = Field(
-        default="auto",
+        default=None,
+        json_schema_extra={"auto": True},
         description=(
-            "주차 행 배치 축 — road=주접도 프레임, core=코어 그리드 정렬(회전 매스 대응), "
-            "inner=내부 차로(aisle) 기준 정렬·**방식은 엔진이 정함**, "
-            "auto=둘 다 평가해 대수 최대 채택(#6 최적화). 대부분 auto. "
-            "내부 차로를 **어떻게 깔지**까지 고르려면 inner_* — inner_perp=차로 양옆에 세운 "
-            "열(직각, parking_angle로 사선)·inner_par=차로를 따라 평행 주차(직각뿐)·"
-            "inner_single=대지 경계를 따라 한 줄(좌/우는 엔진이 정함)·inner_court=가운데 "
-            "회전 마당(각도 무관). "
-            "소비처는 split_parking_axis()로 (축, 방식)을 얻는다."
+            "주차 행 배치 축 — road=주접도 프레임(도로에 기대 깐다), "
+            "inner=대지 안에 차로를 내고 그 차로 기준으로 깐다(직각·평행을 섞는다). "
+            "None=자동: 둘 다 평가해 대수 최대 채택(#6). 대부분 None. "
+            "legacy \"auto\"는 None과 같은 뜻이라 받아서 접는다. "
+            "구 \"core\"(코어 격자 정렬)는 제거됐다 — REF 30필지에서 엔진이 한 번도 고르지 "
+            "않았고, 뜻은 매스 격자 정렬인데 이름이 구현(코어 사각형에서 방향을 빌림)을 "
+            "드러냈다. 건물이 비뚤면 road/inner 안에서 기울여 깐다(#10 ④⑤)."
         ),
     )
     exit_road: Optional[int] = Field(
@@ -428,25 +404,18 @@ class GroundFloor(BaseModel):
         ),
     )
 
-    @model_validator(mode="after")
-    def _check_inner_layout_angle(self):
-        """내부 배치 방식 × 각도 — 곱해지지 않는 조합을 산문이 아니라 타입에서 막는다(#8 ⑧).
+    @model_validator(mode="before")
+    @classmethod
+    def _fold_legacy_auto(cls, data):
+        """legacy `parking_axis="auto"` → None — 「자동」의 표기를 하나로 접는다(#10 ③).
 
-        회전 마당은 각도와 무관하고, 평행 열은 직각뿐이다. **새로 생긴 값에만** 거는
-        검증이라 기존에 심긴 옵션(road + parking_angle 등)은 통과 여부가 바뀌지 않는다.
+        구 `_build_options.json`과 DB가 "auto"를 심고 있다(측정: 51건). 값을 거부하면
+        그 저장값이 통째로 깨지므로, 같은 뜻인 None으로 옮겨 받는다. giga도 받자마자
+        None으로 정규화하고 있었다(`prior.py`: "auto"는 무지정과 동일).
         """
-        _, layout = split_parking_axis(self.parking_axis)
-        if layout == "court" and self.parking_angle is not None:
-            raise ValueError(
-                "ground_floor.parking_axis='inner_court'(회전 마당)는 각도와 무관합니다 — "
-                f"parking_angle={self.parking_angle}을 지우세요."
-            )
-        if layout == "par" and self.parking_angle not in (None, 90):
-            raise ValueError(
-                "ground_floor.parking_axis='inner_par'(평행 열)는 직각뿐입니다 — "
-                f"parking_angle={self.parking_angle}은 inner_perp에서만 씁니다."
-            )
-        return self
+        if isinstance(data, dict) and data.get("parking_axis") == "auto":
+            data = {**data, "parking_axis": None}
+        return data
 
     @model_validator(mode="after")
     def _sync_core_axis(self):
