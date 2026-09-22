@@ -76,6 +76,19 @@
   사용자가 고르는 것은 다르다. 되돌리는 값이 쌌던 건 giga가 아직 소비하지 않아서다.
   방식을 고를 필요가 정말 있는지는 giga 쪽 어휘를 정리한 뒤 다시 판단한다.
   `split_parking_axis()`도 함께 제거 — 한 칸에 두 질문을 담은 대가였다.
+- `None`의 뜻을 「첫수표가 정한다」로 (2026-09, #12) — **엔진에는 "더 좋다"가 없다.**
+  엔진 = f(대지, 속성 창) → 도면이고, 엔진이 아는 건 법과 물리의 된다/안 된다뿐이다.
+  취향은 첫수표(속성 창의 `None`을 채우는 표)에만 산다(building-generator #213).
+  그런데 설명이 그 반대를 명세하고 있었다 — "None=자동: 둘 다 평가해 대수 최대 채택",
+  "미달일 때 90→60→45 순차 평가", "estim argmax 자동". **명세가 엔진에게 여러 판을 그려
+  고르라고 시킨 꼴**이고, 엔진은 그대로 따라 소장 값을 받고도 안 믿었다 — 소장 값을 넣으면
+  대수가 오히려 줄었다(`core_type` 25→22, `road_edge` 4→2). 취향 6필드(`parking_axis`·
+  `parking_angle`·`interior_aisle`·`core_side`·`core_rotation`·`core_axis`)를 「None=첫수표가
+  정한다」로 바꿨다. `interior_aisle=True`는 "항상 평가 후 채택"이 아니라 "내부 차로로
+  그린다"다. 코드 동작 변경은 없다 — 문장이 되돌아가면 `test_options_axiom.py`가 걸린다.
+  아울러 `Core` 클래스의 "위치는 derive" 주석 삭제(`GroundFloor.core_side`가 위치 값이라
+  모순이었다), `Parking.type`에 deprecated 표시(`parking_angle`·`parking_axis`와 같은 것을
+  가리키는 세 번째 이름).
 - `parking_axis`의 `"core"` 제거(2026-09, #10 ④⑤) — 뜻은 **매스 격자 정렬**인데 이름이
   구현(엔진이 코어 사각형 두 변에서 방향을 빌림)을 드러냈고, REF 30필지에서 엔진이 한 번도
   고르지 않았다(road 19·inner 11·core 0). 건물이 비뚤면 `road`/`inner` 안에서 기울여 깔

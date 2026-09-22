@@ -126,9 +126,8 @@ class Core(BaseModel):
 
     # width/depth(코어 치수 raw scalar) 제거됨 — 코어 크기/형상은 입력이 아니라
     # **세대분할의 산출물**로 derive(삼전 정답: 계단·EV가 16.4m 분리 = 세대 배치 결과).
-    # position/lateral(코어 위치 의도)도 제거됨 — 코어 위치는 입력이 아니라 common(전층
-    # 교집합) 안에서 **세대 최대분할**을 실현하는 자리로 derive(servant는 served 최대화의 잔여).
-    # 의도는 type(형상)·composition으로만 표현, 위치·치수는 매스+세대프로그램에서 유도.
+    # 위치는 여기가 아니라 GroundFloor.core_side·core_rotation이 갖는다 — 값이 없으면
+    # 첫수표가 정한다. 치수만 derive(매스+세대프로그램)이고, 위치는 고르는 것이다.
     type: Optional[CoreType] = Field(
         default=None,
         description=(
@@ -247,7 +246,11 @@ class Parking(BaseModel):
     )
     type: ParkingType = Field(
         default="perpendicular",
-        description="배치 형식. perpendicular=직각주차(default).",
+        description=(
+            "[deprecated] 배치 형식. perpendicular=직각주차(default). "
+            "parking_angle·parking_axis와 같은 것을 가리키는 세 번째 이름이다 — "
+            "각도는 parking_angle, 축은 parking_axis가 정본."
+        ),
     )
     ratio_mode: ParkingRatioMode = Field(
         default="multi_family",
@@ -321,10 +324,8 @@ class GroundFloor(BaseModel):
             "내부 6m 차로 주차 (internal 모드) — 주도로에서 직각으로 "
             "대지 내부에 6m 차로를 내고 양쪽 직각주차+평행 보강. 차로 확보 = "
             "8대 특례(주차장법 11조⑤) 밖 일반 부설주차장 → 총 8대 캡 비적용. "
-            "None=자동(외부 도로변 배치가 필요 대수 미달일 때만 평가·대수 우위 "
-            "채택), True=**우선 사용**(항상 평가, 법정 대수만 충족하면 외부보다 "
-            "대수가 적어도 내부차로 채택 — 사용자 유도 버튼), False=금지. "
-            "GT 추출은 이 값을 방출하지 않음(자동 트리거로 재현 — 순수 사용자 의도)."
+            "None=첫수표가 정한다. True=내부 차로로 그린다(평가 없음), False=금지. "
+            "GT 추출은 이 값을 방출하지 않음 — 순수 사용자 의도."
         ),
     )
     parking_angle: Optional[Literal[45, 60, 90]] = Field(
@@ -333,9 +334,9 @@ class GroundFloor(BaseModel):
             "내부차로(interior_aisle) 주차 각도. 45/60=사선(fishbone) — 차로폭은 "
             "주차장법 시행규칙 11조⑤1호 법정값(45° 3.5m·60° 4.0m), 연접(back) 없음, "
             "막다른 차로라 일방 진입·후진 퇴출 전제. 90=직각(차로 6m). "
-            "None=자동: 외부 도로변 배치가 필요 대수 미달일 때 90→60→45 순차 평가, "
-            "대수 엄격 우위만 채택(동률 90). 외부 도로변 주차는 항상 직각(11조⑤2호 — "
-            "도로를 차로로 쓰는 형식은 직각·평행뿐)이라 inner 모드에만 의미."
+            "None=첫수표가 정한다(현행 90). 사선 순차 평가는 2026-09-19에 제거됐다. "
+            "외부 도로변 주차는 항상 직각(11조⑤2호 — 도로를 차로로 쓰는 형식은 "
+            "직각·평행뿐)이라 inner 모드에만 의미."
         ),
     )
     parking_axis: Optional[ParkingAxis] = Field(
@@ -343,8 +344,9 @@ class GroundFloor(BaseModel):
         json_schema_extra={"auto": True},
         description=(
             "주차 행 배치 축 — road=주접도 프레임(도로에 기대 깐다), "
-            "inner=대지 안에 차로를 내고 그 차로 기준으로 깐다(직각·평행을 섞는다). "
-            "None=자동: 둘 다 평가해 대수 최대 채택(#6). 대부분 None. "
+            "inner=대지 안에 차로를 내고 그 차로 기준으로 깐다 — 까는 방식(직각·평행·"
+            "경계 한 줄·회전 마당과 그 섞음)은 첫수표가 정한다. "
+            "None=첫수표가 정한다. 대부분 None. "
             "legacy \"auto\"는 None과 같은 뜻이라 받아서 접는다. "
             "구 \"core\"(코어 격자 정렬)는 제거됐다 — REF 30필지에서 엔진이 한 번도 고르지 "
             "않았고, 뜻은 매스 격자 정렬인데 이름이 구현(코어 사각형에서 방향을 빌림)을 "
@@ -375,7 +377,7 @@ class GroundFloor(BaseModel):
             "코어 방위 — common(전층 교집합)의 어느 자리인가 (동서남북 8방향 "
             "+ c=중앙, EPSG 절대 방위). 대각=모서리·정방위=변 중간에서 common "
             "장변에 snap, 배향은 snap된 변에서 derive. c=중심 최근접 변 후보 "
-            "(명시적 중앙 의도). None=estim argmax 자동."
+            "(명시적 중앙 의도). None=첫수표가 정한다."
         ),
     )
     core_rotation: Optional[Literal[0, 90, 180, 270]] = Field(
@@ -388,7 +390,7 @@ class GroundFloor(BaseModel):
             "core_axis(road/depth)로는 같은 축 위 180° 뒤집기를 표현할 수 없어 "
             "네 방위를 전부 받는다. 라이브러리 형상 가로세로와 무관한 앉은 변 "
             "기준 절대 표현이라 코어 형상이 바뀌어도 뜻이 유지된다. "
-            "None=estim argmax 자동. 명시 시 core_axis로 자동 동기화 "
+            "None=첫수표가 정한다. 명시 시 core_axis로 자동 동기화 "
             "(0/180→road, 90/270→depth)."
         ),
     )
@@ -397,10 +399,10 @@ class GroundFloor(BaseModel):
         description=(
             "[deprecated — core_rotation으로 대체] 코어 장축 배향 — "
             "road=주접도변과 평행(눕힘), depth=직교(깊이 방향으로 세움). "
-            "절반 지정이라 road=0/180·depth=90/270 중 엔진이 자동 선택 — "
+            "절반 지정이라 road=0/180·depth=90/270 중 첫수표가 정한다 — "
             "구 _build_options.json 17필지가 쓰는 값이라 유지하며, 정밀 지정은 "
             "core_rotation. core_rotation과 모순되면 에러(road↔{0,180}, "
-            "depth↔{90,270}). None=estim argmax 자동."
+            "depth↔{90,270}). None=첫수표가 정한다."
         ),
     )
 
