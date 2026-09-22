@@ -30,7 +30,7 @@ LEGACY = {
     "ground_floor": {
         "core_side": "ne", "core_rotation": 90, "core_entries": 2,
         "parking_axis": "inner", "parking_angle": 45, "road_edge": 1,
-        "entry2": True, "tandem": False, "bk_offset": 5.5,
+        "entry2": True, "tandem": False, "bk_offset": 5.5,   # entry2 = 구 이름
         "interior_aisle": True, "exit_road": 0, "road_setback": 1.5,
         "corridor_mode": "edge", "pedestrian_width": 1.8,
         "commercial_remainder": True,
@@ -59,7 +59,7 @@ EXPECTED = [
     ("design.parking.parking_axis", "inner"),          # 주차 배치가 주차로 모인다
     ("design.parking.parking_angle", 45),
     ("design.parking.road_edge", 1),
-    ("design.parking.entry2", True),
+    ("design.parking.multi_road", True),   # 이름이 2인데 뜻은 ≤3이었다
     ("design.parking.tandem", False),
     ("design.parking.bk_offset", 5.5),
     ("design.parking.interior_aisle", True),
@@ -107,6 +107,33 @@ def test_legacy_migration_loses_nothing():
         and json.dumps(v, ensure_ascii=False) not in dumped
     ]
     assert missing == [], f"이행에서 사라진 필드: {missing}"
+
+
+def test_legacy_name_follows_its_meaning():
+    """entry2 → multi_road — 이름은 2인데 뜻은 '≤3 도로'였다. 구 키도 받아서 옮긴다."""
+    o = BuildOptions.model_validate({"ground_floor": {"entry2": True}})
+    assert o.design.parking.multi_road is True
+    assert not hasattr(o.design.parking, "entry2")
+
+
+def test_dropped_legacy_financing_fields_are_swallowed():
+    """현 모델 미사용 분양 필드(소비처 0곳)는 저장값에 남아 있어도 조용히 버린다.
+
+    거부하면 그 키가 든 DB jsonb 설계안이 안 열린다.
+    """
+    o = BuildOptions.model_validate(
+        {"financing": {"land_loan_ltv": 0.6, "deposit_pct": 0.1, "presale_period": 6}}
+    )
+    assert o.business.financing.land_loan_ltv == 0.6
+    assert not hasattr(o.business.financing, "deposit_pct")
+
+
+def test_angle_is_inner_only():
+    """외부 도로변 주차는 항상 직각 — road + 사선은 조용히 무시되던 조합이었다."""
+    with pytest.raises(Exception, match="inner 축에서만"):
+        BuildOptions.model_validate({"design": {"parking": {"parking_axis": "road", "parking_angle": 45}}})
+    ok = BuildOptions.model_validate({"design": {"parking": {"parking_axis": "inner", "parking_angle": 45}}})
+    assert ok.design.parking.parking_angle == 45
 
 
 def test_new_shape_is_not_touched():

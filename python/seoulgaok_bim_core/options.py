@@ -263,7 +263,7 @@ class Core(BaseModel):
         description=(
             "코어(복도) 보행 출입구 수 1|2. 2=코어 문 반대편에도 문 — 보행로가 도로에서 "
             "꼬이는 필지(합정동 441-31). None=자동: 둘째 문의 보행로가 첫째보다 뚜렷이 "
-            "짧을 때만 2. scheme `_pedestrian_paths`로 전부 방출. (entry2는 차량 진입 옵션 — 별개)"
+            "짧을 때만 2. scheme `_pedestrian_paths`로 전부 방출. (multi_road는 차량 진입 옵션 — 별개)"
         ),
     )
 
@@ -357,11 +357,13 @@ class Parking(BaseModel):
         default=None,
         description="주접도 변 인덱스 (필지 폴리곤 기준). None=최장 접도변 자동.",
     )
-    entry2: Optional[bool] = Field(
+    multi_road: Optional[bool] = Field(
         default=None,
+        json_schema_extra={"auto": True},
         description=(
             "다중도로 주차 — 주접도 외 잔여 접도변(넓은급→긴변, 최대 3)에 추가 주차. "
-            "None=법정 대수 부족 시 자동. (구 '인접 2차 진입'에서 ≤3 도로로 일반화.)"
+            "None=첫수표가 정한다. (구 이름 entry2 — '인접 2차 진입'에서 ≤3 도로로 "
+            "일반화됐는데 이름이 2에 남아 있었다.)"
         ),
     )
     tandem: Optional[bool] = Field(
@@ -411,6 +413,20 @@ class Parking(BaseModel):
         if isinstance(data, dict) and data.get("parking_axis") == "auto":
             data = {**data, "parking_axis": None}
         return data
+
+    @model_validator(mode="after")
+    def _angle_is_inner_only(self):
+        """각도는 내부 차로에서만 뜻이 있다 — 스코프를 산문이 아니라 타입에서 막는다(#10 ⑧).
+
+        외부 도로변 주차는 항상 직각이다(주차장법 시행규칙 11조⑤2호 — 도로를 차로로 쓰는
+        형식은 직각·평행뿐). road 축에 45°를 주면 엔진이 조용히 무시하던 조합이었다.
+        """
+        if self.parking_axis == "road" and self.parking_angle not in (None, 90):
+            raise ValueError(
+                f"parking.parking_angle={self.parking_angle}은 inner 축에서만 씁니다 — "
+                "외부 도로변 주차는 항상 직각입니다(주차장법 시행규칙 11조⑤2호)."
+            )
+        return self
 
     def bk_eff(self, stall_depth: float = 5.0) -> float:
         """백칸 밴드 시작 깊이 = max(BK, stall_depth)."""
@@ -752,12 +768,6 @@ class Financing(BaseModel):
     # ── 분양 스케줄 (비아파트 = 준공 후 매각) ──
     # 비아파트는 통상 준공 후 분양 → post_months 기간에 균등 매각.
     # 아래 계약/중도/잔금 필드는 legacy(아파트 선분양) — 현 모델 미사용.
-    presale_start_offset: int = Field(
-        default=0, description="[legacy] 분양 개시 = 착공 후 N개월.")
-    presale_period: int = Field(default=6, description="[legacy] 분양 기간 (개월).")
-    deposit_pct: float = Field(default=0.10, description="[legacy] 계약금 비율.")
-    mid_pct: float = Field(default=0.60, description="[legacy] 중도금 비율.")
-    balance_pct: float = Field(default=0.30, description="[legacy] 잔금 비율.")
 
 
 # ═════════════════════════════════════════════════════════════════════
@@ -842,7 +852,7 @@ _GF_TO = {
     "core_side": "core", "core_rotation": "core", "core_axis": "core",
     "core_entries": "core",
     "parking_axis": "parking", "parking_angle": "parking", "road_edge": "parking",
-    "entry2": "parking", "tandem": "parking", "bk_offset": "parking",
+    "entry2": "parking", "tandem": "parking", "bk_offset": "parking",   # entry2→multi_road
     "interior_aisle": "parking", "exit_road": "parking", "road_setback": "parking",
     "corridor_mode": "circulation", "pedestrian_width": "circulation",
     "commercial_remainder": "massing",
@@ -850,6 +860,14 @@ _GF_TO = {
     "min_col_dist": "dimensions", "preferred_min_span": "dimensions",
 }
 _PARKING_DIMS = ("stall_width", "stall_depth", "aisle_width")
+# 구 이름 → 새 이름 (뜻은 같다)
+_RENAMED = {"entry2": "multi_road"}
+# 폐기된 legacy 필드 — 저장값에 남아 있으면 조용히 버린다(소비처 0곳, 현 모델 미사용).
+# 거부하면 DB jsonb에 그 키가 든 설계안이 안 열린다.
+_DROPPED = {
+    "financing": ("presale_start_offset", "presale_period",
+                  "deposit_pct", "mid_pct", "balance_pct"),
+}
 
 
 class BuildOptions(BaseModel):
@@ -916,6 +934,7 @@ class BuildOptions(BaseModel):
                     dims[k] = park.pop(k)
             design["parking"] = park
         for k, v in (data.get("ground_floor") or {}).items():
+            k = _RENAMED.get(k, k)
             target = _GF_TO.get(k)
             if target is None:                      # 모르는 키는 parking에 남겨 거부되게 둔다
                 design.setdefault("parking", {})[k] = v
@@ -933,7 +952,11 @@ class BuildOptions(BaseModel):
             standards["concrete"] = data["concrete"]
         if dims:
             standards["dimensions"] = dims
-        business = {k: data[k] for k in ("schedule", "financing") if isinstance(data.get(k), dict)}
+        business = {}
+        for k in ("schedule", "financing"):
+            if isinstance(data.get(k), dict):
+                business[k] = {kk: vv for kk, vv in data[k].items()
+                               if kk not in _DROPPED.get(k, ())}
 
         if design:
             d["design"] = design
