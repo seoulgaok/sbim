@@ -257,20 +257,16 @@ class Core(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def _reject_legacy_core_axis(cls, data):
-        """구 `core_axis`(road/depth)는 제거됐다 — 조용히 접지 않는다(#10 ⑤).
+    def _drop_legacy_core_axis(cls, data):
+        """구 `core_axis`(road/depth)는 제거됐다 — 들어오면 버린다 (#13).
 
-        절반 지정이라(road↔{0,180}, depth↔{90,270}) `core_rotation`으로 무손실 변환이
-        안 된다. 버리면 사람이 재둔 배향 의도가 사라지고, 한쪽으로 접으면 엔진이 다른
-        도면을 그린다. 그래서 거부하고, 다시 재라고 말한다.
+        절반 지정이라(road↔{0,180}, depth↔{90,270}) 회전각으로 옮길 수 없다. 한쪽으로
+        접으면 없던 정밀도를 지어내는 것이라, 값으로 못 옮기는 대신 비운다 — 비면
+        첫수표가 정한다. 거부하지 않는 건 구 `_build_options.json`이 이 값을 심고 있어
+        저장된 설계안이 통째로 안 열리기 때문이다.
         """
-        if isinstance(data, dict) and data.get("core_axis") is not None:
-            raise ValueError(
-                f"core.core_axis={data['core_axis']!r}는 제거된 필드입니다 — "
-                "절반 지정이라 core_rotation(0/90/180/270)으로 변환할 수 없습니다. "
-                "building-generator `tools/groundtruth/measure_core_rotation.py`로 "
-                "그 필지의 회전각을 다시 재서 core_rotation으로 심으세요."
-            )
+        if isinstance(data, dict) and "core_axis" in data:
+            data = {k: v for k, v in data.items() if k != "core_axis"}
         return data
 
 

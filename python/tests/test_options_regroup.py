@@ -215,11 +215,7 @@ def test_every_stored_design_still_loads():
                      else "parking_axis=core" if "parking_axis" in msg
                      else msg.split("\n")[1][:70])
             failed.append((p.parent.name, cause))
-    # 허용되는 실패는 제거된 두 필드뿐이다 — 둘 다 조용히 접지 않고 거부한다(#10 ⑤).
-    # core_axis: 절반 지정이라 core_rotation으로 무손실 변환이 안 된다(다시 재야 한다).
-    # parking_axis="core": 사람이 심어둔 값이라 말없이 바꾸면 의도가 사라진다.
-    allowed = {"core_axis", "parking_axis=core"}
-    unexpected = [f for f in failed if f[1] not in allowed]
+    # 구 core_axis는 버려서 열리고(#13), 구 parking_axis="core"만 거부한다(#10 ⑤) —
+    # 사람이 심어둔 축 의도라 말없이 바꾸지 않는다.
+    unexpected = [f for f in failed if f[1] != "parking_axis=core"]
     assert unexpected == [], f"열리지 않는 저장값: {unexpected}"
-    # 다시 재야 하는 필지 수 — giga measure_core_rotation으로 회전각을 심으면 0이 된다
-    assert sum(1 for f in failed if f[1] == "core_axis") > 0

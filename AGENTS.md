@@ -37,13 +37,13 @@
   구 저장값 51건이 심고 있어 거부하면 통째로 깨진다. 자동 가능 여부는
   `json_schema_extra={"auto": True}`로 표시한다(산문 description에 묻지 않는다).
 
-## 코어 배향 — `Core.core_rotation` (#4, #10 ⑤)
+## 코어 배향 — `Core.core_rotation` (#4, #13)
 
 - `core_rotation`(0/90/180/270)이 코어 배향의 **유일한** 표현이다. 구 `core_axis`(road/depth)는
-  제거됐고 **거부**한다 — 절반 지정이라 무손실 변환이 안 되고, 조용히 접으면 뜻이 바뀐다.
-- 구 `reference/sbim/*/_build_options.json` 19필지가 `core_axis`만 갖고 있어 로드에서 멈춘다.
-  giga `tools/groundtruth/measure_core_rotation.py`로 회전각을 다시 재어 심으면 풀린다.
-- giga 소비처(`aaro/core_stage.py`·`stalls.py`·`pipeline.py`)도 `core_rotation`만 읽어야 한다.
+  같은 뜻을 두 정밀도로 받는 중복이라 제거됐다.
+- 들어오면 **버린다**(거부하지 않는다) — 절반 지정이라 회전각으로 못 옮기고, 거부하면 구
+  `_build_options.json` 19필지가 안 열린다. 비면 첫수표가 정한다.
+- 그 19필지의 배향을 되살리려면 giga가 회전각을 다시 재어 `core_rotation`으로 심어야 한다.
 
 ## 코어 유형 번호 — 2026-09 개번 (#2)
 
