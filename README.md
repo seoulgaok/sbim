@@ -65,7 +65,7 @@ IFC에 남지 않아 복원되지 않습니다.
 ```python
 from seoulgaok_bim_core import build_options, build_site_where
 
-opts = build_options(financing={"land_loan_ltv": 0.7})   # 인자 > 설정파일 > 기본값
+opts = build_options(business={"financing": {"land_loan_ltv": 0.7}})  # 인자 > 설정파일 > 기본값
 where, params = build_site_where(alias="l")
 ```
 

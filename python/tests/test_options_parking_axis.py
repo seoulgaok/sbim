@@ -10,14 +10,14 @@
 import pytest
 from pydantic import ValidationError
 
-from seoulgaok_bim_core import GroundFloor
+from seoulgaok_bim_core import Parking
 from seoulgaok_bim_core.options import ParkingAxis
 from typing import get_args
 
 
 def test_default_is_none():
     """기본값은 None — 「자동」의 표기는 하나뿐이다."""
-    assert GroundFloor().parking_axis is None
+    assert Parking().parking_axis is None
 
 
 def test_axes_are_two():
@@ -27,16 +27,16 @@ def test_axes_are_two():
 
 @pytest.mark.parametrize("axis", ["road", "inner", None])
 def test_accepted(axis):
-    assert GroundFloor(parking_axis=axis).parking_axis == axis
+    assert Parking(parking_axis=axis).parking_axis == axis
 
 
 def test_legacy_auto_folds_to_none():
     """구 _build_options.json 51건이 "auto"를 심고 있다 — 거부하지 않고 옮겨 받는다."""
-    assert GroundFloor(parking_axis="auto").parking_axis is None
+    assert Parking(parking_axis="auto").parking_axis is None
 
 
 def test_legacy_auto_folds_in_nested_load():
-    g = GroundFloor.model_validate({"parking_axis": "auto", "parking_angle": 45})
+    g = Parking.model_validate({"parking_axis": "auto", "parking_angle": 45})
     assert (g.parking_axis, g.parking_angle) == (None, 45)
 
 
@@ -51,10 +51,10 @@ def test_removed_and_unknown_values_rejected(axis):
     말없이 None으로 바꾸면 그 의도가 사라진다 — giga 기록에서 먼저 지워야 한다.
     """
     with pytest.raises(ValidationError):
-        GroundFloor(parking_axis=axis)
+        Parking(parking_axis=axis)
 
 
 def test_auto_metadata_is_machine_readable():
     """무엇을 비워도 되는지를 산문이 아니라 스키마가 말한다(#10 ③)."""
-    extra = GroundFloor.model_fields["parking_axis"].json_schema_extra
+    extra = Parking.model_fields["parking_axis"].json_schema_extra
     assert extra == {"auto": True}

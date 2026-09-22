@@ -17,12 +17,12 @@ from seoulgaok_bim_core import options as O
 # 취향 필드 — 값이 없으면 첫수표가 정한다 (derive 필드와 구분된다:
 # road_edge·exit_road처럼 법·기하가 한 값을 계산해 주는 것은 여기 없다)
 CHOICE_FIELDS = [
-    "parking_axis",
-    "parking_angle",
-    "interior_aisle",
-    "core_side",
-    "core_rotation",
-    "core_axis",
+    (O.Parking, "parking_axis"),
+    (O.Parking, "parking_angle"),
+    (O.Parking, "interior_aisle"),
+    (O.Core, "core_side"),
+    (O.Core, "core_rotation"),
+    (O.Core, "core_axis"),
 ]
 
 # 엔진에게 탐색을 시키는 명세 — 어느 필드에도 없어야 한다
@@ -37,16 +37,16 @@ SEARCH_PHRASES = [
 ]
 
 
-@pytest.mark.parametrize("name", CHOICE_FIELDS)
-def test_choice_field_defers_to_first_move(name):
-    desc = O.GroundFloor.model_fields[name].description
-    assert "첫수표" in desc, f"{name}: None의 주인이 첫수표라고 말하지 않는다"
+@pytest.mark.parametrize(("cls", "name"), CHOICE_FIELDS)
+def test_choice_field_defers_to_first_move(cls, name):
+    desc = cls.model_fields[name].description
+    assert "첫수표" in desc, f"{cls.__name__}.{name}: None의 주인이 첫수표라고 말하지 않는다"
 
 
-@pytest.mark.parametrize("name", CHOICE_FIELDS)
-def test_choice_field_does_not_promise_selection(name):
-    desc = O.GroundFloor.model_fields[name].description
-    assert "채택" not in desc, f"{name}: 엔진이 골라 채택한다고 적혀 있다"
+@pytest.mark.parametrize(("cls", "name"), CHOICE_FIELDS)
+def test_choice_field_does_not_promise_selection(cls, name):
+    desc = cls.model_fields[name].description
+    assert "채택" not in desc, f"{cls.__name__}.{name}: 엔진이 골라 채택한다고 적혀 있다"
 
 
 def _all_descriptions():
