@@ -10,13 +10,13 @@ legacy core_axis(road/depth) ↔ 신규 core_rotation(0/90/180/270) 이행 계�
 import pytest
 from pydantic import ValidationError
 
-from seoulgaok_bim_core.options import GroundFloor
+from seoulgaok_bim_core.options import Core
 
 
 @pytest.mark.parametrize("axis", ["road", "depth"])
 def test_legacy_core_axis_unchanged(axis):
     """core_axis만 주면 core_rotation은 None — 뜻이 조용히 바뀌지 않는다."""
-    g = GroundFloor(core_axis=axis)
+    g = Core(core_axis=axis)
     assert g.core_axis == axis
     assert g.core_rotation is None
 
@@ -27,7 +27,7 @@ def test_legacy_core_axis_unchanged(axis):
 )
 def test_core_rotation_syncs_core_axis(rotation, axis):
     """core_rotation만 주면 legacy core_axis로 동기화 — 구 소비처 호환."""
-    g = GroundFloor(core_rotation=rotation)
+    g = Core(core_rotation=rotation)
     assert g.core_rotation == rotation
     assert g.core_axis == axis
 
@@ -36,7 +36,7 @@ def test_core_rotation_syncs_core_axis(rotation, axis):
 def test_core_rotation_consistent_with_axis(rotation):
     """둘 다 주고 일관(같은 coarse)이면 통과."""
     coarse = "road" if rotation in (0, 180) else "depth"
-    g = GroundFloor(core_axis=coarse, core_rotation=rotation)
+    g = Core(core_axis=coarse, core_rotation=rotation)
     assert g.core_rotation == rotation
     assert g.core_axis == coarse
 
@@ -47,4 +47,4 @@ def test_core_rotation_consistent_with_axis(rotation):
 def test_core_axis_rotation_contradiction_rejected(axis, rotation):
     """둘 다 주고 모순이면 거부 — 병존이 아니라 대체/이행."""
     with pytest.raises(ValidationError):
-        GroundFloor(core_axis=axis, core_rotation=rotation)
+        Core(core_axis=axis, core_rotation=rotation)

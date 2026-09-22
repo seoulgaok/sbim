@@ -1,112 +1,60 @@
-"""GroundFloor.parking_axis — 내부 차로 배치 방식에 이름을 준다 (#8 ⑨, 1단계).
+"""GroundFloor.parking_axis — 축은 둘, 「자동」은 하나 (#10 ③④).
 
-giga 어휘(aaro/inner.py)에는 내부 차로를 까는 방식이 넷 구현돼 있는데(직교 열·평행 열·
-경계 한 줄·회전 마당) sbim에는 이름이 없었다 — 엔진은 스스로 정할 수 있는데 사용자는
-줄 수 없었다. 값 추가라 기존에 심긴 옵션은 뜻도 통과 여부도 바뀌지 않는다.
+#9로 내부 차로 배치 방식 넷(inner_perp·par·single·court)에 이름을 줬다가 되돌렸다.
+소장 GT 30필지 실측에서 **대지 안쪽 12필지 중 9필지가 직각과 평행을 섞는다** — 소장은
+방식을 고르는 게 아니라 한 방식 안에서 섞는다. 고르지 않는 것에 이름을 주면 과분류다.
+
+「자동」의 표기도 하나로 접었다. 구 저장값의 "auto"는 받아서 None으로 옮긴다.
 """
-
-from typing import get_args
 
 import pytest
 from pydantic import ValidationError
 
-from seoulgaok_bim_core import (
-    GroundFloor,
-    InnerLayout,
-    ParkingAxis,
-    split_parking_axis,
-)
-
-LEGACY = ["road", "core", "inner", "auto"]
-NEW = ["inner_perp", "inner_par", "inner_single", "inner_court"]
+from seoulgaok_bim_core import Parking
+from seoulgaok_bim_core.options import ParkingAxis
+from typing import get_args
 
 
-def test_default_is_auto():
-    assert GroundFloor().parking_axis == "auto"
+def test_default_is_none():
+    """기본값은 None — 「자동」의 표기는 하나뿐이다."""
+    assert Parking().parking_axis is None
 
 
-@pytest.mark.parametrize("axis", LEGACY + [None])
-def test_legacy_values_still_accepted(axis):
-    assert GroundFloor(parking_axis=axis).parking_axis == axis
+def test_axes_are_two():
+    """축은 둘 — 도로에 기대느냐, 대지 안에 차로를 내느냐."""
+    assert set(get_args(ParkingAxis)) == {"road", "inner"}
 
 
-@pytest.mark.parametrize("axis", NEW)
-def test_new_values_accepted(axis):
-    assert GroundFloor(parking_axis=axis).parking_axis == axis
+@pytest.mark.parametrize("axis", ["road", "inner", None])
+def test_accepted(axis):
+    assert Parking(parking_axis=axis).parking_axis == axis
 
 
-@pytest.mark.parametrize("axis", ["inner_diag", "court", "INNER", ""])
-def test_unknown_value_rejected(axis):
-    with pytest.raises(ValidationError):
-        GroundFloor(parking_axis=axis)
+def test_legacy_auto_folds_to_none():
+    """구 _build_options.json 51건이 "auto"를 심고 있다 — 거부하지 않고 옮겨 받는다."""
+    assert Parking(parking_axis="auto").parking_axis is None
+
+
+def test_legacy_auto_folds_in_nested_load():
+    g = Parking.model_validate({"parking_axis": "auto", "parking_angle": 45})
+    assert (g.parking_axis, g.parking_angle) == (None, 45)
 
 
 @pytest.mark.parametrize(
-    ("value", "expected"),
-    [
-        (None, (None, None)),
-        ("auto", (None, None)),          # 「자동」의 두 표기를 한 곳에서 접는다
-        ("road", ("road", None)),
-        ("core", ("core", None)),
-        ("inner", ("inner", None)),      # 내부 차로, 방식은 엔진이
-        ("inner_perp", ("inner", "perp")),
-        ("inner_par", ("inner", "par")),
-        ("inner_single", ("inner", "single")),
-        ("inner_court", ("inner", "court")),
-    ],
+    "axis",
+    ["inner_perp", "inner_par", "inner_single", "inner_court", "core", "mass", "AUTO", ""],
 )
-def test_split(value, expected):
-    assert split_parking_axis(value) == expected
+def test_removed_and_unknown_values_rejected(axis):
+    """#9의 inner_*와 구 core는 값이 아니다 — 되살아나면 여기서 걸린다.
+
+    core는 조용히 접지 않고 **거부한다**. 이태원동 303-22에 사람이 심어둔 값이라
+    말없이 None으로 바꾸면 그 의도가 사라진다 — giga 기록에서 먼저 지워야 한다.
+    """
+    with pytest.raises(ValidationError):
+        Parking(parking_axis=axis)
 
 
-@pytest.mark.parametrize("value", ["inner_", "inner_diag", "mass", "court"])
-def test_split_rejects_unknown(value):
-    with pytest.raises(ValueError):
-        split_parking_axis(value)
-
-
-def test_every_literal_value_splits():
-    """Literal과 분해 함수가 따로 놀지 않는다 — 값을 늘리면 여기서 걸린다."""
-    layouts = set(get_args(InnerLayout))
-    for value in get_args(ParkingAxis):
-        axis, layout = split_parking_axis(value)
-        assert axis in (None, "road", "core", "inner")
-        assert layout is None or layout in layouts
-
-
-def test_every_layout_has_a_name():
-    """라이브러리에 있는데 속성 창에 없으면 버그 — 네 방식 모두 값이 있다."""
-    named = {split_parking_axis(v)[1] for v in get_args(ParkingAxis)} - {None}
-    assert named == set(get_args(InnerLayout))
-
-
-# ── 방식 × 각도 — 곱해지지 않는 조합 (#8 ⑧) ──
-
-def test_court_ignores_angle():
-    assert GroundFloor(parking_axis="inner_court").parking_angle is None
-    with pytest.raises(ValidationError, match="각도와 무관"):
-        GroundFloor(parking_axis="inner_court", parking_angle=45)
-
-
-@pytest.mark.parametrize("angle", [None, 90])
-def test_par_allows_right_angle(angle):
-    assert GroundFloor(parking_axis="inner_par", parking_angle=angle).parking_angle == angle
-
-
-@pytest.mark.parametrize("angle", [45, 60])
-def test_par_rejects_slant(angle):
-    with pytest.raises(ValidationError, match="직각뿐"):
-        GroundFloor(parking_axis="inner_par", parking_angle=angle)
-
-
-@pytest.mark.parametrize("angle", [None, 45, 60, 90])
-def test_perp_takes_any_angle(angle):
-    assert GroundFloor(parking_axis="inner_perp", parking_angle=angle).parking_angle == angle
-
-
-@pytest.mark.parametrize("axis", LEGACY)
-@pytest.mark.parametrize("angle", [None, 45, 60, 90])
-def test_legacy_combinations_unchanged(axis, angle):
-    """기존 값에는 새 검증을 걸지 않는다 — 심긴 옵션이 어느 날 거부되면 안 된다."""
-    g = GroundFloor(parking_axis=axis, parking_angle=angle)
-    assert (g.parking_axis, g.parking_angle) == (axis, angle)
+def test_auto_metadata_is_machine_readable():
+    """무엇을 비워도 되는지를 산문이 아니라 스키마가 말한다(#10 ③)."""
+    extra = Parking.model_fields["parking_axis"].json_schema_extra
+    assert extra == {"auto": True}

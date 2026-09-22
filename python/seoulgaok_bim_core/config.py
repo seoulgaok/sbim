@@ -96,10 +96,15 @@ if __name__ == "__main__":
     assert base == {"f": {"x": 1}}, "입력을 변조하면 안 됨"
 
     # kwargs가 설정을 이긴다
-    opts = build_options(exterior={"style": "brick"})
-    assert opts.exterior.style == "brick", opts.exterior
+    opts = build_options(design={"exterior": {"style": "brick"}})
+    assert opts.design.exterior.style == "brick", opts.design.exterior
+
+    # 구 평면 모양도 받아서 옮긴다 (저장된 설계안·DB jsonb 호환)
+    legacy = build_options(exterior={"style": "brick"}, ground_floor={"core_side": "n"})
+    assert legacy.design.exterior.style == "brick", legacy.design.exterior
+    assert legacy.design.core.core_side == "n", legacy.design.core
 
     # 금융 값은 기본 미설정 — 조용한 가정 금지
-    assert opts.financing.land_loan_rate is None, "금융 기본값은 None이어야"
+    assert opts.business.financing.land_loan_rate is None, "금융 기본값은 None이어야"
 
     print("config self-check OK")
