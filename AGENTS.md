@@ -37,17 +37,13 @@
   구 저장값 51건이 심고 있어 거부하면 통째로 깨진다. 자동 가능 여부는
   `json_schema_extra={"auto": True}`로 표시한다(산문 description에 묻지 않는다).
 
-## 코어 배향 — `GroundFloor.core_rotation` (#4)
+## 코어 배향 — `Core.core_rotation` (#4, #10 ⑤)
 
-- `core_rotation`(0/90/180/270)이 코어 배향의 정본이다. `core_axis`(road/depth)는
-  deprecated — 절반 지정(road↔{0,180}, depth↔{90,270})으로 남는다.
-- 이행 규칙(`GroundFloor._sync_core_axis`): `core_rotation` 명시 시 legacy
-  `core_axis`로 자동 동기화, 둘 다 주고 모순되면 에러.
-- 구 `reference/sbim/*/_build_options.json` 17필지가 `core_axis`를 심고 있다 —
-  뜻을 바꾸지 않는 것이 이행의 조건. `core_axis`를 리팩터로 제거하기 전에
-  building-generator 소비처가 `core_rotation`으로 정규화돼 있어야 한다
-  (그 소비처 마이그레이션은 별도 작업: `shared/modules/aaro/prior.py`,
-  `core_stage.py`).
+- `core_rotation`(0/90/180/270)이 코어 배향의 **유일한** 표현이다. 구 `core_axis`(road/depth)는
+  제거됐고 **거부**한다 — 절반 지정이라 무손실 변환이 안 되고, 조용히 접으면 뜻이 바뀐다.
+- 구 `reference/sbim/*/_build_options.json` 19필지가 `core_axis`만 갖고 있어 로드에서 멈춘다.
+  giga `tools/groundtruth/measure_core_rotation.py`로 회전각을 다시 재어 심으면 풀린다.
+- giga 소비처(`aaro/core_stage.py`·`stalls.py`·`pipeline.py`)도 `core_rotation`만 읽어야 한다.
 
 ## 코어 유형 번호 — 2026-09 개번 (#2)
 

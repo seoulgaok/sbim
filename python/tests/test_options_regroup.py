@@ -209,9 +209,17 @@ def test_every_stored_design_still_loads():
         try:
             BuildOptions.model_validate(raw)
         except Exception as e:
-            failed.append((p.parent.name, str(e).split("\n")[1][:70]))
-    # 유일하게 허용되는 실패 — 이태원동은 구 parking_axis="core"를 심고 있고, 이 릴리스가
-    # 그 값을 의도적으로 거부한다(#10 ⑤: 조용히 접지 않는다). giga 기록에서 지우면 사라진다.
-    known = {("이태원동_303-22", "design.parking.parking_axis")}
-    assert set(failed) <= known, f"열리지 않는 저장값: {[f for f in failed if f not in known]}"
-    assert failed, "이태원동의 core 거부가 사라졌다 — 기록이 정리됐으면 이 테스트를 지워라"
+            msg = str(e)
+            # 제거된 두 필드는 일부러 거부한다 — 그 둘인지 메시지로 가른다
+            cause = ("core_axis" if "measure_core_rotation" in msg
+                     else "parking_axis=core" if "parking_axis" in msg
+                     else msg.split("\n")[1][:70])
+            failed.append((p.parent.name, cause))
+    # 허용되는 실패는 제거된 두 필드뿐이다 — 둘 다 조용히 접지 않고 거부한다(#10 ⑤).
+    # core_axis: 절반 지정이라 core_rotation으로 무손실 변환이 안 된다(다시 재야 한다).
+    # parking_axis="core": 사람이 심어둔 값이라 말없이 바꾸면 의도가 사라진다.
+    allowed = {"core_axis", "parking_axis=core"}
+    unexpected = [f for f in failed if f[1] not in allowed]
+    assert unexpected == [], f"열리지 않는 저장값: {unexpected}"
+    # 다시 재야 하는 필지 수 — giga measure_core_rotation으로 회전각을 심으면 0이 된다
+    assert sum(1 for f in failed if f[1] == "core_axis") > 0

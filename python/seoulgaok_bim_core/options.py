@@ -240,22 +240,10 @@ class Core(BaseModel):
             "0=코어 기준자세 그대로 변에 밀착, 90/180/270=그만큼 회전. "
             "코어는 점대칭이 아니라(계단·EV 한쪽 편재, 복도 한 면 접합, 출입구 "
             "면이 방향별로 달라 0·90·180·270이 전부 다른 결과) 절반 지정인 "
-            "core_axis(road/depth)로는 같은 축 위 180° 뒤집기를 표현할 수 없어 "
+            "구 core_axis(road/depth)로는 같은 축 위 180° 뒤집기를 표현할 수 없어 "
             "네 방위를 전부 받는다. 라이브러리 형상 가로세로와 무관한 앉은 변 "
             "기준 절대 표현이라 코어 형상이 바뀌어도 뜻이 유지된다. "
-            "None=첫수표가 정한다. 명시 시 core_axis로 자동 동기화 "
-            "(0/180→road, 90/270→depth)."
-        ),
-    )
-    core_axis: Optional[Literal["road", "depth"]] = Field(
-        default=None,
-        description=(
-            "[deprecated — core_rotation으로 대체] 코어 장축 배향 — "
-            "road=주접도변과 평행(눕힘), depth=직교(깊이 방향으로 세움). "
-            "절반 지정이라 road=0/180·depth=90/270 중 첫수표가 정한다 — "
-            "구 _build_options.json 17필지가 쓰는 값이라 유지하며, 정밀 지정은 "
-            "core_rotation. core_rotation과 모순되면 에러(road↔{0,180}, "
-            "depth↔{90,270}). None=첫수표가 정한다."
+            "None=첫수표가 정한다."
         ),
     )
     core_entries: Optional[int] = Field(
@@ -267,26 +255,23 @@ class Core(BaseModel):
         ),
     )
 
-    @model_validator(mode="after")
-    def _sync_core_axis(self):
-        """core_axis(deprecated) ↔ core_rotation 정합 — 신규 core_rotation이 정본.
+    @model_validator(mode="before")
+    @classmethod
+    def _reject_legacy_core_axis(cls, data):
+        """구 `core_axis`(road/depth)는 제거됐다 — 조용히 접지 않는다(#10 ⑤).
 
-        core_rotation 명시 시 legacy core_axis로 동기화(0/180→road, 90/270→depth),
-        둘 다 주고 모순되면 거부한다. core_axis만 있으면(기존에 심긴 17필지)
-        그대로 절반 지정으로 남겨 뜻을 바꾸지 않는다 — core_rotation=None이면 no-op.
+        절반 지정이라(road↔{0,180}, depth↔{90,270}) `core_rotation`으로 무손실 변환이
+        안 된다. 버리면 사람이 재둔 배향 의도가 사라지고, 한쪽으로 접으면 엔진이 다른
+        도면을 그린다. 그래서 거부하고, 다시 재라고 말한다.
         """
-        if self.core_rotation is None:
-            return self
-        coarse = "road" if self.core_rotation in (0, 180) else "depth"
-        if self.core_axis is None:
-            self.core_axis = coarse
-        elif self.core_axis != coarse:
+        if isinstance(data, dict) and data.get("core_axis") is not None:
             raise ValueError(
-                f"core.core_axis={self.core_axis!r}는 core_rotation="
-                f"{self.core_rotation}과 모순입니다 (road↔{{0,180}}, "
-                f"depth↔{{90,270}})."
+                f"core.core_axis={data['core_axis']!r}는 제거된 필드입니다 — "
+                "절반 지정이라 core_rotation(0/90/180/270)으로 변환할 수 없습니다. "
+                "building-generator `tools/groundtruth/measure_core_rotation.py`로 "
+                "그 필지의 회전각을 다시 재서 core_rotation으로 심으세요."
             )
-        return self
+        return data
 
 
 # ═════════════════════════════════════════════════════════════════════
