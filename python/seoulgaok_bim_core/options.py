@@ -189,7 +189,8 @@ class UnitSpec(BaseModel):
 
 
 class Core(BaseModel):
-    """코어 — 무엇을(type) 어디에(core_side) 어느 방향으로(core_rotation) 앉히는가.
+    """코어 — 무엇을(type) 어디에(core_side) 어느 방향으로(core_rotation) 어느 손잡이로
+    (core_mirror) 앉히는가.
 
     치수는 입력이 아니라 매스+세대프로그램에서 derive된다(삼전 정답: 계단·EV가 16.4m
     분리 = 세대 배치 결과). 자리와 배향은 고르는 것이고, 값이 없으면 첫수표가 정한다.
@@ -244,6 +245,17 @@ class Core(BaseModel):
             "네 방위를 전부 받는다. 라이브러리 형상 가로세로와 무관한 앉은 변 "
             "기준 절대 표현이라 코어 형상이 바뀌어도 뜻이 유지된다. "
             "None=첫수표가 정한다."
+        ),
+    )
+    core_mirror: Optional[bool] = Field(
+        default=None,
+        description=(
+            "코어 좌우 뒤집기 — true=코어 기준자세를 거울처럼 뒤집은 모양(앉은 변에서 "
+            "봐서 계단·EV의 좌우가 바뀐 반대 손잡이)으로 앉힌 뒤 core_rotation만큼 "
+            "돌린다. 회전 네 방위로는 이 모양이 안 나온다 — 회전 180°는 가로·세로를 "
+            "함께 뒤집어 복도 면까지 옮기지만, 거울은 복도 면을 그대로 두고 좌우만 "
+            "바꾼다. 회전과 함께 코어가 변에 앉는 여덟 자세를 전부 적는다. "
+            "false=기준자세 그대로. None=첫수표가 정한다."
         ),
     )
     core_entries: Optional[int] = Field(
