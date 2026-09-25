@@ -18,7 +18,7 @@
   명세가 탐색을 시키면 엔진이 그대로 따라 **소장 값을 받고도 안 믿는다**(값을 넣으면 대수가
   줄었다: `core_type` 25→22, `road_edge` 4→2). 가드는 `tests/test_options_axiom.py`.
 - derive(법·기하가 한 값을 계산)와 취향(첫수표가 채움)은 다르다 — `road_edge`·`exit_road`는
-  derive, `parking_axis`·`core_side`는 취향.
+  derive, `parking_axis`·`core_side`·`mass_axis`(매스 작업축, #15)는 취향.
 
 ## `BuildOptions`는 속성 창이다 (#8)
 

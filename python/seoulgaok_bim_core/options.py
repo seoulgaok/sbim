@@ -124,6 +124,14 @@ class Massing(BaseModel):
         default=False,
         description="주차 배치 후 잔여 1층 면적을 근생(상가)으로 전환.",
     )
+    mass_axis: Optional[Literal["road", "sunlight"]] = Field(
+        default=None,
+        description=(
+            "상층 매스를 반듯하게 세울 기준 방향 — road=주접도변(도로 경계선)과 나란히, "
+            "sunlight=일조발생라인(정북 인접 대지경계선)과 나란히. "
+            "None=첫수표가 정한다."
+        ),
+    )
 
     # ─── derive 헬퍼 (옵션이 아니라 계산 — 옵션화 금지) ───────────────
 
