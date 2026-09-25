@@ -23,6 +23,7 @@ CHOICE_FIELDS = [
     (O.Core, "core_side"),
     (O.Core, "core_rotation"),
     (O.Core, "core_mirror"),
+    (O.Massing, "mass_axis"),
 ]
 
 # 엔진에게 탐색을 시키는 명세 — 어느 필드에도 없어야 한다
