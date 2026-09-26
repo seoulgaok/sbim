@@ -47,6 +47,11 @@
 
 주요 결정:
 
+- `Core.core_side` 설명 갱신(2026-09-26, R1 검증 지적) — 「대각=모서리·정방위=변
+  중간 snap, 배향은 snap된 변에서 derive」는 엔진 뜻이 아니었다. 엔진(`core_stage.py`
+  `dir8`)의 뜻은 **common 중심에서 본 코어 중심의 8방위** — common 둘레 위 모든 후보에
+  방위 하드 필터를 걸고, 남는 자리가 없으면 폴백 없이 CoreTypeInfeasible. 정방위도 변
+  중간에 고정되지 않는다(변 위 자리는 `core_along`의 몫). 값·타입 변경 없음.
 - `Core.core_along` 추가(2026-09-26, seoulgaok/sbim#18) — `core_side`가 정한 **변 위**에서
   코어가 앉는 자리(`start`/`mid`/`end`). `core_side="s"`는 남쪽 **변**까지만 정해 변 위의
   자리를 적을 곳이 없었다 — 「남측 가운데」 요구가 3건 쌓였고, giga 첫수표 `core_at_mid`가
