@@ -258,6 +258,13 @@ class Core(BaseModel):
             "None=첫수표가 정한다."
         ),
     )
+    core_along: Optional[Literal["start", "mid", "end"]] = Field(
+        default=None,
+        description=(
+            "core_side 로 정한 변 위에서 코어가 앉는 자리 — start/end=변의 양끝 쪽, "
+            "mid=변 가운데. None=첫수표가 정한다. core_side 가 c 이거나 없으면 무시."
+        ),
+    )
     core_mirror: Optional[bool] = Field(
         default=None,
         description=(
@@ -355,6 +362,13 @@ class Parking(BaseModel):
             "None=첫수표가 정한다(현행 90). 사선 순차 평가는 2026-09-19에 제거됐다. "
             "외부 도로변 주차는 항상 직각(11조⑤2호 — 도로를 차로로 쓰는 형식은 "
             "직각·평행뿐)이라 inner 모드에만 의미."
+        ),
+    )
+    parallel: Optional[bool] = Field(
+        default=None,
+        description=(
+            "평행주차 열 사용 — True=평행 열을 쓴다(직각이 안 들어가는 폭에서 평행으로), "
+            "False=평행 열을 쓰지 않는다. None=첫수표·엔진 규칙이 정한다."
         ),
     )
     road_edge: Optional[int] = Field(

@@ -47,6 +47,16 @@
 
 주요 결정:
 
+- `Core.core_along` 추가(2026-09-26, seoulgaok/sbim#18) — `core_side`가 정한 **변 위**에서
+  코어가 앉는 자리(`start`/`mid`/`end`). `core_side="s"`는 남쪽 **변**까지만 정해 변 위의
+  자리를 적을 곳이 없었다 — 「남측 가운데」 요구가 3건 쌓였고, giga 첫수표 `core_at_mid`가
+  sbim에 없는 내부 키를 내는 꼴이었다(#12 위반). `core_side`가 `c`이거나 없으면 무시,
+  `None`=첫수표가 정한다.
+- `Parking.parallel` 추가(2026-09-26, seoulgaok/sbim#19) — 평행주차 열 사용 선택(True/
+  False/None). 평행 어휘는 엔진에 이미 있고(`stage_parallel`·`_pack_parallel`),
+  `parking_angle`은 45/60/90만 받아 평행을 적을 곳이 없었다. `None`=첫수표·엔진 규칙이
+  정한다. 현재 출하 경로는 `parking.*`를 aaro에 넘기지 않아 배선 수리가 선행된다 —
+  엔진 소비는 building-generator 쪽 별도 작업.
 - `core_edge`/`align`/`offset` 3필드 → `core_side` 8방위 단일 필드로 통합.
   중앙 의도를 표현할 수 없어 `"c"`를 추가했다.
 - `pedestrian_width` 기본값을 **시행령 41조 다세대 유효너비 하한**에 맞춰
