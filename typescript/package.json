@@ -14,6 +14,10 @@
       "import": "./dist/types.js",
       "types": "./dist/types.d.ts"
     },
+    "./options": {
+      "import": "./dist/options.js",
+      "types": "./dist/options.d.ts"
+    },
     "./operations": {
       "import": "./dist/operations.js",
       "types": "./dist/operations.d.ts"

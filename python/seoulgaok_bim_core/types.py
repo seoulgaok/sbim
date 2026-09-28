@@ -14,6 +14,8 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict
 
+from .options import CoreType, ParkingAxis
+
 
 class _Base(BaseModel):
     model_config = ConfigDict(extra="allow")  # 알려지지 않은 필드 허용
@@ -262,6 +264,49 @@ class Scheme(_Base):
     data: SchemeData
     floor_plans: list[FloorPlan]
     unit_ids: list[str]
+    resolved_options: Optional["ResolvedOptions"] = None
+
+
+# --- resolved_options (엔진이 채운 속성 창) -----------------------------------
+
+
+class _ResolvedMassing(_Base):
+    mass_axis: Optional[Literal["road", "sunlight"]] = None
+
+
+class _ResolvedCore(_Base):
+    type: Optional[CoreType] = None
+    core_side: Optional[Literal["n", "ne", "e", "se", "s", "sw", "w", "nw", "c"]] = None
+    core_rotation: Optional[Literal[0, 90, 180, 270]] = None
+    core_mirror: Optional[bool] = None
+
+
+class _ResolvedParking(_Base):
+    parking_axis: Optional[ParkingAxis] = None
+    parking_angle: Optional[Literal[45, 60, 90]] = None
+    parallel: Optional[bool] = None
+    tandem: Optional[bool] = None
+    multi_road: Optional[bool] = None
+    road_edge: Optional[int] = None
+
+
+class ResolvedDesign(_Base):
+    """`BuildOptions.design`과 같은 중첩 모양 — 첫수표가 채울 수 있는 필드만."""
+    massing: Optional[_ResolvedMassing] = None
+    core: Optional[_ResolvedCore] = None
+    parking: Optional[_ResolvedParking] = None
+
+
+class ResolvedOptions(_Base):
+    """엔진이 실제로 쓴 속성 창 값 + 필드별 출처 — 엔진이 방출, 소비처가 표시.
+
+    사용자가 비운(None) 칸을 첫수표가 채우면 그 값이 여기 적힌다. 소비처는 전문가 칸의
+    자동값을 흐리게 「자동 (s · 90° · 2형)」으로 보여 주고, 누르면 그 값으로 고정한다.
+    source 키는 "<묶음>.<필드>"(예: "core.core_side"), 값은 user(사용자가 준 값) |
+    prior(첫수표가 채운 값). design 에 없는 필드는 source 에도 없다.
+    """
+    design: ResolvedDesign
+    source: dict[str, Literal["user", "prior"]] = {}
 
 
 # --- Unit -------------------------------------------------------------------
@@ -350,3 +395,6 @@ class SurroundingData(_Base):
 class SurroundingBuilding(_Base):
     geom: SurroundingGeometry
     data: SurroundingData
+
+
+Scheme.model_rebuild()

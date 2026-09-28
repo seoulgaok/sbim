@@ -3,6 +3,7 @@
  */
 
 export * from "./types.js";
+export * from "./options.js";
 export * from "./errors.js";
 export * from "./geometry.js";
 export * from "./operations.js";

@@ -10,6 +10,19 @@
 - 구 13블록 모양(`ground_floor`·`concrete`·`windows` …)은 `_migrate_legacy_shape`가 받아서
   옮긴다. 저장된 설계안과 DB jsonb가 옛 경로라 이 이행층을 지우면 기존 데이터가 깨진다.
 
+## 속성 창 정리 — 수만 남긴다 (2026-09-28)
+
+- 옵션 = 설계자가 두는 **수**뿐이다. 법은 엔진 상수(주차 칸·차로 치수), 대수는 결과,
+  엔진이 안 읽는 키는 두지 않는다. 한 뜻에 한 이름(`interior_aisle`→`parking_axis`).
+- 지운 키는 **거부하지 않고 받아서 버린다**(`_drop`·각 모델의 before validator) — 옮길
+  자리가 있으면 옮긴다(`far_target`→`far_limit_override`, 옛 자리 → `regulations`).
+  옛 평평한 모양(`ground_floor`)도 `_migrate_legacy_shape`·`_GF_TO`로 같은 새 모양에 떨어진다.
+- 법이 정하는 값을 필지 사정으로 덮어쓰는 것은 전부 `design.regulations`(법규 보정)다 —
+  설계 묶음에 섞지 않는다.
+- TS `BuildOptions`는 **생성물**이다(`python/scripts/gen_build_options.py` →
+  `schema/build_options.schema.json` → `typescript/src/options.ts`). 옵션을 바꾸면 생성을
+  돌리고 dist를 굽는다 — `test_build_options_schema.py`가 어긋남을 잡는다.
+
 ## 엔진에는 "더 좋다"가 없다 (#12)
 
 - 엔진 = f(대지, 속성 창) → 도면. 엔진이 아는 것은 **법과 물리의 된다/안 된다**뿐이다.

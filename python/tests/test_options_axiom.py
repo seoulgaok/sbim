@@ -19,7 +19,6 @@ from seoulgaok_bim_core import options as O
 CHOICE_FIELDS = [
     (O.Parking, "parking_axis"),
     (O.Parking, "parking_angle"),
-    (O.Parking, "interior_aisle"),
     (O.Core, "core_side"),
     (O.Core, "core_rotation"),
     (O.Core, "core_mirror"),
