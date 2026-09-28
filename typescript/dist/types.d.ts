@@ -8,6 +8,7 @@
  * 좌표계: 링·점 좌표는 EPSG:5186 절대(parcel_center 더해진 상태).
  * 메시(BufferGeometry positions)만 parcel_center 상대 — 혼동 금지.
  */
+import type { Core, Massing, Parking } from "./options.js";
 /** EPSG:5186 절대 좌표점 */
 export type Point2 = [number, number];
 /** 닫힘 여부 무관 좌표 링 */
@@ -302,6 +303,27 @@ export interface Scheme extends SchemeSpatial {
     data: SchemeData;
     floor_plans: FloorPlan[];
     unit_ids: string[];
+    /** 엔진이 실제로 쓴 속성 창 값 + 출처. 구 scheme엔 없다. */
+    resolved_options?: ResolvedOptions;
+}
+/** `BuildOptions.design`과 같은 중첩 모양 — 첫수표가 채울 수 있는 필드만. */
+export interface ResolvedDesign {
+    massing?: Pick<Massing, "mass_axis">;
+    core?: Pick<Core, "type" | "core_side" | "core_rotation" | "core_mirror">;
+    parking?: Pick<Parking, "parking_axis" | "parking_angle" | "parallel" | "tandem" | "multi_road" | "road_edge">;
+}
+/** 필드 값의 출처 — user=사용자가 준 값, prior=첫수표가 채운 값. */
+export type ResolvedSource = "user" | "prior";
+/**
+ * 엔진이 실제로 쓴 속성 창 값 + 필드별 출처 — 엔진이 방출, 소비처가 표시.
+ *
+ * 사용자가 비운(null) 칸을 첫수표가 채우면 그 값이 여기 적힌다. 전문가 칸의 자동값을
+ * 흐리게 「자동 (s · 90° · 2형)」으로 보여 주고, 누르면 그 값으로 고정한다.
+ * `source` 키는 "<묶음>.<필드>"(예: "core.core_side"). design에 없는 필드는 source에도 없다.
+ */
+export interface ResolvedOptions {
+    design: ResolvedDesign;
+    source: Record<string, ResolvedSource>;
 }
 export interface UnitGeometry {
     boundary: BufferGeometryData[];

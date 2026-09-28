@@ -46,36 +46,27 @@ LEGACY = {
 EXPECTED = [
     ("design.massing.target_floor_count", 6),
     ("design.massing.first_floor_height", 3.6),
-    ("design.massing.commercial_remainder", True),     # 단계 서랍 → 매스
     ("design.units.units_per_floor", 3),
-    ("design.units.cut_axis", "depth"),
     ("design.core.type", 2),
-    ("design.core.composition", "stair"),
     ("design.core.core_side", "ne"),                   # 코어 자리가 코어로 모인다
     ("design.core.core_rotation", 90),
     ("design.core.core_entries", 2),
-    ("design.parking.count", 7),
-    ("design.parking.ratio_mode", "non_residential"),
+    ("design.regulations.ratio_mode", "non_residential"),  # 법규 보정으로 모인다
     ("design.parking.parking_axis", "inner"),          # 주차 배치가 주차로 모인다
     ("design.parking.parking_angle", 45),
     ("design.parking.road_edge", 1),
     ("design.parking.multi_road", True),   # 이름이 2인데 뜻은 ≤3이었다
     ("design.parking.tandem", False),
-    ("design.parking.bk_offset", 5.5),
-    ("design.parking.interior_aisle", True),
     ("design.parking.exit_road", 0),
-    ("design.parking.road_setback", 1.5),
+    ("design.regulations.road_setback", 1.5),
     ("design.circulation.corridor_mode", "edge"),      # 동선이 제 집을 갖는다
-    ("design.circulation.pedestrian_width", 1.8),
+    ("design.regulations.pedestrian_width", 1.8),
     ("design.exterior.style", "brick"),                # 한 필드 클래스 둘을 흡수
     ("design.exterior.window_style", "open"),
     ("design.structure", "rahmen"),                    # 한 필드 클래스를 스칼라로
-    ("design.regulations.bcr_target", 58.0),
+    ("design.regulations.bcr_limit_override", 58.0),   # 구 이름 bcr_target
     ("standards.concrete.wall_thickness", 0.22),       # 회사 표준은 접히는 묶음으로
     ("standards.concrete.price_per_m3", 190000),
-    ("standards.dimensions.stall_width", 2.6),         # 치수는 선택이 아니라 표준
-    ("standards.dimensions.stall_depth", 5.2),
-    ("standards.dimensions.aisle_width", 6.5),
     ("standards.dimensions.max_span", 7.2),
     ("standards.dimensions.cantilever", 1.4),
     ("standards.dimensions.min_col_dist", 3.1),
@@ -96,10 +87,19 @@ def test_legacy_field_lands_in_its_object(path, expected):
     assert _dig(BuildOptions.model_validate(LEGACY), path) == expected
 
 
+# 2026-09-28 정리로 지웠거나(버림) 다른 이름으로 흡수된 키 — 「흘린 값」이 아니다
+REMOVED_OR_RENAMED = {
+    "commercial_remainder", "cut_axis", "composition", "count", "bk_offset",
+    "stall_width", "stall_depth", "aisle_width",          # 버림
+    "interior_aisle", "bcr_target",                       # parking_axis · bcr_limit_override
+}
+
+
 def test_legacy_migration_loses_nothing():
-    """구 13블록의 모든 값이 새 모양 어딘가에 있다 — 흘린 값이 없다."""
+    """구 13블록의 모든 값이 새 모양 어딘가에 있다 — 흘린 값이 없다(지운 키 제외)."""
     got = BuildOptions.model_validate(LEGACY)
-    flat = {k: v for block in LEGACY.values() for k, v in block.items()}
+    flat = {k: v for block in LEGACY.values() for k, v in block.items()
+            if k not in REMOVED_OR_RENAMED}
     dumped = json.dumps(got.model_dump(), ensure_ascii=False, sort_keys=True)
     missing = [
         k for k, v in flat.items()
@@ -173,11 +173,12 @@ def test_helpers_read_new_paths():
 
 
 def test_object_helpers_moved_to_their_owners():
-    """bk_eff는 주차가, walk_width·aisle은 동선이 갖는다."""
+    """bk_eff는 주차가(칸 깊이 고정 — bk_offset 삭제), walk_width·aisle은 보행로 폭을
+    가진 법규 보정이 갖는다."""
     o = BuildOptions.model_validate({"ground_floor": {"bk_offset": 6.0, "pedestrian_width": 2.0}})
-    assert o.design.parking.bk_eff() == 6.0
-    assert o.design.circulation.walk_width() == 2.0
-    assert o.design.circulation.aisle() == 2.5
+    assert o.design.parking.bk_eff() == 5.0
+    assert o.design.regulations.walk_width() == 2.0
+    assert o.design.regulations.aisle() == 2.5
 
 
 REF_ROOTS = [

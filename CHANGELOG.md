@@ -19,6 +19,12 @@
 - `Core.position`·`lateral` 제거 — 위치도 같은 이유
 - `Pillars`(기둥 개수) → `Structure`(벽식/라멘/철골) — 개수는 결과, 구조방식이 의도
 - `SpatialLayout` 도입 후 철회 — 옵션에 기하를 넣으면 의도 레이어가 무너진다
+- 속성 창 정리(2026-09-28) — 수(설계자가 고르는 것)만 남겼다. 엔진이 안 읽거나 겹치는
+  키(`core_along`·`cut_axis`·`commercial_remainder`·`parking.count`·`type`·`bk_offset`·
+  `composition`)와 주차장법 치수(`stall_*`·`aisle_width`)를 지우고(저장값은 받아 버림),
+  `interior_aisle`은 `parking_axis`로 흡수, `far/bcr_target`은 `*_limit_override`로 개명,
+  법규 보정 3개(`road_setback`·`pedestrian_width`·`ratio_mode`)를 `regulations`로 모았다.
+  결과 계약 `resolved_options`와 TS `BuildOptions` 생성 타입을 더했다.
 
 **목적함수(`objective`)는 폐기됐다.** "좋음"의 우선순위를 사용자가 리스트로
 주는 방식(`attach` 추가 → 제거 → 전체 폐기)을 세 번 시도한 끝에,

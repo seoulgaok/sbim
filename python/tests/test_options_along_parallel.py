@@ -1,4 +1,7 @@
-"""Core.core_along · Parking.parallel — 어휘 결손 두 자리(v1.2, seoulgaok/sbim#18·#19).
+"""Core.core_along(삭제) · Parking.parallel — 어휘 결손 두 자리(v1.2, seoulgaok/sbim#18·#19).
+
+core_along 은 2026-09-28 정리에서 지웠다 — core_side 정방위가 곧 변 가운데라 겹쳤다.
+저장값에 남아 있으면 받아서 버린다.
 
 `core_side`는 **변**까지만 정한다. 변 위의 자리(양끝·가운데)는 속성 창에 없어서
 소장이 「코어를 남측 가운데에」라고 해도 적을 곳이 없었다 — 엔진 안의 `core_at_mid`
@@ -22,26 +25,19 @@ EXAMPLES = Path(__file__).resolve().parents[2] / "examples"
 # ── Core.core_along ──────────────────────────────────────────────────
 
 
-def test_core_along_default_is_none():
-    assert Core().core_along is None
+def test_core_along_is_gone():
+    assert "core_along" not in Core.model_fields
 
 
 @pytest.mark.parametrize("along", ["start", "mid", "end"])
-def test_core_along_accepted(along):
-    assert Core(core_along=along).core_along == along
+def test_saved_core_along_is_swallowed(along):
+    c = Core.model_validate({"core_side": "s", "core_along": along})
+    assert c.core_side == "s"
+    assert "core_along" not in c.model_dump()
 
 
-@pytest.mark.parametrize("along", ["center", "middle", "left", "L/2", "", 0.5])
-def test_core_along_unknown_rejected(along):
-    with pytest.raises(ValidationError):
-        Core(core_along=along)
-
-
-def test_core_along_description_names_core_side():
-    """무시 조건(core_side가 c이거나 없으면)과 자동 표기를 설명이 말한다."""
-    desc = Core.model_fields["core_along"].description
-    assert "core_side" in desc
-    assert "None=첫수표가 정한다" in desc
+def test_core_side_description_no_longer_mentions_core_along():
+    assert "core_along" not in Core.model_fields["core_side"].description
 
 
 # ── Parking.parallel ─────────────────────────────────────────────────
@@ -69,10 +65,8 @@ def test_saved_design_without_new_keys_reads_unchanged():
     """새 키가 없는 저장값은 검증 후 다른 필드가 하나도 안 바뀐다 — 새 필드만 None."""
     opts = BuildOptions.model_validate(json.loads((EXAMPLES / "sbim_config.example.json").read_text()))
     design = opts.model_dump()["design"]
-    assert design["core"]["core_along"] is None
     assert design["parking"]["parallel"] is None
-    # 새 필드를 빼면 옛 키 집합과 같다 — 직렬화 키가 늘어난 것 외 변형 없음.
-    assert set(design["core"]) == {  # 옛 필드 + core_along
-        "type", "composition", "core_side", "core_rotation", "core_mirror", "core_entries", "core_along",
+    assert set(design["core"]) == {
+        "type", "core_side", "core_rotation", "core_mirror", "core_entries",
     }
     assert "parallel" in set(design["parking"])
