@@ -564,7 +564,8 @@
           ],
           "auto": true,
           "default": null,
-          "description": "주차 행 배치 축 — road=주접도 프레임(도로에 기대 깐다), inner=대지 안에 차로를 내고 그 차로 기준으로 깐다 — 까는 방식(직각·평행·경계 한 줄·회전 마당과 그 섞음)은 첫수표가 정한다. None=첫수표가 정한다. 대부분 None. legacy \"auto\"는 None과 같은 뜻이라 받아서 접는다. 구 \"core\"(코어 격자 정렬)는 제거됐다 — REF 30필지에서 엔진이 한 번도 고르지 않았고, 뜻은 매스 격자 정렬인데 이름이 구현(코어 사각형에서 방향을 빌림)을 드러냈다. 건물이 비뚤면 road/inner 안에서 기울여 깐다(#10 ④⑤). 구 interior_aisle(True/False)은 이 필드로 흡수됐다 — inner/road.",
+          "deprecated": "주차 버블 parking_graph 가 대신한다",
+          "description": "[지울 예정 — 주차 버블 parking_graph 가 대신한다. 버블이 없을 때만 쓰인다.] 주차 행 배치 축 — road=주접도 프레임(도로에 기대 깐다), inner=대지 안에 차로를 내고 그 차로 기준으로 깐다 — 까는 방식(직각·평행·경계 한 줄·회전 마당과 그 섞음)은 첫수표가 정한다. None=첫수표가 정한다. 대부분 None. legacy \"auto\"는 None과 같은 뜻이라 받아서 접는다. 구 \"core\"(코어 격자 정렬)는 제거됐다 — REF 30필지에서 엔진이 한 번도 고르지 않았고, 뜻은 매스 격자 정렬인데 이름이 구현(코어 사각형에서 방향을 빌림)을 드러냈다. 건물이 비뚤면 road/inner 안에서 기울여 깐다(#10 ④⑤). 구 interior_aisle(True/False)은 이 필드로 흡수됐다 — inner/road.",
           "title": "Parking Axis"
         },
         "parking_angle": {
@@ -608,7 +609,8 @@
             }
           ],
           "default": null,
-          "description": "주접도 변 인덱스 (필지 폴리곤 기준). None=최장 접도변 자동.",
+          "deprecated": "주차 버블 parking_graph 가 대신한다",
+          "description": "[지울 예정 — 주차 버블 parking_graph 가 대신한다. 버블이 없을 때만 쓰인다.] 주접도 변 인덱스 (필지 폴리곤 기준). None=최장 접도변 자동.",
           "title": "Road Edge"
         },
         "multi_road": {
@@ -622,7 +624,8 @@
           ],
           "auto": true,
           "default": null,
-          "description": "다중도로 주차 — 주접도 외 잔여 접도변(넓은급→긴변, 최대 3)에 추가 주차. None=첫수표가 정한다. (구 이름 entry2 — '인접 2차 진입'에서 ≤3 도로로 일반화됐는데 이름이 2에 남아 있었다.) parking_graph 가 있으면 읽지 않는다 — 어느 도로에 버블을 붙일지가 그 배열이다.",
+          "deprecated": "주차 버블 parking_graph 가 대신한다",
+          "description": "[지울 예정 — 주차 버블 parking_graph 가 대신한다. 버블이 없을 때만 쓰인다.] 다중도로 주차 — 주접도 외 잔여 접도변(넓은급→긴변, 최대 3)에 추가 주차. None=첫수표가 정한다. (구 이름 entry2 — '인접 2차 진입'에서 ≤3 도로로 일반화됐는데 이름이 2에 남아 있었다.) parking_graph 가 있으면 읽지 않는다 — 어느 도로에 버블을 붙일지가 그 배열이다.",
           "title": "Multi Road"
         },
         "tandem": {
