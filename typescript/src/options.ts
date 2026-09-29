@@ -162,7 +162,7 @@ export interface Core {
    */
   core_mirror?: boolean | null;
   /**
-   * 코어(복도) 보행 출입구 수 1|2. 2=코어 문 반대편에도 문 — 보행로가 도로에서 꼬이는 필지(합정동 441-31). None=자동: 둘째 문의 보행로가 첫째보다 뚜렷이 짧을 때만 2. scheme `_pedestrian_paths`로 전부 방출. (multi_road는 차량 진입 옵션 — 별개)
+   * 코어(복도) 보행 출입구 수 1|2. 2=코어 문 반대편에도 문 — 보행로가 도로에서 꼬이는 필지(합정동 441-31). None=문 하나(엔진이 둘째 문을 스스로 켜지 않는다 — 2가 필요하면 옵션으로 준다). scheme `_pedestrian_paths`로 전부 방출. (multi_road는 차량 진입 옵션 — 별개)
    * @default null
    */
   core_entries?: number | null;
