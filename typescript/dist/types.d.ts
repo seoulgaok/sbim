@@ -310,7 +310,7 @@ export interface Scheme extends SchemeSpatial {
 export interface ResolvedDesign {
     massing?: Pick<Massing, "mass_axis">;
     core?: Pick<Core, "type" | "core_side" | "core_rotation" | "core_mirror">;
-    parking?: Pick<Parking, "parking_axis" | "parking_angle" | "parallel" | "tandem" | "multi_road" | "road_edge">;
+    parking?: Pick<Parking, "parking_axis" | "parking_angle" | "parallel" | "tandem" | "multi_road" | "road_edge" | "parking_graph">;
 }
 /** 필드 값의 출처 — user=사용자가 준 값, prior=첫수표가 채운 값. */
 export type ResolvedSource = "user" | "prior";
