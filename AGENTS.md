@@ -48,7 +48,9 @@
   `stalls.py::stage_core_axis`를 함께 걷어내야 한다.
 - 「자동」의 표기는 `None` 하나다. legacy `"auto"`는 `_fold_legacy_auto`가 받아서 접는다 —
   구 저장값 51건이 심고 있어 거부하면 통째로 깨진다. 자동 가능 여부는
-  `json_schema_extra={"auto": True}`로 표시한다(산문 description에 묻지 않는다).
+  `json_schema_extra={"auto": True}`로 표시한다(산문 description에 묻지 않는다). 지울 예정도
+  같은 방식으로 키를 붙인다 — `json_schema_extra={"deprecated": "…"}`가 스키마를 지나 TS
+  생성물에 `@deprecated`로 렌더된다(예: `options._DEPRECATED_BY_BUBBLE_TAG`).
 
 ## 주차 버블 — `Parking.parking_graph` (2026-09-29)
 
@@ -66,6 +68,8 @@
   road_side 없는 노드를 만나면 방위를 지어내지 않고 그래프 전체를 버린다(None).
 - `parking_axis`와의 모순은 **거부하지 않는다** — REF 추출 축과 버블이 갈리는 필지가 있고
   엔진이 버블을 다 읽기 전까지 옛 경로가 그 축을 쓴다.
+- 버블이 뜻을 대신 가져간 `parking_axis`·`road_edge`·`multi_road` 는 **지울 예정으로 표시만**
+  해 둔다(엔진이 버블 없는 필지에서 아직 읽는다). 삭제는 엔진이 이 셋을 안 읽게 된 뒤.
 - 엔진은 road → yard → 섞임 순으로 붙이고, 모든 튜플을 지원할 때만 버블을 읽는다(아니면
   통째로 무시) — 일부만 읽으면 옵션이 가짜 필드가 된다.
 

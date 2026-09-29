@@ -298,6 +298,17 @@ class Core(BaseModel):
 # ═════════════════════════════════════════════════════════════════════
 
 
+# 세 필드는 주차 버블(parking_graph)에 뜻을 넘겼다 — 버블이 「어느 도로에 어떤 종류로
+# 주차하나」를 정하므로 주 배치 축·주접도 변 번호·다중도로 여부는 버블이 대신한다.
+# 다만 엔진이 버블이 없는 필지에서 아직 이 셋을 읽는다 — 그래서 지금은 **표시만** 한다
+# (description 접두어 + JSON Schema `deprecated`, TS 생성물에는 @deprecated 태그로 렌더).
+# 실제 삭제는 엔진이 이 필드를 안 읽게 된 뒤 별도 과제.
+_DEPRECATED_BY_BUBBLE = "[지울 예정 — 주차 버블 parking_graph 가 대신한다. 버블이 없을 때만 쓰인다.] "
+# JSON Schema `deprecated` 의 값 = 이유 한 줄. TS 생성물에는 @deprecated 태그로 떨어진다
+# (태그에는 접두어를 또 넣지 않는다 — 겹친다).
+_DEPRECATED_BY_BUBBLE_TAG = "주차 버블 parking_graph 가 대신한다"
+
+
 class Parking(BaseModel):
     """주차 — 어떤 축으로 어디에 깔까. 대수는 결과다(법정 대수는 regulations.ratio_mode).
 
@@ -309,9 +320,10 @@ class Parking(BaseModel):
 
     parking_axis: Optional[ParkingAxis] = Field(
         default=None,
-        json_schema_extra={"auto": True},
+        json_schema_extra={"auto": True, "deprecated": _DEPRECATED_BY_BUBBLE_TAG},
         description=(
-            "주차 행 배치 축 — road=주접도 프레임(도로에 기대 깐다), "
+            _DEPRECATED_BY_BUBBLE
+            + "주차 행 배치 축 — road=주접도 프레임(도로에 기대 깐다), "
             "inner=대지 안에 차로를 내고 그 차로 기준으로 깐다 — 까는 방식(직각·평행·"
             "경계 한 줄·회전 마당과 그 섞음)은 첫수표가 정한다. "
             "None=첫수표가 정한다. 대부분 None. "
@@ -342,13 +354,18 @@ class Parking(BaseModel):
     )
     road_edge: Optional[int] = Field(
         default=None,
-        description="주접도 변 인덱스 (필지 폴리곤 기준). None=최장 접도변 자동.",
+        json_schema_extra={"deprecated": _DEPRECATED_BY_BUBBLE_TAG},
+        description=(
+            _DEPRECATED_BY_BUBBLE
+            + "주접도 변 인덱스 (필지 폴리곤 기준). None=최장 접도변 자동."
+        ),
     )
     multi_road: Optional[bool] = Field(
         default=None,
-        json_schema_extra={"auto": True},
+        json_schema_extra={"auto": True, "deprecated": _DEPRECATED_BY_BUBBLE_TAG},
         description=(
-            "다중도로 주차 — 주접도 외 잔여 접도변(넓은급→긴변, 최대 3)에 추가 주차. "
+            _DEPRECATED_BY_BUBBLE
+            + "다중도로 주차 — 주접도 외 잔여 접도변(넓은급→긴변, 최대 3)에 추가 주차. "
             "None=첫수표가 정한다. (구 이름 entry2 — '인접 2차 진입'에서 ≤3 도로로 "
             "일반화됐는데 이름이 2에 남아 있었다.) "
             "parking_graph 가 있으면 읽지 않는다 — 어느 도로에 버블을 붙일지가 그 배열이다."

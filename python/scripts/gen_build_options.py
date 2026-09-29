@@ -103,6 +103,11 @@ def interface(name: str, s: dict) -> list[str]:
             notes.append(f"@default {_lit(ps['default'])}")
         if ps.get("auto"):
             notes.append("@auto None=자동")
+        # JSON Schema 표준 `deprecated` 키 — 값이 문자열이면 그 이유를 태그에 쓴다
+        # (`json_schema_extra={"deprecated": "..."}` 또는 pydantic Field(deprecated=...)).
+        dep = ps.get("deprecated")
+        if dep:
+            notes.append(f"@deprecated {dep}" if isinstance(dep, str) else "@deprecated")
         out += _doc([n for n in notes if n], "  ")
         opt = "" if prop in s.get("required", ()) else "?"
         out.append(f"  {prop}{opt}: {ts_type(ps)};")

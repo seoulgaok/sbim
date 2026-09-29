@@ -57,4 +57,6 @@ def test_removed_and_unknown_values_rejected(axis):
 def test_auto_metadata_is_machine_readable():
     """무엇을 비워도 되는지를 산문이 아니라 스키마가 말한다(#10 ③)."""
     extra = Parking.model_fields["parking_axis"].json_schema_extra
-    assert extra == {"auto": True}
+    assert extra["auto"] is True
+    # 지울 예정도 산문이 아니라 키로 적는다 — TS 생성물은 이 키로 @deprecated 를 렌더한다.
+    assert extra["deprecated"] == "주차 버블 parking_graph 가 대신한다"
