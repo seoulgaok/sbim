@@ -64,4 +64,18 @@ describe("BuildOptions TS 타입", () => {
     expect(o.design?.regulations?.far_limit_override).toBe(250);
     expect(r.source["core.core_side"]).toBe("prior");
   });
+
+  it("버블 종류는 셋 — road | yard | aisle (스키마·TS 같다)", () => {
+    // 화곡 1033-19 alt3 — 대지 안 곧은 차로
+    const hwaegok: BuildOptions = {
+      design: { parking: { parking_graph: [["w", "aisle"]] } },
+    };
+    expect(hwaegok.design?.parking?.parking_graph?.[0][1]).toBe("aisle");
+    const kinds =
+      schema.$defs.Parking.properties.parking_graph.anyOf.find(
+        (s: any) => s.type === "array",
+      ).items.prefixItems[1].enum;
+    expect(kinds).toEqual(["road", "yard", "aisle"]);
+    expect(ts).toContain('"road" | "yard" | "aisle"');
+  });
 });
