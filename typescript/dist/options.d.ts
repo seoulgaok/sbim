@@ -5,7 +5,8 @@
  * 생성: cd python && uv run python scripts/gen_build_options.py
  *       (schema/build_options.schema.json 을 거쳐 이 파일을 쓴다)
  *
- * 모든 필드가 옵셔널이다 — 비우면 sbim 기본값(대부분 None=첫수표가 정한다)이 채운다.
+ * 거의 모든 필드가 옵셔널이다 — 비우면 sbim 기본값(대부분 None=첫수표가 정한다)이 채운다.
+ * 필수는 목록 항목 안쪽뿐이다(주차 버블 ParkingNode.kind · ParkingRow.side/stalls).
  * 지운 키(core_along·interior_aisle·far_target …)는 서버가 받아서 버리거나 옮기지만,
  * 새로 보내는 값은 이 모양으로 보낸다.
  */
@@ -333,7 +334,7 @@ export interface Parking {
      */
     road_edge?: number | null;
     /**
-     * 다중도로 주차 — 주접도 외 잔여 접도변(넓은급→긴변, 최대 3)에 추가 주차. None=첫수표가 정한다. (구 이름 entry2 — '인접 2차 진입'에서 ≤3 도로로 일반화됐는데 이름이 2에 남아 있었다.)
+     * 다중도로 주차 — 주접도 외 잔여 접도변(넓은급→긴변, 최대 3)에 추가 주차. None=첫수표가 정한다. (구 이름 entry2 — '인접 2차 진입'에서 ≤3 도로로 일반화됐는데 이름이 2에 남아 있었다.) parking_graph 가 있으면 읽지 않는다 — 어느 도로에 몇 대인지가 그 road 노드다.
      * @default null
      * @auto None=자동
      */
@@ -348,6 +349,76 @@ export interface Parking {
      * @default null
      */
     exit_road?: number | null;
+    /**
+     * 주차 버블 — 칸을 어느 차로에 몇 대씩 붙이는가. 목록 순서가 놓는 순서다(보행로 띠는 늘 먼저 선다). road=도로가 곧 차로, yard=대지 안 차로(곧은 차로는 면이 나란한 yard). 좌표·치수는 없다 — 칸 방향은 코어(건물) 축이고 벽을 따르는 면만 align=wall. 값이 있으면 multi_road 는 읽지 않는다. None=첫수표가 정한다.
+     * @default null
+     * @auto None=자동
+     */
+    parking_graph?: ParkingNode[] | null;
+}
+/**
+ * 주차 버블 하나 — 칸이 어느 차로를 향하는가.
+ *
+ * road=도로가 곧 차로(주차장법 시행규칙 11조⑤2호 — 칸 앞 띠가 도로에 닿는다),
+ * yard=대지 안 차로(11조⑤1호). 곧은 차로는 이름을 따로 두지 않는다 — 면이 나란한
+ * (left·right 만 있거나 면이 하나뿐인) yard 다. REF 35필지의 곧은 차로 10조각이 전부
+ * 이 꼴이었다(「곧은 차로 = 자란 마당」).
+ *
+ * 칸이 향하는 곳은 필드가 아니다 — 노드 소속이 곧 그것이다(road 칸은 도로, yard 칸은
+ * 제 마당). 코어·보행로도 노드가 아니다 — 코어는 Core 가, 보행로는 코어 문·exit_road 가
+ * 정해 칸보다 먼저 서고, 버블은 그 둘을 장애물로 받는다.
+ */
+export interface ParkingNode {
+    /**
+     * road=도로가 곧 차로(칸이 도로를 향한다) · yard=대지 안 차로(칸이 마당을 향한다). 곧은 차로는 면이 나란한 yard 다.
+     */
+    kind: "road" | "yard";
+    /**
+     * 진입 도로 (EPSG 절대 방위, core_side 와 같은 꼴). 접도 변 가운데 바깥쪽이 이 방위와 가장 나란한 변의 도로다 — 같은 방위에 도로가 둘이면 도로 앞 순서(frontage)가 앞선 쪽. None=주접도(road_edge 가 정한 변).
+     * @default null
+     */
+    road_side?: "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw" | null;
+    /**
+     * 이 버블의 칸 수 — 좌표가 아니라 개수다(연접 뒤칸·평행칸 포함). yard 에 rows 가 있으면 그 합과 같아야 한다. None=rows 합, rows 도 없으면 법정 대수까지.
+     * @default null
+     */
+    stalls?: number | null;
+    /**
+     * yard 전용 — 마당 면 목록. 적힌 순서가 세우는 순서, 한 자리에 면 하나. None=far→left→right→near 고정 순서로 면을 하나씩 더한다.
+     * @default null
+     */
+    rows?: ParkingRow[] | null;
+    /**
+     * yard 전용 — 도로에 바로 닿지 않는 마당이 지나는 앞 마당의 목록 번호(0부터). 앞에 적힌 yard 만 가리킨다. None=도로에서 곧장 들어간다.
+     * @default null
+     */
+    via?: number | null;
+    /**
+     * 이 버블에 연접(직렬 2단) 뒤칸 허용. None=parking.tandem 을 따른다.
+     * @default null
+     */
+    tandem?: boolean | null;
+}
+/**
+ * 마당의 한 면 — 칸 줄이 등을 댄 자리. 칸은 자기 마당을 향한다.
+ *
+ * 치수·좌표는 없다. 칸·진입 띠(직각 6m·평행 4m)는 법 상수고, 면 위 어디서부터 칸을
+ * 잇는지도 엔진 규칙이다 — 좌표를 옵션에 넣으면 속성 창이 도면이 된다.
+ */
+export interface ParkingRow {
+    /**
+     * 면의 자리 — 진입 도로에서 대지 안을 볼 때. far=도로 맞은편 · left/right=옆 · near=도로 쪽(도로에 등을 대고 마당을 본다).
+     */
+    side: "far" | "left" | "right" | "near";
+    /**
+     * 이 면의 칸 수 — 연접 뒤칸·평행칸을 포함한 개수.
+     */
+    stalls: number;
+    /**
+     * 칸 줄의 방향 — wall=등 댄 필지 변을 따른다(사선 변에 붙은 칸). None=코어(건물) 축을 따른다 — 소장 도면 안쪽 칸 대부분이 이쪽이다.
+     * @default null
+     */
+    align?: "wall" | null;
 }
 /**
  * 법규 보정 — 법이 정하는 값을 필지 사정으로 덮어쓴다. 평소엔 전부 비워 둔다.

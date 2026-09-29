@@ -14,7 +14,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from .options import CoreType, ParkingAxis
+from .options import CoreType, ParkingAxis, ParkingNode
 
 
 class _Base(BaseModel):
@@ -288,6 +288,7 @@ class _ResolvedParking(_Base):
     tandem: Optional[bool] = None
     multi_road: Optional[bool] = None
     road_edge: Optional[int] = None
+    parking_graph: Optional[list[ParkingNode]] = None   # 엔진이 실제로 푼 버블
 
 
 class ResolvedDesign(_Base):
