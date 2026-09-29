@@ -1,7 +1,7 @@
 """Parking.parking_graph — 주차 버블을 속성 창 값으로.
 
 버블은 (진입 도로 방위, road|yard) 튜플의 배열이다 — 위상만 적고 칸 수는 결과다.
-좌표·치수는 없고, 진입 도로는 dir8 방위(빈 값 = 주접도)다.
+방위는 항상 dir8 — 필지에서 본 진입 자리의 위치(core_side 와 같은 규칙)다.
 REF 값은 firstmate 설계 보고서(v12-parking-graph-opt §3.1)의 소장 도면 역산이다.
 """
 
@@ -11,9 +11,9 @@ from pydantic import ValidationError
 from seoulgaok_bim_core import BuildOptions, Parking, ResolvedOptions
 
 # REF 소장 도면을 버블로 적은 값
-YEONHUI_75_9 = [  # 코어가 가른 두 마당 — 같은 주접도에서 마당 둘
-    [None, "yard"],
-    [None, "yard"],
+YEONHUI_75_9 = [  # 코어가 가른 두 마당 — 같은 서쪽 도로의 북쪽 끝·남쪽 끝 마당 둘
+    ["nw", "yard"],
+    ["sw", "yard"],
 ]
 SEONGBUK_126_37 = [  # 북측 도로 앞 줄 + 남서측 도로의 마당
     ["n", "road"],
@@ -49,16 +49,25 @@ def test_nested_design_path():
 
 def test_legacy_ground_floor_shape_moves_to_parking():
     o = BuildOptions.model_validate({"ground_floor": {"parking_graph": YEONHUI_75_9}})
-    assert o.design.parking.parking_graph == [(None, "yard"), (None, "yard")]
+    assert o.design.parking.parking_graph == [("nw", "yard"), ("sw", "yard")]
 
 
 def test_legacy_dict_nodes_fold_to_tuples():
     """구 노드(dict) 값은 kind·road_side 만 옮기고 칸 수·면 자리는 버린다 — 대수는 결과."""
     p = _park([
         {"kind": "road", "road_side": "n", "stalls": 5, "tandem": True},
+        {"kind": "yard", "road_side": "sw"},
+    ])
+    assert p.parking_graph == [("n", "road"), ("sw", "yard")]
+
+
+def test_legacy_dict_nodes_without_side_drop_whole_graph():
+    """방위 없는 구 노드는 방위를 지어내지 않는다 — 그래프 전체를 버린다(None)."""
+    p = _park([
+        {"kind": "road", "road_side": "n"},
         {"kind": "yard", "rows": [{"side": "far", "stalls": 2}]},
     ])
-    assert p.parking_graph == [("n", "road"), (None, "yard")]
+    assert p.parking_graph is None
 
 
 @pytest.mark.parametrize("bad", [
@@ -67,6 +76,7 @@ def test_legacy_dict_nodes_fold_to_tuples():
     [["c", "road"]],           # c 는 방위가 아니다
     [["n"]],                   # 튜플은 값 둘
     [["n", "road", "yard"]],
+    [[None, "yard"]],          # null 방위 — 주접도 표기는 없어졌다
     [[None, "yard", "extra"]],
 ])
 def test_rejects_malformed(bad):
@@ -79,4 +89,4 @@ def test_resolved_options_carries_graph():
         "design": {"parking": {"parking_axis": "inner", "parking_graph": YEONHUI_75_9}},
         "source": {"parking.parking_graph": "user"},
     })
-    assert r.design.parking.parking_graph == [(None, "yard"), (None, "yard")]
+    assert r.design.parking.parking_graph == [("nw", "yard"), ("sw", "yard")]

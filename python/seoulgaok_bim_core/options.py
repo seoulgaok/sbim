@@ -361,18 +361,21 @@ class Parking(BaseModel):
         default=None,
         description="보행통로 출구 도로변 인덱스 (필지 폴리곤 기준). None=자동(최근접 도로변).",
     )
-    parking_graph: Optional[list[tuple[Optional[Dir8], Literal["road", "yard"]]]] = Field(
+    parking_graph: Optional[list[tuple[Dir8, Literal["road", "yard"]]]] = Field(
         default=None,
         min_length=1,
         json_schema_extra={"auto": True},
         description=(
             "주차 버블 — (진입 도로 방위, road|yard) 튜플의 배열. 위상만 적는다 — "
-            "칸 수·면 자리·정렬은 대수가 결과이듯 엔진이 정한다. 첫 값 = 진입 도로 방위"
-            "(dir8, None=주접도), 둘째 = 그 도로 앞 한 줄(road) 또는 그 도로에서 대지 "
-            "안 마당(yard). 배열 순서가 놓는 순서다(보행로 띠는 늘 먼저 선다). "
-            "예: 성북 [[\"n\",\"road\"],[\"sw\",\"yard\"]] · 연희 "
-            "[[null,\"yard\"],[null,\"yard\"]] — 같은 주접도에서 앞줄 하나와 마당 "
-            "둘. 값이 있으면 multi_road 는 읽지 않는다. None=첫수표가 정한다."
+            "칸 수·면 자리·정렬은 대수가 결과이듯 엔진이 정한다. 첫 값 = 진입 자리의 "
+            "방위(항상 dir8, 필지에서 본 위치 — core_side 와 같은 규칙: 정방위는 그쪽 변의 "
+            "도로 가운데부터, 대각은 그 모서리에 닿은 도로 끝부터 검토; 주접도도 그 방위로 "
+            "적는다), 둘째 = 그 도로 앞 한 줄(road) 또는 그 도로에서 대지 안 마당(yard). "
+            "배열 순서가 놓는 순서다(보행로 띠는 늘 먼저 선다). 예: 성북 "
+            "[[\"n\",\"road\"],[\"sw\",\"yard\"]] — 북측 도로 앞 줄과 남서측 도로의 "
+            "마당 · 연희 [[\"nw\",\"yard\"],[\"sw\",\"yard\"]] — 같은 서쪽 도로의 북쪽 "
+            "끝·남쪽 끝 마당 둘. 값이 있으면 multi_road 는 읽지 않는다. None=첫수표가 "
+            "정한다."
         ),
     )
 
@@ -388,8 +391,10 @@ class Parking(BaseModel):
           로 옮길 때 사선 각도가 남아 있으면 버린다 — 옛 엔진도 내부 차로가 아니면 각도를
           안 읽었고, 남기면 road 축 각도 검증에 걸려 설계안이 안 열린다.
         - 구 `parking_graph` 노드(dict) → (방위, road|yard) 튜플(2026-09-29 개편): kind 는
-          둘째 값으로, road 노드의 road_side 는 첫 값으로 옮긴다. stalls·rows·via·tandem·
-          align 은 대수·면 자리·정렬이 결과라 옮길 자리가 없다 — 버린다.
+          둘째 값으로, road 노드의 road_side 는 첫 값으로 옮긴다. 방위는 항상 8방위다
+          (null 제거) — road_side 없는 노드를 만나면 방위를 지어내지 않고 그 그래프
+          전체를 버린다(None). stalls·rows·via·tandem·align 은 대수·면 자리·정렬이 결과라
+          옮길 자리가 없다 — 버린다.
         - `count`(대수는 결과) · `type`(deprecated, 각도·축의 세 번째 이름) ·
           `bk_offset`(백칸은 칸 깊이 바로 뒤 — 법정 상수)은 버린다.
         """
@@ -399,16 +404,20 @@ class Parking(BaseModel):
         if isinstance(graph, list) and graph and any(
             isinstance(n, dict) for n in graph
         ):
-            folded = [
-                (
-                    (n.get("road_side") if n.get("kind") == "road" else None),
-                    n.get("kind"),
-                )
-                if isinstance(n, dict)
-                else n
-                for n in graph
-            ]
-            data = {**data, "parking_graph": folded}
+            folded = []
+            for n in graph:
+                if isinstance(n, dict):
+                    side = n.get("road_side")
+                    if n.get("kind") not in ("road", "yard") or side is None:
+                        folded = None
+                        break
+                    folded.append((side, n["kind"]))
+                else:
+                    folded.append(n)
+            if folded is None:
+                data = {k: v for k, v in data.items() if k != "parking_graph"}
+            else:
+                data = {**data, "parking_graph": folded}
         if data.get("parking_axis") == "auto":
             data = {**data, "parking_axis": None}
         if "interior_aisle" in data:

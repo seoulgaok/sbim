@@ -288,7 +288,7 @@ class _ResolvedParking(_Base):
     tandem: Optional[bool] = None
     multi_road: Optional[bool] = None
     road_edge: Optional[int] = None
-    parking_graph: Optional[list[tuple[Optional[str], str]]] = None   # 엔진이 실제로 푼 버블 (방위, road|yard)
+    parking_graph: Optional[list[tuple[str, str]]] = None   # 엔진이 실제로 푼 버블 (방위, road|yard)
 
 
 class ResolvedDesign(_Base):
