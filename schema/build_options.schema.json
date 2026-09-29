@@ -622,7 +622,7 @@
           ],
           "auto": true,
           "default": null,
-          "description": "다중도로 주차 — 주접도 외 잔여 접도변(넓은급→긴변, 최대 3)에 추가 주차. None=첫수표가 정한다. (구 이름 entry2 — '인접 2차 진입'에서 ≤3 도로로 일반화됐는데 이름이 2에 남아 있었다.) parking_graph 가 있으면 읽지 않는다 — 어느 도로에 몇 대인지가 그 road 노드다.",
+          "description": "다중도로 주차 — 주접도 외 잔여 접도변(넓은급→긴변, 최대 3)에 추가 주차. None=첫수표가 정한다. (구 이름 entry2 — '인접 2차 진입'에서 ≤3 도로로 일반화됐는데 이름이 2에 남아 있었다.) parking_graph 가 있으면 읽지 않는다 — 어느 도로에 버블을 붙일지가 그 배열이다.",
           "title": "Multi Road"
         },
         "tandem": {
@@ -655,7 +655,38 @@
           "anyOf": [
             {
               "items": {
-                "$ref": "#/$defs/ParkingNode"
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "n",
+                          "ne",
+                          "e",
+                          "se",
+                          "s",
+                          "sw",
+                          "w",
+                          "nw"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  {
+                    "enum": [
+                      "road",
+                      "yard"
+                    ],
+                    "type": "string"
+                  }
+                ],
+                "type": "array"
               },
               "minItems": 1,
               "type": "array"
@@ -666,155 +697,11 @@
           ],
           "auto": true,
           "default": null,
-          "description": "주차 버블 — 칸을 어느 차로에 몇 대씩 붙이는가. 목록 순서가 놓는 순서다(보행로 띠는 늘 먼저 선다). road=도로가 곧 차로, yard=대지 안 차로(곧은 차로는 면이 나란한 yard). 좌표·치수는 없다 — 칸 방향은 코어(건물) 축이고 벽을 따르는 면만 align=wall. 값이 있으면 multi_road 는 읽지 않는다. None=첫수표가 정한다.",
+          "description": "주차 버블 — (진입 도로 방위, road|yard) 튜플의 배열. 위상만 적는다 — 칸 수·면 자리·정렬은 대수가 결과이듯 엔진이 정한다. 첫 값 = 진입 도로 방위(dir8, None=주접도), 둘째 = 그 도로 앞 한 줄(road) 또는 그 도로에서 대지 안 마당(yard). 배열 순서가 놓는 순서다(보행로 띠는 늘 먼저 선다). 예: 성북 [[\"n\",\"road\"],[\"sw\",\"yard\"]] · 연희 [[null,\"yard\"],[null,\"yard\"]] — 같은 주접도에서 앞줄 하나와 마당 둘. 값이 있으면 multi_road 는 읽지 않는다. None=첫수표가 정한다.",
           "title": "Parking Graph"
         }
       },
       "title": "Parking",
-      "type": "object"
-    },
-    "ParkingNode": {
-      "additionalProperties": false,
-      "description": "주차 버블 하나 — 칸이 어느 차로를 향하는가.\n\nroad=도로가 곧 차로(주차장법 시행규칙 11조⑤2호 — 칸 앞 띠가 도로에 닿는다),\nyard=대지 안 차로(11조⑤1호). 곧은 차로는 이름을 따로 두지 않는다 — 면이 나란한\n(left·right 만 있거나 면이 하나뿐인) yard 다. REF 35필지의 곧은 차로 10조각이 전부\n이 꼴이었다(「곧은 차로 = 자란 마당」).\n\n칸이 향하는 곳은 필드가 아니다 — 노드 소속이 곧 그것이다(road 칸은 도로, yard 칸은\n제 마당). 코어·보행로도 노드가 아니다 — 코어는 Core 가, 보행로는 코어 문·exit_road 가\n정해 칸보다 먼저 서고, 버블은 그 둘을 장애물로 받는다.",
-      "properties": {
-        "kind": {
-          "description": "road=도로가 곧 차로(칸이 도로를 향한다) · yard=대지 안 차로(칸이 마당을 향한다). 곧은 차로는 면이 나란한 yard 다.",
-          "enum": [
-            "road",
-            "yard"
-          ],
-          "title": "Kind",
-          "type": "string"
-        },
-        "road_side": {
-          "anyOf": [
-            {
-              "enum": [
-                "n",
-                "ne",
-                "e",
-                "se",
-                "s",
-                "sw",
-                "w",
-                "nw"
-              ],
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "진입 도로 (EPSG 절대 방위, core_side 와 같은 꼴). 접도 변 가운데 바깥쪽이 이 방위와 가장 나란한 변의 도로다 — 같은 방위에 도로가 둘이면 도로 앞 순서(frontage)가 앞선 쪽. None=주접도(road_edge 가 정한 변).",
-          "title": "Road Side"
-        },
-        "stalls": {
-          "anyOf": [
-            {
-              "minimum": 1,
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "이 버블의 칸 수 — 좌표가 아니라 개수다(연접 뒤칸·평행칸 포함). yard 에 rows 가 있으면 그 합과 같아야 한다. None=rows 합, rows 도 없으면 법정 대수까지.",
-          "title": "Stalls"
-        },
-        "rows": {
-          "anyOf": [
-            {
-              "items": {
-                "$ref": "#/$defs/ParkingRow"
-              },
-              "minItems": 1,
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "yard 전용 — 마당 면 목록. 적힌 순서가 세우는 순서, 한 자리에 면 하나. None=far→left→right→near 고정 순서로 면을 하나씩 더한다.",
-          "title": "Rows"
-        },
-        "via": {
-          "anyOf": [
-            {
-              "minimum": 0,
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "yard 전용 — 도로에 바로 닿지 않는 마당이 지나는 앞 마당의 목록 번호(0부터). 앞에 적힌 yard 만 가리킨다. None=도로에서 곧장 들어간다.",
-          "title": "Via"
-        },
-        "tandem": {
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "이 버블에 연접(직렬 2단) 뒤칸 허용. None=parking.tandem 을 따른다.",
-          "title": "Tandem"
-        }
-      },
-      "required": [
-        "kind"
-      ],
-      "title": "ParkingNode",
-      "type": "object"
-    },
-    "ParkingRow": {
-      "additionalProperties": false,
-      "description": "마당의 한 면 — 칸 줄이 등을 댄 자리. 칸은 자기 마당을 향한다.\n\n치수·좌표는 없다. 칸·진입 띠(직각 6m·평행 4m)는 법 상수고, 면 위 어디서부터 칸을\n잇는지도 엔진 규칙이다 — 좌표를 옵션에 넣으면 속성 창이 도면이 된다.",
-      "properties": {
-        "side": {
-          "description": "면의 자리 — 진입 도로에서 대지 안을 볼 때. far=도로 맞은편 · left/right=옆 · near=도로 쪽(도로에 등을 대고 마당을 본다).",
-          "enum": [
-            "far",
-            "left",
-            "right",
-            "near"
-          ],
-          "title": "Side",
-          "type": "string"
-        },
-        "stalls": {
-          "description": "이 면의 칸 수 — 연접 뒤칸·평행칸을 포함한 개수.",
-          "minimum": 1,
-          "title": "Stalls",
-          "type": "integer"
-        },
-        "align": {
-          "anyOf": [
-            {
-              "const": "wall",
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "description": "칸 줄의 방향 — wall=등 댄 필지 변을 따른다(사선 변에 붙은 칸). None=코어(건물) 축을 따른다 — 소장 도면 안쪽 칸 대부분이 이쪽이다.",
-          "title": "Align"
-        }
-      },
-      "required": [
-        "side",
-        "stalls"
-      ],
-      "title": "ParkingRow",
       "type": "object"
     },
     "RegulationOverrides": {

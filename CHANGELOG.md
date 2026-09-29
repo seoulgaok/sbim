@@ -25,11 +25,15 @@
   `interior_aisle`은 `parking_axis`로 흡수, `far/bcr_target`은 `*_limit_override`로 개명,
   법규 보정 3개(`road_setback`·`pedestrian_width`·`ratio_mode`)를 `regulations`로 모았다.
   결과 계약 `resolved_options`와 TS `BuildOptions` 생성 타입을 더했다.
-- 주차 버블 `parking.parking_graph`(2026-09-29) — 칸을 어느 차로에 몇 대씩 붙이는지를
-  좌표 없이 적는다. 노드는 `road`·`yard` 둘이고 곧은 차로는 면이 나란한 `yard`라 이름을
-  따로 두지 않았다(REF 35필지 곧은 차로 10조각이 전부 이 꼴). 진입 도로는 변 번호가 아니라
-  dir8 방위 — 링 번호는 유효 대지 산정이 바뀌면 조용히 밀린다. `parking_axis`는 지우지 않고
-  공존한다(엔진이 버블을 단계적으로 읽는 동안 옛 경로의 입력).
+- 주차 버블 `parking.parking_graph`(2026-09-29, 같은 날 개편) — (진입 도로 방위 dir8,
+  `road`|`yard`) 튜플의 배열로 위상만 적는다. 첫 값의 빈 값=주접도, 둘째 값은 그 도로 앞
+  한 줄(road)이거나 그 도로에서 대지 안 마당(yard). 배열 순서가 놓는 순서다. 칸 수·면
+  자리(far/left/right/near)·정렬·via·연접 노드 필드는 지웠다 — 대수는 결과다(칸 수를
+  입력으로 주자 엔진이 법정 대수와 어긋나면 실패로 떨어졌다). 연접은 `parking.tandem`
+  이, 나머지는 엔진이 정한다. 진입 도로는 변 번호가 아니라 dir8 방위 — 링 번호는 유효
+  대지 산정이 바뀌면 조용히 밀린다. 구 노드(dict) 저장값은 kind·road_side 만 튜플로
+  옮겨 받는다. `parking_axis`는 지우지 않고 공존한다(엔진이 버블을 단계적으로 읽는 동안
+  옛 경로의 입력).
 
 **목적함수(`objective`)는 폐기됐다.** "좋음"의 우선순위를 사용자가 리스트로
 주는 방식(`attach` 추가 → 제거 → 전체 폐기)을 세 번 시도한 끝에,

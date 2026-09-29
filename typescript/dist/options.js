@@ -6,7 +6,7 @@
  *       (schema/build_options.schema.json 을 거쳐 이 파일을 쓴다)
  *
  * 거의 모든 필드가 옵셔널이다 — 비우면 sbim 기본값(대부분 None=첫수표가 정한다)이 채운다.
- * 필수는 목록 항목 안쪽뿐이다(주차 버블 ParkingNode.kind · ParkingRow.side/stalls).
+ * 필수는 목록 항목 안쪽뿐이다(주차 버블 튜플의 둘째 값 road|yard).
  * 지운 키(core_along·interior_aisle·far_target …)는 서버가 받아서 버리거나 옮기지만,
  * 새로 보내는 값은 이 모양으로 보낸다.
  */

@@ -45,20 +45,13 @@ describe("BuildOptions TS 타입", () => {
       design: { core: { core_side: "s" } },
       source: { "core.core_side": "prior" },
     };
-    // 성북동 126-37 — 주접도 도로 앞 5대 + 서측 도로의 작은 마당
+    // 성북동 126-37 — 북측 도로 앞 줄 + 남서측 도로의 마당
     const seongbuk: BuildOptions = {
       design: {
         parking: {
           parking_graph: [
-            { kind: "road", stalls: 5, tandem: true },
-            {
-              kind: "yard",
-              road_side: "w",
-              rows: [
-                { side: "far", stalls: 2 },
-                { side: "left", stalls: 1, align: "wall" },
-              ],
-            },
+            ["n", "road"],
+            ["sw", "yard"],
           ],
         },
       },
@@ -67,7 +60,7 @@ describe("BuildOptions TS 타입", () => {
       design: { parking: { parking_graph: seongbuk.design?.parking?.parking_graph } },
       source: { "parking.parking_graph": "user" },
     };
-    expect(rg.design.parking?.parking_graph?.[1].rows?.[1].align).toBe("wall");
+    expect(rg.design.parking?.parking_graph?.[1][1]).toBe("yard");
     expect(o.design?.regulations?.far_limit_override).toBe(250);
     expect(r.source["core.core_side"]).toBe("prior");
   });
