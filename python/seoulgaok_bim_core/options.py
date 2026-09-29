@@ -84,7 +84,6 @@ Dir8 = Literal["n", "ne", "e", "se", "s", "sw", "w", "nw"]
 
 # 마당 면의 자리 — 진입 도로에서 대지 안을 볼 때. 절대 방위가 아니라 필지가 돌아도
 # 뜻이 같다. far=도로 맞은편 · left/right=옆 · near=도로 쪽(도로에 등을 대고 마당을 본다).
-YardSide = Literal["far", "left", "right", "near"]
 
 
 
@@ -298,120 +297,6 @@ class Core(BaseModel):
 # ═════════════════════════════════════════════════════════════════════
 
 
-class ParkingRow(BaseModel):
-    """마당의 한 면 — 칸 줄이 등을 댄 자리. 칸은 자기 마당을 향한다.
-
-    치수·좌표는 없다. 칸·진입 띠(직각 6m·평행 4m)는 법 상수고, 면 위 어디서부터 칸을
-    잇는지도 엔진 규칙이다 — 좌표를 옵션에 넣으면 속성 창이 도면이 된다.
-    """
-
-    model_config = ConfigDict(extra="forbid")
-
-    side: YardSide = Field(
-        description=(
-            "면의 자리 — 진입 도로에서 대지 안을 볼 때. far=도로 맞은편 · left/right=옆 · "
-            "near=도로 쪽(도로에 등을 대고 마당을 본다)."
-        ),
-    )
-    stalls: int = Field(
-        ge=1,
-        description="이 면의 칸 수 — 연접 뒤칸·평행칸을 포함한 개수.",
-    )
-    align: Optional[Literal["wall"]] = Field(
-        default=None,
-        description=(
-            "칸 줄의 방향 — wall=등 댄 필지 변을 따른다(사선 변에 붙은 칸). "
-            "None=코어(건물) 축을 따른다 — 소장 도면 안쪽 칸 대부분이 이쪽이다."
-        ),
-    )
-
-
-class ParkingNode(BaseModel):
-    """주차 버블 하나 — 칸이 어느 차로를 향하는가.
-
-    road=도로가 곧 차로(주차장법 시행규칙 11조⑤2호 — 칸 앞 띠가 도로에 닿는다),
-    yard=대지 안 차로(11조⑤1호). 곧은 차로는 이름을 따로 두지 않는다 — 면이 나란한
-    (left·right 만 있거나 면이 하나뿐인) yard 다. REF 35필지의 곧은 차로 10조각이 전부
-    이 꼴이었다(「곧은 차로 = 자란 마당」).
-
-    칸이 향하는 곳은 필드가 아니다 — 노드 소속이 곧 그것이다(road 칸은 도로, yard 칸은
-    제 마당). 코어·보행로도 노드가 아니다 — 코어는 Core 가, 보행로는 코어 문·exit_road 가
-    정해 칸보다 먼저 서고, 버블은 그 둘을 장애물로 받는다.
-    """
-
-    model_config = ConfigDict(extra="forbid")
-
-    kind: Literal["road", "yard"] = Field(
-        description=(
-            "road=도로가 곧 차로(칸이 도로를 향한다) · yard=대지 안 차로(칸이 마당을 "
-            "향한다). 곧은 차로는 면이 나란한 yard 다."
-        ),
-    )
-    road_side: Optional[Dir8] = Field(
-        default=None,
-        description=(
-            "진입 도로 (EPSG 절대 방위, core_side 와 같은 꼴). 접도 변 가운데 바깥쪽이 "
-            "이 방위와 가장 나란한 변의 도로다 — 같은 방위에 도로가 둘이면 도로 앞 "
-            "순서(frontage)가 앞선 쪽. None=주접도(road_edge 가 정한 변)."
-        ),
-    )
-    stalls: Optional[int] = Field(
-        default=None,
-        ge=1,
-        description=(
-            "이 버블의 칸 수 — 좌표가 아니라 개수다(연접 뒤칸·평행칸 포함). "
-            "yard 에 rows 가 있으면 그 합과 같아야 한다. "
-            "None=rows 합, rows 도 없으면 법정 대수까지."
-        ),
-    )
-    rows: Optional[list[ParkingRow]] = Field(
-        default=None,
-        min_length=1,
-        description=(
-            "yard 전용 — 마당 면 목록. 적힌 순서가 세우는 순서, 한 자리에 면 하나. "
-            "None=far→left→right→near 고정 순서로 면을 하나씩 더한다."
-        ),
-    )
-    via: Optional[int] = Field(
-        default=None,
-        ge=0,
-        description=(
-            "yard 전용 — 도로에 바로 닿지 않는 마당이 지나는 앞 마당의 목록 번호(0부터). "
-            "앞에 적힌 yard 만 가리킨다. None=도로에서 곧장 들어간다."
-        ),
-    )
-    tandem: Optional[bool] = Field(
-        default=None,
-        description="이 버블에 연접(직렬 2단) 뒤칸 허용. None=parking.tandem 을 따른다.",
-    )
-
-    @model_validator(mode="after")
-    def _kind_scope(self):
-        """road 에 마당 필드가 오면 거부한다 — 도로 앞 칸은 면이 없고 목도 없다.
-        조용히 버리면 소장 값이 어디서 사라졌는지 모른다(#10 ⑧ 각도 선례)."""
-        if self.kind == "road":
-            if self.rows is not None or self.via is not None:
-                raise ValueError(
-                    "parking_graph: road 노드는 rows·via 를 쓰지 않습니다 — 도로가 곧 "
-                    "차로라 마당 면·앞 마당이 없습니다."
-                )
-            return self
-        if self.rows is not None:
-            sides = [r.side for r in self.rows]
-            if len(set(sides)) != len(sides):
-                raise ValueError(
-                    f"parking_graph: 한 마당에 같은 자리 면이 둘입니다 {sides} — "
-                    "한 자리에 면 하나로 합쳐 적습니다."
-                )
-            total = sum(r.stalls for r in self.rows)
-            if self.stalls is not None and self.stalls != total:
-                raise ValueError(
-                    f"parking_graph: yard stalls={self.stalls}가 rows 합 {total}과 "
-                    "다릅니다 — 한 수를 두 곳에 다르게 적었습니다."
-                )
-        return self
-
-
 class Parking(BaseModel):
     """주차 — 어떤 축으로 어디에 깔까. 대수는 결과다(법정 대수는 regulations.ratio_mode).
 
@@ -465,7 +350,7 @@ class Parking(BaseModel):
             "다중도로 주차 — 주접도 외 잔여 접도변(넓은급→긴변, 최대 3)에 추가 주차. "
             "None=첫수표가 정한다. (구 이름 entry2 — '인접 2차 진입'에서 ≤3 도로로 "
             "일반화됐는데 이름이 2에 남아 있었다.) "
-            "parking_graph 가 있으면 읽지 않는다 — 어느 도로에 몇 대인지가 그 road 노드다."
+            "parking_graph 가 있으면 읽지 않는다 — 어느 도로에 버블을 붙일지가 그 배열이다."
         ),
     )
     tandem: Optional[bool] = Field(
@@ -476,16 +361,18 @@ class Parking(BaseModel):
         default=None,
         description="보행통로 출구 도로변 인덱스 (필지 폴리곤 기준). None=자동(최근접 도로변).",
     )
-    parking_graph: Optional[list[ParkingNode]] = Field(
+    parking_graph: Optional[list[tuple[Optional[Dir8], Literal["road", "yard"]]]] = Field(
         default=None,
         min_length=1,
         json_schema_extra={"auto": True},
         description=(
-            "주차 버블 — 칸을 어느 차로에 몇 대씩 붙이는가. 목록 순서가 놓는 순서다"
-            "(보행로 띠는 늘 먼저 선다). road=도로가 곧 차로, yard=대지 안 차로(곧은 "
-            "차로는 면이 나란한 yard). 좌표·치수는 없다 — 칸 방향은 코어(건물) 축이고 "
-            "벽을 따르는 면만 align=wall. 값이 있으면 multi_road 는 읽지 않는다. "
-            "None=첫수표가 정한다."
+            "주차 버블 — (진입 도로 방위, road|yard) 튜플의 배열. 위상만 적는다 — "
+            "칸 수·면 자리·정렬은 대수가 결과이듯 엔진이 정한다. 첫 값 = 진입 도로 방위"
+            "(dir8, None=주접도), 둘째 = 그 도로 앞 한 줄(road) 또는 그 도로에서 대지 "
+            "안 마당(yard). 배열 순서가 놓는 순서다(보행로 띠는 늘 먼저 선다). "
+            "예: 성북 [[\"n\",\"road\"],[\"sw\",\"yard\"]] · 연희 "
+            "[[null,\"yard\"],[null,\"yard\"]] — 같은 주접도에서 앞줄 하나와 마당 "
+            "둘. 값이 있으면 multi_road 는 읽지 않는다. None=첫수표가 정한다."
         ),
     )
 
@@ -500,11 +387,28 @@ class Parking(BaseModel):
           두 이름으로 받던 중복이다. parking_axis 가 이미 값이면 그쪽이 이긴다. False→road
           로 옮길 때 사선 각도가 남아 있으면 버린다 — 옛 엔진도 내부 차로가 아니면 각도를
           안 읽었고, 남기면 road 축 각도 검증에 걸려 설계안이 안 열린다.
+        - 구 `parking_graph` 노드(dict) → (방위, road|yard) 튜플(2026-09-29 개편): kind 는
+          둘째 값으로, road 노드의 road_side 는 첫 값으로 옮긴다. stalls·rows·via·tandem·
+          align 은 대수·면 자리·정렬이 결과라 옮길 자리가 없다 — 버린다.
         - `count`(대수는 결과) · `type`(deprecated, 각도·축의 세 번째 이름) ·
           `bk_offset`(백칸은 칸 깊이 바로 뒤 — 법정 상수)은 버린다.
         """
         if not isinstance(data, dict):
             return data
+        graph = data.get("parking_graph")
+        if isinstance(graph, list) and graph and any(
+            isinstance(n, dict) for n in graph
+        ):
+            folded = [
+                (
+                    (n.get("road_side") if n.get("kind") == "road" else None),
+                    n.get("kind"),
+                )
+                if isinstance(n, dict)
+                else n
+                for n in graph
+            ]
+            data = {**data, "parking_graph": folded}
         if data.get("parking_axis") == "auto":
             data = {**data, "parking_axis": None}
         if "interior_aisle" in data:
@@ -515,25 +419,6 @@ class Parking(BaseModel):
                 if not ia and data.get("parking_angle") not in (None, 90):
                     data.pop("parking_angle")
         return _drop(data, ("count", "type", "bk_offset"))
-
-    @model_validator(mode="after")
-    def _via_points_back(self):
-        """via 는 앞에 적힌 yard 만 가리킨다 — 목록 순서가 놓는 순서라, 앞으로만 가리키면
-        순환이 생길 수 없고 엔진은 적힌 순서대로 한 번에 푼다."""
-        for i, node in enumerate(self.parking_graph or ()):
-            if node.via is None:
-                continue
-            if node.via >= i:
-                raise ValueError(
-                    f"parking_graph[{i}].via={node.via} — via 는 앞에 적힌 마당 번호만 "
-                    "가리킵니다(첫 노드는 via 를 쓰지 않습니다)."
-                )
-            if self.parking_graph[node.via].kind != "yard":
-                raise ValueError(
-                    f"parking_graph[{i}].via={node.via}은 road 노드입니다 — 지나는 곳은 "
-                    "마당이어야 합니다(도로로 곧장 나가면 via 를 비웁니다)."
-                )
-        return self
 
     @model_validator(mode="after")
     def _angle_is_inner_only(self):
