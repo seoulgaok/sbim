@@ -273,6 +273,16 @@ Python `types.py`와 TypeScript `types.ts`가 같은 것을 다르게 정의하�
 **부정 변증법**: silent invalid를 금지한다. 모든 도메인 명제 위반은
 `CompileError`로 표면화한다. 조용히 넘어가는 게 가장 비싼 버그다.
 
+`_compile_errors`(2026-10-06)는 그 표면화를 **저장된 설계**까지 늘린다. 엔진이 설계안을
+거절해도 결과(도면·세대)는 저장되고 화면에 깨끗한 설계로 보이는 구멍이 있었다 — 이제
+거절 사유가 scheme.json에 함께 남아 소비처가 경고와 함께 보여준다. 어휘는 `errors.py
+CompileError`가 정본이므로(type·reason·details·suggestion) 새 필드는 그 배열을 참조할 뿐
+자기 모양을 발명하지 않는다. 없음(구 scheme)과 `[]`(엔진이 보고할 게 없었다)을 구별해 둔다
+— 둘 다 컴파일 통과지만, 저장값에서 「없음」을 「0건」으로 바꿔 적면 옛 방출물과 방금
+컴파일된 설계를 가르는 수단이 사라진다. 밑줄 키이므로 python 쪽은 docstring 계약
+(extra=allow가 그대로 통과시키고), 선언은 TS `SchemeSpatial`이 받는다. 엔진 응답의
+`compile_errors`(밑줄 없음, 그날도 있던 키)는 응답 전용이고 scheme 저장값에는 없다.
+
 ---
 
 ## 오픈소스화 (2026-08)

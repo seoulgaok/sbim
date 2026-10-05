@@ -260,7 +260,9 @@ class Scheme(_Base):
     _floor_outlines·_pedestrian_path·_pedestrian_paths(보행로 전부, [0]=_pedestrian_path —
     코어 문 2개 #35)·_halls({level: [ring, …]} DH 공용 홀 — 코어 복도 띠를 늘인 팔·EV 로비(연희 75-9 GT), 접면 연결계 = 복도∪홀)·
     _penthouse_outline·_common_footprint·_validation·_north_ref_edges·_north_datum_offset·
-    _column_size·_legal_checks(법규 33항목 판정 실값 — key는 legal_checklist.yaml, #16)."""
+    _column_size·_legal_checks(법규 33항목 판정 실값 — key는 legal_checklist.yaml, #16)·
+    _compile_errors(이 설계안에 대한 엔진 스스로의 거절 사유 — errors.py CompileError[].
+    없음 또는 [] = 컴파일 통과, 하나 이상이면 설계는 저장됐지만 경고와 함께 보여야 한다)."""
     data: SchemeData
     floor_plans: list[FloorPlan]
     unit_ids: list[str]
