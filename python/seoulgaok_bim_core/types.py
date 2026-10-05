@@ -262,7 +262,9 @@ class Scheme(_Base):
     _penthouse_outline·_common_footprint·_validation·_north_ref_edges·_north_datum_offset·
     _column_size·_legal_checks(법규 33항목 판정 실값 — key는 legal_checklist.yaml, #16)·
     _compile_errors(이 설계안에 대한 엔진 스스로의 거절 사유 — errors.py CompileError[].
-    없음 또는 [] = 컴파일 통과, 하나 이상이면 설계는 저장됐지만 경고와 함께 보여야 한다)."""
+    없음 또는 [] = 컴파일 통과, 하나 이상이면 설계는 저장됐지만 경고와 함께 보여야 한다)·
+    _engine_stamp(이 설계안을 만든 엔진 빌드를 적는 도장 — 서버 결과를 추적·재현한다.
+    engine_commit·platform·python·compiled_at(ISO-8601 UTC) 전부 str. 없음 = 구 scheme)."""
     data: SchemeData
     floor_plans: list[FloorPlan]
     unit_ids: list[str]
