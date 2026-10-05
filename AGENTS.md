@@ -43,14 +43,12 @@
   고르는 선택은 다르다 — 내부 차로 방식 넷에 이름을 줬다가 하루 만에 되돌렸다(#9 → #10 ④).
   소장 GT는 방식을 고르지 않고 한 방식 안에서 직각·평행을 **섞고** 있었다(12필지 중 9).
   새 어휘에 이름을 주기 전에 **소장 도면에서 그게 선택으로 나타나는지** 먼저 센다.
-- `parking_axis`의 축은 `road`·`inner` 둘뿐이다. 구 `"core"`는 제거됐고 **거부**한다 —
-  giga `manual_options.json`의 이태원동 303-22가 이 값을 심고 있어, 그 줄과
-  `stalls.py::stage_core_axis`를 함께 걷어내야 한다.
-- 「자동」의 표기는 `None` 하나다. legacy `"auto"`는 `_fold_legacy_auto`가 받아서 접는다 —
-  구 저장값 51건이 심고 있어 거부하면 통째로 깨진다. 자동 가능 여부는
-  `json_schema_extra={"auto": True}`로 표시한다(산문 description에 묻지 않는다). 지울 예정도
-  같은 방식으로 키를 붙인다 — `json_schema_extra={"deprecated": "…"}`가 스키마를 지나 TS
-  생성물에 `@deprecated`로 렌더된다(예: `options._DEPRECATED_BY_BUBBLE_TAG`).
+- 「자동」의 표기는 `None` 하나다. 자동 가능 여부는 `json_schema_extra={"auto": True}`로
+  표시한다(산문 description에 묻지 않는다).
+- **주차 버블이 대신한 세 필드는 삭제됐다(2026-10-05)** — `parking_axis`·`road_edge`·
+  `multi_road`·`interior_aisle`. building-generator 가 어디서도 읽지 않고 REF 48 필지가
+  전부 버블 경로로 까는 것이 전제였다. 저장값에 남아 있는 키는 `Parking._fold_legacy`가
+  조용히 버린다(거부하지 않는다 — 구 `"auto"`·`"core"` 값도 같이).
 
 ## 주차 버블 — `Parking.parking_graph` (2026-09-29)
 
@@ -72,8 +70,9 @@
   road_side 없는 노드를 만나면 방위를 지어내지 않고 그래프 전체를 버린다(None).
 - `parking_axis`와의 모순은 **거부하지 않는다** — REF 추출 축과 버블이 갈리는 필지가 있고
   엔진이 버블을 다 읽기 전까지 옛 경로가 그 축을 쓴다.
-- 버블이 뜻을 대신 가져간 `parking_axis`·`road_edge`·`multi_road` 는 **지울 예정으로 표시만**
-  해 둔다(엔진이 버블 없는 필지에서 아직 읽는다). 삭제는 엔진이 이 셋을 안 읽게 된 뒤.
+- 버블이 뜻을 대신 가져간 `parking_axis`·`road_edge`·`multi_road` 는 **삭제됐다**(2026-10-05,
+  전제: building-generator PR #346 머지 + REF 48 필지 전부 버블 경로) — 저장값의 키는
+  `_fold_legacy`가 조용히 버린다.
 - 엔진은 road → yard → 섞임 순으로 붙이고, 모든 튜플을 지원할 때만 버블을 읽는다(아니면
   통째로 무시) — 일부만 읽으면 옵션이 가짜 필드가 된다. `aisle` 는 뒤에 늘어난 셋째 종류 —
   추출기와 엔진(building-generator)이 이 값을 다루기 전까지는 속성 창만 열려 있다.
