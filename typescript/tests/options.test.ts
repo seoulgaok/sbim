@@ -37,7 +37,7 @@ describe("BuildOptions TS 타입", () => {
     const o: BuildOptions = {
       design: {
         core: { type: 2, core_side: "s", core_rotation: 90, core_mirror: false },
-        parking: { parking_axis: "inner", parking_angle: 60 },
+        parking: { parking_angle: 60 },
         regulations: { far_limit_override: 250, road_setback: 0, ratio_mode: "multi_family" },
       },
     };
