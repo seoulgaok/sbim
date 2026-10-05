@@ -358,12 +358,9 @@ export interface ResolvedDesign {
   core?: Pick<Core, "type" | "core_side" | "core_rotation" | "core_mirror">;
   parking?: Pick<
     Parking,
-    | "parking_axis"
     | "parking_angle"
     | "parallel"
     | "tandem"
-    | "multi_road"
-    | "road_edge"
     | "parking_graph"
   >;
 }

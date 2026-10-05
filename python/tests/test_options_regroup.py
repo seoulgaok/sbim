@@ -52,10 +52,7 @@ EXPECTED = [
     ("design.core.core_rotation", 90),
     ("design.core.core_entries", 2),
     ("design.regulations.ratio_mode", "non_residential"),  # 법규 보정으로 모인다
-    ("design.parking.parking_axis", "inner"),          # 주차 배치가 주차로 모인다
-    ("design.parking.parking_angle", 45),
-    ("design.parking.road_edge", 1),
-    ("design.parking.multi_road", True),   # 이름이 2인데 뜻은 ≤3이었다
+    ("design.parking.parking_angle", 45),             # 각도는 남는다(축은 엔진이 정한다)
     ("design.parking.tandem", False),
     ("design.parking.exit_road", 0),
     ("design.regulations.road_setback", 1.5),
@@ -86,12 +83,14 @@ def _dig(obj, path):
 def test_legacy_field_lands_in_its_object(path, expected):
     assert _dig(BuildOptions.model_validate(LEGACY), path) == expected
 
-
-# 2026-09-28 정리로 지웠거나(버림) 다른 이름으로 흡수된 키 — 「흘린 값」이 아니다
+# 2026-09-28 정리로 지웠거나(버림) 다른 이름으로 흡수된 키 — 「흘린 값」이 아니다.
+# parking_axis·road_edge·multi_road·entry2·interior_aisle 은 주차 버블이 대신한 뒤
+# 삭제됐다(2026-10-05) — 값이 어디에도 도착하지 않는다.
 REMOVED_OR_RENAMED = {
     "commercial_remainder", "cut_axis", "composition", "count", "bk_offset",
     "stall_width", "stall_depth", "aisle_width",          # 버림
-    "interior_aisle", "bcr_target",                       # parking_axis · bcr_limit_override
+    "interior_aisle", "bcr_target",                       # 버림 · bcr_limit_override
+    "parking_axis", "road_edge", "multi_road", "entry2",  # 버블이 대신한 세 필드 + 구 이름
 }
 
 
@@ -110,10 +109,13 @@ def test_legacy_migration_loses_nothing():
 
 
 def test_legacy_name_follows_its_meaning():
-    """entry2 → multi_road — 이름은 2인데 뜻은 '≤3 도로'였다. 구 키도 받아서 옮긴다."""
+    """entry2 → multi_road → 삭제 — 이름은 2인데 뜻은 '≤3 도로'였고, 뜻은 버블이 대신한다.
+
+    구 키는 조용히 버려진다(거부하지 않는다).
+    """
     o = BuildOptions.model_validate({"ground_floor": {"entry2": True}})
-    assert o.design.parking.multi_road is True
     assert not hasattr(o.design.parking, "entry2")
+    assert "multi_road" not in o.design.parking.model_dump()
 
 
 def test_dropped_legacy_financing_fields_are_swallowed():
@@ -126,14 +128,6 @@ def test_dropped_legacy_financing_fields_are_swallowed():
     )
     assert o.business.financing.land_loan_ltv == 0.6
     assert not hasattr(o.business.financing, "deposit_pct")
-
-
-def test_angle_is_inner_only():
-    """외부 도로변 주차는 항상 직각 — road + 사선은 조용히 무시되던 조합이었다."""
-    with pytest.raises(Exception, match="inner 축에서만"):
-        BuildOptions.model_validate({"design": {"parking": {"parking_axis": "road", "parking_angle": 45}}})
-    ok = BuildOptions.model_validate({"design": {"parking": {"parking_axis": "inner", "parking_angle": 45}}})
-    assert ok.design.parking.parking_angle == 45
 
 
 def test_new_shape_is_not_touched():
@@ -210,13 +204,7 @@ def test_every_stored_design_still_loads():
         try:
             BuildOptions.model_validate(raw)
         except Exception as e:
-            msg = str(e)
-            # 제거된 두 필드는 일부러 거부한다 — 그 둘인지 메시지로 가른다
-            cause = ("core_axis" if "measure_core_rotation" in msg
-                     else "parking_axis=core" if "parking_axis" in msg
-                     else msg.split("\n")[1][:70])
-            failed.append((p.parent.name, cause))
-    # 구 core_axis는 버려서 열리고(#13), 구 parking_axis="core"만 거부한다(#10 ⑤) —
-    # 사람이 심어둔 축 의도라 말없이 바꾸지 않는다.
-    unexpected = [f for f in failed if f[1] != "parking_axis=core"]
-    assert unexpected == [], f"열리지 않는 저장값: {unexpected}"
+            failed.append((p.parent.name, str(e).split("\n")[1][:70]))
+    # 구 parking_axis="core"(이태원동 303-22)도 이제 버려서 열린다 — 축 필드 자체가
+    # 삭제됐다(2026-10-05). 어느 저장값도 거부되지 않는다.
+    assert failed == [], f"열리지 않는 저장값: {failed}"

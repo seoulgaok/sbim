@@ -73,12 +73,6 @@ ParkingRatioMode = Literal["multi_family", "non_residential"]
 
 CorridorMode = Literal["carve", "edge"]
 
-# 주차 행 배치 축. 축은 둘이다 — 도로에 기대느냐(road), 대지 안에 차로를 내느냐(inner).
-# 내부 차로 안쪽을 어떤 방식으로 까는지는 **고르는 게 아니라 섞는 것**이라 값이 아니다
-# (소장 GT 30필지 중 대지 안쪽 12필지의 9필지가 직각과 평행을 섞는다 — #10 ④).
-# None = 자동. 「자동」의 표기는 None 하나뿐이고, legacy "auto"는 받아서 None으로 접는다.
-ParkingAxis = Literal["road", "inner"]
-
 # 절대 방위 여덟(EPSG) — core_side 에서 c(매스 안쪽, 방위가 아니다)를 뺀 꼴.
 Dir8 = Literal["n", "ne", "e", "se", "s", "sw", "w", "nw"]
 
@@ -264,8 +258,7 @@ class Core(BaseModel):
         description=(
             "코어(복도) 보행 출입구 수 1|2. 2=코어 문 반대편에도 문 — 보행로가 도로에서 "
             "꼬이는 필지(합정동 441-31). None=문 하나(엔진이 둘째 문을 스스로 켜지 않는다 "
-            "— 2가 필요하면 옵션으로 준다). scheme `_pedestrian_paths`로 전부 방출. "
-            "(multi_road는 차량 진입 옵션 — 별개)"
+            "— 2가 필요하면 옵션으로 준다). scheme `_pedestrian_paths`로 전부 방출."
         ),
     )
 
@@ -287,17 +280,6 @@ class Core(BaseModel):
 # ═════════════════════════════════════════════════════════════════════
 
 
-# 세 필드는 주차 버블(parking_graph)에 뜻을 넘겼다 — 버블이 「어느 도로에 어떤 종류로
-# 주차하나」를 정하므로 주 배치 축·주접도 변 번호·다중도로 여부는 버블이 대신한다.
-# 다만 엔진이 버블이 없는 필지에서 아직 이 셋을 읽는다 — 그래서 지금은 **표시만** 한다
-# (description 접두어 + JSON Schema `deprecated`, TS 생성물에는 @deprecated 태그로 렌더).
-# 실제 삭제는 엔진이 이 필드를 안 읽게 된 뒤 별도 과제.
-_DEPRECATED_BY_BUBBLE = "[지울 예정 — 주차 버블 parking_graph 가 대신한다. 버블이 없을 때만 쓰인다.] "
-# JSON Schema `deprecated` 의 값 = 이유 한 줄. TS 생성물에는 @deprecated 태그로 떨어진다
-# (태그에는 접두어를 또 넣지 않는다 — 겹친다).
-_DEPRECATED_BY_BUBBLE_TAG = "주차 버블 parking_graph 가 대신한다"
-
-
 class Parking(BaseModel):
     """주차 — 어떤 축으로 어디에 깔까. 대수는 결과다(법정 대수는 regulations.ratio_mode).
 
@@ -307,26 +289,11 @@ class Parking(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    parking_axis: Optional[ParkingAxis] = Field(
-        default=None,
-        json_schema_extra={"auto": True, "deprecated": _DEPRECATED_BY_BUBBLE_TAG},
-        description=(
-            _DEPRECATED_BY_BUBBLE
-            + "주차 행 배치 축 — road=주접도 프레임(도로에 기대 깐다), "
-            "inner=대지 안에 차로를 내고 그 차로 기준으로 깐다 — 까는 방식(직각·평행·"
-            "경계 한 줄·회전 마당과 그 섞음)은 첫수표가 정한다. "
-            "None=첫수표가 정한다. 대부분 None. "
-            "legacy \"auto\"는 None과 같은 뜻이라 받아서 접는다. "
-            "구 \"core\"(코어 격자 정렬)는 제거됐다 — REF 30필지에서 엔진이 한 번도 고르지 "
-            "않았고, 뜻은 매스 격자 정렬인데 이름이 구현(코어 사각형에서 방향을 빌림)을 "
-            "드러냈다. 건물이 비뚤면 road/inner 안에서 기울여 깐다(#10 ④⑤). "
-            "구 interior_aisle(True/False)은 이 필드로 흡수됐다 — inner/road."
-        ),
-    )
     parking_angle: Optional[Literal[45, 60, 90]] = Field(
         default=None,
+        json_schema_extra={"auto": True},
         description=(
-            "내부 차로(parking_axis=inner) 주차 각도. 45/60=사선(fishbone) — 차로폭은 "
+            "내부 차로 주차 각도. 45/60=사선(fishbone) — 차로폭은 "
             "주차장법 시행규칙 11조⑤1호 법정값(45° 3.5m·60° 4.0m), 연접(back) 없음, "
             "막다른 차로라 일방 진입·후진 퇴출 전제. 90=직각(차로 6m). "
             "None=첫수표가 정한다(현행 90). 사선 순차 평가는 2026-09-19에 제거됐다. "
@@ -339,25 +306,6 @@ class Parking(BaseModel):
         description=(
             "평행주차 열 사용 — True=평행 열을 쓴다(직각이 안 들어가는 폭에서 평행으로), "
             "False=평행 열을 쓰지 않는다. None=첫수표·엔진 규칙이 정한다."
-        ),
-    )
-    road_edge: Optional[int] = Field(
-        default=None,
-        json_schema_extra={"deprecated": _DEPRECATED_BY_BUBBLE_TAG},
-        description=(
-            _DEPRECATED_BY_BUBBLE
-            + "주접도 변 인덱스 (필지 폴리곤 기준). None=최장 접도변 자동."
-        ),
-    )
-    multi_road: Optional[bool] = Field(
-        default=None,
-        json_schema_extra={"auto": True, "deprecated": _DEPRECATED_BY_BUBBLE_TAG},
-        description=(
-            _DEPRECATED_BY_BUBBLE
-            + "다중도로 주차 — 주접도 외 잔여 접도변(넓은급→긴변, 최대 3)에 추가 주차. "
-            "None=첫수표가 정한다. (구 이름 entry2 — '인접 2차 진입'에서 ≤3 도로로 "
-            "일반화됐는데 이름이 2에 남아 있었다.) "
-            "parking_graph 가 있으면 읽지 않는다 — 어느 도로에 버블을 붙일지가 그 배열이다."
         ),
     )
     tandem: Optional[bool] = Field(
@@ -396,8 +344,7 @@ class Parking(BaseModel):
             "도로에서 들어가는 마당 · 연희 [[\"nw\",\"yard\"],[\"sw\",\"yard\"]] — 같은 "
             "서쪽 도로의 북쪽 끝·남쪽 끝에서 든 마당 둘 · 화곡 1033-19 의 두 대안 "
             "[[\"w\",\"yard\"]](서쪽 작은 마당에 칸이 세 면)과 [[\"w\",\"aisle\"]](같은 "
-            "자리 곧은 차로 두 줄). 값이 있으면 multi_road 는 읽지 않는다. "
-            "None=첫수표가 정한다."
+            "자리 곧은 차로 두 줄). None=첫수표가 정한다."
         ),
     )
 
@@ -406,17 +353,14 @@ class Parking(BaseModel):
     def _fold_legacy(cls, data):
         """구 저장값을 옮겨 받는다 — 거부하면 그 값을 심은 설계안이 통째로 깨진다.
 
-        - legacy `parking_axis="auto"` → None: 「자동」의 표기를 하나로 접는다(#10 ③,
-          구 저장값 51건).
-        - `interior_aisle` → `parking_axis`(2026-09-28): True=inner, False=road. 같은 것을
-          두 이름으로 받던 중복이다. parking_axis 가 이미 값이면 그쪽이 이긴다. False→road
-          로 옮길 때 사선 각도가 남아 있으면 버린다 — 옛 엔진도 내부 차로가 아니면 각도를
-          안 읽었고, 남기면 road 축 각도 검증에 걸려 설계안이 안 열린다.
         - 구 `parking_graph` 노드(dict) → (방위, road|yard|aisle) 튜플(2026-09-29 개편):
           kind 는 둘째 값으로, road 노드의 road_side 는 첫 값으로 옮긴다. 방위는 항상 8방위다
           (null 제거) — road_side 없는 노드를 만나면 방위를 지어내지 않고 그 그래프
           전체를 버린다(None). stalls·rows·via·tandem·align 은 대수·면 자리·정렬이 결과라
           옮길 자리가 없다 — 버린다.
+        - `parking_axis`·`road_edge`·`multi_road`·`interior_aisle`(2026-10-05 삭제):
+          주차 버블 parking_graph 가 뜻을 대신 가져갔다 — building-generator 도 어디서도
+          읽지 않으니 옮길 자리가 없어 버린다. 구 `"auto"`·`"core"` 값도 같이 묻는다.
         - `count`(대수는 결과) · `type`(deprecated, 각도·축의 세 번째 이름) ·
           `bk_offset`(백칸은 칸 깊이 바로 뒤 — 법정 상수)은 버린다.
         """
@@ -440,30 +384,8 @@ class Parking(BaseModel):
                 data = {k: v for k, v in data.items() if k != "parking_graph"}
             else:
                 data = {**data, "parking_graph": folded}
-        if data.get("parking_axis") == "auto":
-            data = {**data, "parking_axis": None}
-        if "interior_aisle" in data:
-            data = dict(data)
-            ia = data.pop("interior_aisle")
-            if ia is not None and data.get("parking_axis") is None:
-                data["parking_axis"] = "inner" if ia else "road"
-                if not ia and data.get("parking_angle") not in (None, 90):
-                    data.pop("parking_angle")
-        return _drop(data, ("count", "type", "bk_offset"))
-
-    @model_validator(mode="after")
-    def _angle_is_inner_only(self):
-        """각도는 내부 차로에서만 뜻이 있다 — 스코프를 산문이 아니라 타입에서 막는다(#10 ⑧).
-
-        외부 도로변 주차는 항상 직각이다(주차장법 시행규칙 11조⑤2호 — 도로를 차로로 쓰는
-        형식은 직각·평행뿐). road 축에 45°를 주면 엔진이 조용히 무시하던 조합이었다.
-        """
-        if self.parking_axis == "road" and self.parking_angle not in (None, 90):
-            raise ValueError(
-                f"parking.parking_angle={self.parking_angle}은 inner 축에서만 씁니다 — "
-                "외부 도로변 주차는 항상 직각입니다(주차장법 시행규칙 11조⑤2호)."
-            )
-        return self
+        return _drop(data, ("count", "type", "bk_offset",
+                            "parking_axis", "road_edge", "multi_road", "interior_aisle"))
 
     def bk_eff(self, stall_depth: float = 5.0) -> float:
         """백칸 밴드 시작 깊이 = 칸 깊이(법정 5.0). bk_offset 을 지워 옵션이 아니다 —

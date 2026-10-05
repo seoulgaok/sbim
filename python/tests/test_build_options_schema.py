@@ -28,36 +28,31 @@ def test_generated_files_are_fresh():
 def test_removed_keys_not_in_generated_ts():
     ts = (_gen().TS_PATH).read_text(encoding="utf-8")
     for gone in ("core_along?:", "interior_aisle?:", "far_target?:", "bcr_target?:",
-                 "bk_offset?:", "cut_axis?:", "commercial_remainder?:", "stall_width?:"):
+                 "bk_offset?:", "cut_axis?:", "commercial_remainder?:", "stall_width?:",
+                 "parking_axis?:", "road_edge?:", "multi_road?:"):
         assert gone not in ts, gone
     assert "far_limit_override?:" in ts and "export interface BuildOptions" in ts
 
 
-# 주차 버블이 대신하는 세 필드 — 엔진이 버블 없는 필지에서 아직 읽으므로 지금은 삭제가 아니라
-# 표시만 한다. 표시가 생성물에서 빠지면 속성 창이 지워질 필드를 그대로 권한다.
+# 주차 버블이 대신한 세 필드 — 삭제됐다(2026-10-05). 생성물에 되살아나면 속성 창이
+# 지워진 필드를 다시 권한다.
 SUPERSEDED_BY_BUBBLE = ("parking_axis", "road_edge", "multi_road")
 
 
-def test_bubble_superseded_fields_marked_through_generated_files():
+def test_bubble_superseded_fields_absent_from_generated_files():
     gen = _gen()
     props = json.loads(gen.SCHEMA_PATH.read_text(encoding="utf-8"))["$defs"]["Parking"]["properties"]
     ts = gen.TS_PATH.read_text(encoding="utf-8")
-    lines = ts.splitlines()
     for name in SUPERSEDED_BY_BUBBLE:
-        desc = Parking.model_fields[name].description
-        assert desc.startswith("[지울 예정"), f"{name}: 정본 설명에 표시가 없다"
-        assert props[name].get("deprecated"), f"{name}: 스키마에 deprecated 가 없다"
-        at = next(i for i, ln in enumerate(lines) if ln.startswith(f"  {name}?:"))
-        doc = "\n".join(lines[:at])
-        jsdoc = doc[doc.rindex("/**"):]
-        assert "[지울 예정" in jsdoc, f"{name}: TS JSDoc 첫 줄에 표시가 없다"
-        assert "@deprecated" in jsdoc, f"{name}: TS JSDoc 에 @deprecated 가 없다"
+        assert name not in Parking.model_fields, f"{name}: 정본에 돌아왔다"
+        assert name not in props, f"{name}: 스키마에 남아 있다"
+        assert f"  {name}?:" not in ts, f"{name}: TS 에 남아 있다"
 
 
 def test_resolved_options_shape():
     r = ResolvedOptions.model_validate({
         "design": {"core": {"core_side": "s", "core_rotation": 90, "type": 2},
-                   "parking": {"parking_axis": "inner", "parking_angle": 60}},
+                   "parking": {"parking_angle": 60}},
         "source": {"core.core_side": "prior", "core.type": "user"},
     })
     assert r.design.core.core_side == "s"

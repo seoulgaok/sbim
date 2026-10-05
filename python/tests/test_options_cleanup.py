@@ -22,6 +22,7 @@ NEW_SHAPE_WITH_OLD_KEYS = {
         "parking": {
             "count": 6, "type": "perpendicular", "bk_offset": 5.5,
             "interior_aisle": True, "tandem": True,
+            "parking_axis": "auto", "road_edge": 2, "multi_road": True,
             "road_setback": 0.5, "ratio_mode": "non_residential",
         },
         "circulation": {"corridor_mode": "edge", "pedestrian_width": 1.8},
@@ -55,11 +56,11 @@ def test_old_keys_land_in_new_shape(raw):
     assert "cut_axis" not in d["design"]["units"]
     assert not {"core_along", "composition"} & set(d["design"]["core"])
     assert not {"count", "type", "bk_offset", "interior_aisle",
+                "parking_axis", "road_edge", "multi_road",
                 "road_setback", "ratio_mode"} & set(d["design"]["parking"])
     assert "pedestrian_width" not in d["design"]["circulation"]
     assert not {"stall_width", "stall_depth", "aisle_width"} & set(d["standards"]["dimensions"])
     # 흡수 · 개명 · 이동
-    assert o.design.parking.parking_axis == "inner"
     assert o.design.regulations.far_limit_override == 230.0
     assert o.design.regulations.road_setback == 0.5
     assert o.design.regulations.pedestrian_width == 1.8
@@ -82,25 +83,14 @@ def test_flat_shape_keeps_new_fields_it_carries():
     assert o.design.parking.parallel is False
 
 
-@pytest.mark.parametrize(("ia", "axis"), [(True, "inner"), (False, "road"), (None, None)])
-def test_interior_aisle_becomes_parking_axis(ia, axis):
-    assert Parking.model_validate({"interior_aisle": ia}).parking_axis == axis
+def test_interior_aisle_is_dropped():
+    """interior_aisle 은 parking_axis 로 흡수됐다가(2026-09-28) 축 필드 삭제와 함께 버려졌다.
 
-
-def test_parking_axis_wins_over_interior_aisle():
-    p = Parking.model_validate({"interior_aisle": True, "parking_axis": "road"})
-    assert p.parking_axis == "road"
-
-
-def test_interior_aisle_false_drops_diagonal_angle():
-    """옛 엔진은 내부 차로가 아니면 각도를 안 읽었다 — road 로 옮기며 각도를 버려야 열린다."""
-    p = Parking.model_validate({"interior_aisle": False, "parking_angle": 45})
-    assert p.parking_axis == "road" and p.parking_angle is None
-
-
-def test_interior_aisle_with_legacy_auto_axis():
-    p = Parking.model_validate({"interior_aisle": True, "parking_axis": "auto"})
-    assert p.parking_axis == "inner"
+    옮길 자리가 없다 — 뜻은 주차 버블이 대신한다. 조용히 버려진다.
+    """
+    p = Parking.model_validate({"interior_aisle": True, "parking_angle": 45})
+    assert "interior_aisle" not in p.model_dump()
+    assert p.parking_angle == 45   # 각도는 남는다 — 축은 엔진이 정한다
 
 
 @pytest.mark.parametrize(("old", "new"), [("far_target", "far_limit_override"),
@@ -139,6 +129,7 @@ def test_old_place_merges_into_regulations_instance():
     (Core, "core_along"), (Core, "composition"),
     (Parking, "count"), (Parking, "type"), (Parking, "bk_offset"),
     (Parking, "interior_aisle"), (Parking, "road_setback"), (Parking, "ratio_mode"),
+    (Parking, "parking_axis"), (Parking, "road_edge"), (Parking, "multi_road"),
     (Circulation, "pedestrian_width"),
     (Dimensions, "stall_width"), (Dimensions, "stall_depth"), (Dimensions, "aisle_width"),
 ])
