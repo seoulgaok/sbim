@@ -287,6 +287,19 @@ export interface CoreLayout {
   ev_front?: Ring;
 }
 
+/** 이 설계안을 만든 엔진 빌드 도장 — 서버 결과를 추적·재현한다. 전부 문자열.
+ *  같은 소스라도 CPU 아키텍처가 다르면 컴파일 분기가 갈릴 수 있어 platform 을 남긴다. */
+export interface EngineStamp {
+  /** 엔진 저장소 커밋 SHA — 이 도면을 만든 빌드 */
+  engine_commit: string;
+  /** 엔진이 돈 플랫폼 — "linux-x86_64" · "darwin-arm64" 등 */
+  platform: string;
+  /** 엔진 파이썬 버전 문자열 */
+  python: string;
+  /** 컴파일 시각 — ISO-8601 UTC */
+  compiled_at: string;
+}
+
 /** scheme.json 최상위 밑줄 키 — 생성기 scheme 방출부 방출 계약.
  *  전부 옵셔널 (구 scheme 호환). */
 export interface SchemeSpatial {
@@ -344,6 +357,9 @@ export interface SchemeSpatial {
   /** 엔진이 이 설계안을 스스로 거절한 사유 (errors.ts CompileError — type·reason·details·suggestion).
    *  없음 또는 [] = 컴파일 통과. 하나 이상이면 설계는 저장됐지만 경고와 함께 보여야 한다. */
   _compile_errors?: CompileError[];
+  /** 이 설계안을 만든 엔진 빌드 도장 (EngineStamp) — 서버 결과를 추적·재현한다.
+   *  전부 문자열. 구 scheme엔 없다 — 소비처는 부재를 "구 버전"으로 처리할 것. */
+  _engine_stamp?: EngineStamp;
 }
 
 export interface Scheme extends SchemeSpatial {
