@@ -14,7 +14,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from .options import CoreType, ParkingAxis
+from .options import CoreType
 
 
 class _Base(BaseModel):
@@ -282,12 +282,9 @@ class _ResolvedCore(_Base):
 
 
 class _ResolvedParking(_Base):
-    parking_axis: Optional[ParkingAxis] = None
     parking_angle: Optional[Literal[45, 60, 90]] = None
     parallel: Optional[bool] = None
     tandem: Optional[bool] = None
-    multi_road: Optional[bool] = None
-    road_edge: Optional[int] = None
     parking_graph: Optional[list[tuple[str, str]]] = None   # 엔진이 실제로 푼 버블 (방위, road|yard|aisle)
 
 
