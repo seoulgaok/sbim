@@ -10,6 +10,7 @@
  */
 
 import type { Core, Massing, Parking } from "./options.js";
+import type { CompileError } from "./errors.js";
 
 /** EPSG:5186 절대 좌표점 */
 export type Point2 = [number, number];
@@ -340,6 +341,9 @@ export interface SchemeSpatial {
     law: string;
     note?: string;
   }[];
+  /** 엔진이 이 설계안을 스스로 거절한 사유 (errors.ts CompileError — type·reason·details·suggestion).
+   *  없음 또는 [] = 컴파일 통과. 하나 이상이면 설계는 저장됐지만 경고와 함께 보여야 한다. */
+  _compile_errors?: CompileError[];
 }
 
 export interface Scheme extends SchemeSpatial {
