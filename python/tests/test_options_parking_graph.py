@@ -39,8 +39,7 @@ def test_default_is_none_and_old_fields_untouched():
     p = Parking()
     assert p.parking_graph is None
     before = {k: v for k, v in p.model_dump().items() if k != "parking_graph"}
-    assert before == {"parking_axis": None, "parking_angle": None, "parallel": None,
-                      "road_edge": None, "multi_road": None, "tandem": None,
+    assert before == {"parking_angle": None, "parallel": None, "tandem": None,
                       "exit_road": None}
 
 
@@ -136,7 +135,7 @@ def test_legacy_dict_node_with_unknown_kind_drops_whole_graph():
 
 def test_resolved_options_carries_graph():
     r = ResolvedOptions.model_validate({
-        "design": {"parking": {"parking_axis": "inner", "parking_graph": YEONHUI_75_9}},
+        "design": {"parking": {"parking_graph": YEONHUI_75_9}},
         "source": {"parking.parking_graph": "user"},
     })
     assert r.design.parking.parking_graph == [("nw", "yard"), ("sw", "yard")]
