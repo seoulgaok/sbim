@@ -257,6 +257,18 @@ export interface EngineStamp {
     /** 컴파일 시각 — ISO-8601 UTC */
     compiled_at: string;
 }
+/** 기둥 실단면 하나 — _column_centers의 같은 자리 기둥을 정사각이 아니라 이 단면으로 그린다.
+ *  w는 빔 축 방향, d는 그 가로, angle_deg는 w 축의 각(도). */
+export interface ColumnSection {
+    /** 기둥 중심 (EPSG:5186 절대) — _column_centers와 같은 프레임·같은 순서 */
+    center: Point2;
+    /** 단면 치수 (m) — 빔 축 방향 */
+    w: number;
+    /** 단면 치수 (m) — 빔 축의 가로 */
+    d: number;
+    /** w 축의 각 (도) */
+    angle_deg: number;
+}
 /** scheme.json 최상위 밑줄 키 — 생성기 scheme 방출부 방출 계약.
  *  전부 옵셔널 (구 scheme 호환). */
 export interface SchemeSpatial {
@@ -282,6 +294,10 @@ export interface SchemeSpatial {
     /** 기둥 단면 한 변 (m) — Concrete.column_size 확정값. 도면 재구성이
      *  scheme만 보고도 같은 크기를 그리도록 방출(폴백 이원화 방지). */
     _column_size?: number | null;
+    /** 기둥 실단면 목록 — _column_centers와 같은 좌표 프레임·같은 순서. 있음이면 소비처는
+     *  정사각 대신 이것으로 그린다(얇은 단면 기둥을 정사각으로 그리면 주차 칸을 문다).
+     *  없음 = _column_size 정사각 폴백 (구 scheme). */
+    _column_sections?: ColumnSection[];
     /** 정북일조 기준선 (EPSG:5186 절대, 변마다 [p1,p2]) — 3D 뷰어 천공면.
      *  북향 변마다 별도 엣지(상업 인접 면제·도로 인접은 중심선 offset),
      *  매스 깎기(apply_north_setback)와 동일 기준. 면제면 []. */
