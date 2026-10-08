@@ -283,7 +283,9 @@ class _ResolvedMassing(_Base):
 
 
 class _ResolvedUnits(_Base):
+    # 층마다 세대 수가 다르면(예: 3·3·2·1·1) units_per_floor 는 null — 되먹임은 units_by_level 로.
     units_per_floor: Optional[int] = None
+    units_by_level: Optional[dict[int, int]] = None
 
 
 class _ResolvedCore(_Base):
@@ -317,8 +319,9 @@ class ResolvedOptions(_Base):
     prior(첫수표가 채운 값). design 에 없는 필드는 source 에도 없다.
 
     계약: 사용자가 비워 둘 수 있는 `BuildOptions.design` 필드는 전부 ResolvedDesign 에
-    나온다(층수 "massing.target_floor_count"·세대 수 "units.units_per_floor" 포함).
-    source=="prior" 인 값은 결코 null 이 아니다. design 을 그대로 속성 창으로 되먹이면
+    나온다(층수 "massing.target_floor_count"·층별 세대 수 "units.units_by_level" 포함).
+    "units.units_per_floor" 는 모든 층의 세대 수가 같을 때만 채우고, 다르면 null 이며
+    source 에도 없다. 그 밖에 source=="prior" 인 값은 결코 null 이 아니다. design 을 그대로 속성 창으로 되먹이면
     같은 결과가 재현된다.
     """
     design: ResolvedDesign
