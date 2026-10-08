@@ -279,6 +279,11 @@ class Scheme(_Base):
 
 class _ResolvedMassing(_Base):
     mass_axis: Optional[Literal["road", "sunlight"]] = None
+    target_floor_count: Optional[int] = None
+
+
+class _ResolvedUnits(_Base):
+    units_per_floor: Optional[int] = None
 
 
 class _ResolvedCore(_Base):
@@ -298,6 +303,7 @@ class _ResolvedParking(_Base):
 class ResolvedDesign(_Base):
     """`BuildOptions.design`과 같은 중첩 모양 — 첫수표가 채울 수 있는 필드만."""
     massing: Optional[_ResolvedMassing] = None
+    units: Optional[_ResolvedUnits] = None
     core: Optional[_ResolvedCore] = None
     parking: Optional[_ResolvedParking] = None
 
@@ -309,6 +315,11 @@ class ResolvedOptions(_Base):
     자동값을 흐리게 「자동 (s · 90° · 2형)」으로 보여 주고, 누르면 그 값으로 고정한다.
     source 키는 "<묶음>.<필드>"(예: "core.core_side"), 값은 user(사용자가 준 값) |
     prior(첫수표가 채운 값). design 에 없는 필드는 source 에도 없다.
+
+    계약: 사용자가 비워 둘 수 있는 `BuildOptions.design` 필드는 전부 ResolvedDesign 에
+    나온다(층수 "massing.target_floor_count"·세대 수 "units.units_per_floor" 포함).
+    source=="prior" 인 값은 결코 null 이 아니다. design 을 그대로 속성 창으로 되먹이면
+    같은 결과가 재현된다.
     """
     design: ResolvedDesign
     source: dict[str, Literal["user", "prior"]] = {}
