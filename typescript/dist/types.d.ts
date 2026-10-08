@@ -8,7 +8,7 @@
  * 좌표계: 링·점 좌표는 EPSG:5186 절대(parcel_center 더해진 상태).
  * 메시(BufferGeometry positions)만 parcel_center 상대 — 혼동 금지.
  */
-import type { Core, Massing, Parking } from "./options.js";
+import type { Core, Massing, Parking, UnitSpec } from "./options.js";
 import type { CompileError } from "./errors.js";
 /** EPSG:5186 절대 좌표점 */
 export type Point2 = [number, number];
@@ -343,7 +343,8 @@ export interface Scheme extends SchemeSpatial {
 }
 /** `BuildOptions.design`과 같은 중첩 모양 — 첫수표가 채울 수 있는 필드만. */
 export interface ResolvedDesign {
-    massing?: Pick<Massing, "mass_axis">;
+    massing?: Pick<Massing, "mass_axis" | "target_floor_count">;
+    units?: Pick<UnitSpec, "units_per_floor">;
     core?: Pick<Core, "type" | "core_side" | "core_rotation" | "core_mirror">;
     parking?: Pick<Parking, "parking_angle" | "parallel" | "tandem" | "parking_graph">;
 }
@@ -355,6 +356,11 @@ export type ResolvedSource = "user" | "prior";
  * 사용자가 비운(null) 칸을 첫수표가 채우면 그 값이 여기 적힌다. 전문가 칸의 자동값을
  * 흐리게 「자동 (s · 90° · 2형)」으로 보여 주고, 누르면 그 값으로 고정한다.
  * `source` 키는 "<묶음>.<필드>"(예: "core.core_side"). design에 없는 필드는 source에도 없다.
+ *
+ * 계약: 사용자가 비워 둘 수 있는 `BuildOptions.design` 필드는 전부 ResolvedDesign에
+ * 나온다(층수 "massing.target_floor_count"·세대 수 "units.units_per_floor" 포함).
+ * source==="prior"인 값은 결코 null이 아니다. design을 그대로 속성 창으로 되먹이면
+ * 같은 결과가 재현된다.
  */
 export interface ResolvedOptions {
     design: ResolvedDesign;

@@ -59,6 +59,15 @@ def test_resolved_options_shape():
     assert r.source["core.core_side"] == "prior"
 
 
+def test_resolved_options_carries_floors_and_units():
+    r = ResolvedOptions.model_validate({
+        "design": {"massing": {"target_floor_count": 5}, "units": {"units_per_floor": 4}},
+        "source": {"massing.target_floor_count": "prior", "units.units_per_floor": "prior"},
+    })
+    assert r.design.massing.target_floor_count == 5
+    assert r.design.units.units_per_floor == 4
+
+
 def test_scheme_carries_resolved_options_optionally():
     base = {"data": {"lot_area": 1, "build_area": 1, "far": 1, "bcr": 1, "pnu": "1"},
             "floor_plans": [], "unit_ids": []}
