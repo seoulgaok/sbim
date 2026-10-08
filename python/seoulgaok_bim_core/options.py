@@ -452,7 +452,14 @@ class Dimensions(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     max_span: float = Field(default=8.0, description="기둥 최대 간격 (m).")
-    cantilever: float = Field(default=1.2, description="코너 캔틸레버 한계 (m).")
+    cantilever: float = Field(
+        default=3.0,
+        description=(
+            "코너 캔틸레버 한계 (m). 매스 코너에서 가장 가까운 지지(기둥·벽)까지의 거리를 "
+            "축별로 재어 수직·벽따라 중 큰 쪽이 이 값 이하여야 한다. "
+            "GT 1층 203장 중 193장이 3 m 이하(실측)."
+        ),
+    )
     min_col_dist: float = Field(default=3.0, description="기둥 최소 간격 (m).")
     preferred_min_span: float = Field(
         default=4.2, description="엣지 분할 과밀 방지 하한 (m).")
