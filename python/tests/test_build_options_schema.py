@@ -68,6 +68,17 @@ def test_resolved_options_carries_floors_and_units():
     assert r.design.units.units_per_floor == 4
 
 
+def test_resolved_options_carries_units_by_level():
+    r = ResolvedOptions.model_validate({
+        "design": {"units": {"units_per_floor": None,
+                             "units_by_level": {"2": 3, "3": 3, "4": 2, "5": 1, "6": 1}}},
+        "source": {"units.units_by_level": "prior"},
+    })
+    assert r.design.units.units_per_floor is None
+    assert r.design.units.units_by_level == {2: 3, 3: 3, 4: 2, 5: 1, 6: 1}
+    assert "units.units_per_floor" not in r.source
+
+
 def test_scheme_carries_resolved_options_optionally():
     base = {"data": {"lot_area": 1, "build_area": 1, "far": 1, "bcr": 1, "pnu": "1"},
             "floor_plans": [], "unit_ids": []}
