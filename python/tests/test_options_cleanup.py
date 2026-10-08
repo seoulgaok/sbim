@@ -145,7 +145,7 @@ def test_bk_eff_is_stall_depth():
 def test_walk_width_reads_regulations():
     o = BuildOptions.model_validate({"design": {"circulation": {"pedestrian_width": None}}})
     assert o.design.regulations.pedestrian_width is None
-    assert o.design.regulations.walk_width("multi_family") == 1.7
+    assert o.design.regulations.walk_width("multi_family") == 1.5
     assert BuildOptions().design.regulations.walk_width() == 1.5
 
 

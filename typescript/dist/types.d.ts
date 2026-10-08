@@ -341,7 +341,10 @@ export interface Scheme extends SchemeSpatial {
     /** 엔진이 실제로 쓴 속성 창 값 + 출처. 구 scheme엔 없다. */
     resolved_options?: ResolvedOptions;
 }
-/** `BuildOptions.design`과 같은 중첩 모양 — 첫수표가 채울 수 있는 필드만. */
+/**
+ * `BuildOptions.design`과 같은 중첩 모양 — 첫수표가 채우는 필드(`empty: "auto"`)만.
+ * 잎 집합은 python `options.AUTO_FIELDS`와 같다(python/tests/test_auto_fields.py가 지킨다).
+ */
 export interface ResolvedDesign {
     massing?: Pick<Massing, "mass_axis" | "target_floor_count">;
     /** 층마다 세대 수가 다르면 units_per_floor는 null — 되먹임은 units_by_level로. */
@@ -358,11 +361,13 @@ export type ResolvedSource = "user" | "prior";
  * 흐리게 「자동 (s · 90° · 2형)」으로 보여 주고, 누르면 그 값으로 고정한다.
  * `source` 키는 "<묶음>.<필드>"(예: "core.core_side"). design에 없는 필드는 source에도 없다.
  *
- * 계약: 사용자가 비워 둘 수 있는 `BuildOptions.design` 필드는 전부 ResolvedDesign에
- * 나온다(층수 "massing.target_floor_count"·층별 세대 수 "units.units_by_level" 포함).
- * "units.units_per_floor"는 모든 층의 세대 수가 같을 때만 채우고, 다르면 null이며
- * source에도 없다. 그 밖에 source==="prior"인 값은 결코 null이 아니다. design을 그대로 속성 창으로 되먹이면
- * 같은 결과가 재현된다.
+ * 계약: 첫수표가 채우는 필드(스키마의 `empty: "auto"` — 층수·층별 세대 수 포함)는 전부
+ * design에 나온다. source==="prior"인 값은 결코 null이 아니다 — 단 "units.units_per_floor"는
+ * 모든 층의 세대 수가 같을 때만 채우고, 다르면 null이며 source에도 없다. design을
+ * (null 잎을 버리고) 요청의 design에 합쳐 되먹이면 같은 결과(세대·전용면적·주차 대수·
+ * compile_errors)가 재현된다. 소비처는 source를 되보내지 않는다(BuildOptions는
+ * extra="forbid"). 비우면 법이 정하는 필드(`law` — exit_road·한도 덮어쓰기·road_setback)와
+ * 적힌 기본값이 정하는 필드(`default`)는 여기 없다 — 비워 두는 것이 재현되는 선택이다.
  */
 export interface ResolvedOptions {
     design: ResolvedDesign;

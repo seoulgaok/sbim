@@ -43,8 +43,9 @@
   고르는 선택은 다르다 — 내부 차로 방식 넷에 이름을 줬다가 하루 만에 되돌렸다(#9 → #10 ④).
   소장 GT는 방식을 고르지 않고 한 방식 안에서 직각·평행을 **섞고** 있었다(12필지 중 9).
   새 어휘에 이름을 주기 전에 **소장 도면에서 그게 선택으로 나타나는지** 먼저 센다.
-- 「자동」의 표기는 `None` 하나다. 자동 가능 여부는 `json_schema_extra={"auto": True}`로
-  표시한다(산문 description에 묻지 않는다).
+- 「자동」의 표기는 `None` 하나다. 비웠을 때 누가 정하는지는 `json_schema_extra={"empty":
+  "auto"|"law"|"default"}`로 표시한다(산문 description에 묻지 않는다). auto 집합
+  (`options.AUTO_FIELDS`) = `ResolvedDesign` 잎 — `tests/test_auto_fields.py`가 지킨다.
 - **주차 버블이 대신한 세 필드는 삭제됐다(2026-10-05)** — `parking_axis`·`road_edge`·
   `multi_road`·`interior_aisle`. building-generator 가 어디서도 읽지 않고 REF 48 필지가
   전부 버블 경로로 까는 것이 전제였다. 저장값에 남아 있는 키는 `Parking._fold_legacy`가

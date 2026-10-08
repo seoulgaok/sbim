@@ -39,6 +39,14 @@ HEADER = """\
 """
 
 
+# 비웠을 때 누가 정하나 — options.Design 의 `json_schema_extra={"empty": …}`
+EMPTY_NOTE = {
+    "auto": "None=첫수표가 정한다(resolved_options 에 나온다)",
+    "law": "None=법이 정한다",
+    "default": "None=설명에 적힌 기본 동작",
+}
+
+
 def schema() -> dict:
     return BuildOptions.model_json_schema()
 
@@ -101,8 +109,8 @@ def interface(name: str, s: dict) -> list[str]:
         notes = [ps.get("description", "")]
         if "default" in ps:
             notes.append(f"@default {_lit(ps['default'])}")
-        if ps.get("auto"):
-            notes.append("@auto None=자동")
+        if ps.get("empty"):
+            notes.append(f"@empty {ps['empty']} — {EMPTY_NOTE[ps['empty']]}")
         # JSON Schema 표준 `deprecated` 키 — 값이 문자열이면 그 이유를 태그에 쓴다
         # (`json_schema_extra={"deprecated": "..."}` 또는 pydantic Field(deprecated=...)).
         dep = ps.get("deprecated")

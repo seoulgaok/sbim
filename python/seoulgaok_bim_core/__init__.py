@@ -8,7 +8,9 @@ from .site_filter import (
     load_criteria as load_site_criteria,
 )
 from .options import (
+    AUTO_FIELDS,
     CORE_TYPE_RENUMBER_2026_09,
+    EMPTY_MARKERS,
     BuildOptions,
     Business,
     Circulation,
@@ -119,6 +121,8 @@ __all__ = [
     "Schedule",
     "Financing",
     "RegulationOverrides",
+    "EMPTY_MARKERS",
+    "AUTO_FIELDS",
     # CompileError (CSP 명제 위반)
     "CompileError",
     "CompileErrorType",

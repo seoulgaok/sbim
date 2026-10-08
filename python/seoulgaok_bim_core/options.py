@@ -99,10 +99,15 @@ class Massing(BaseModel):
 
     target_floor_count: Optional[int] = Field(
         default=None,
-        description="목표 층수. None=사선·일조·FAR 한계까지 자동 stack. 사선제한으로 미달 가능.",
+        json_schema_extra={"empty": "auto"},
+        description=(
+            "목표 층수. 사선제한으로 미달 가능. "
+            "None=첫수표가 정한다(사선·일조·FAR 한계까지 쌓는다)."
+        ),
     )
     first_floor_height: Optional[float] = Field(
         default=None,
+        json_schema_extra={"empty": "default"},
         description=(
             "1층 층고 (m). 필로티 4m+ 권장. "
             "None이면 구조방식 기본 층고(structure: 벽식 3.0/라멘 3.3)와 동일."
@@ -117,6 +122,7 @@ class Massing(BaseModel):
     )
     mass_axis: Optional[Literal["road", "sunlight"]] = Field(
         default=None,
+        json_schema_extra={"empty": "auto"},
         description=(
             "상층 매스를 반듯하게 세울 기준 방향 — road=주접도변(도로 경계선)과 나란히, "
             "sunlight=일조발생라인(정북 인접 대지경계선)과 나란히. "
@@ -141,17 +147,23 @@ class UnitSpec(BaseModel):
 
     units_per_floor: Optional[int] = Field(
         default=None,
-        description="기준 층당 세대 수. None=면적 기반 자동(45㎡/세대).",
+        json_schema_extra={"empty": "auto"},
+        description=(
+            "기준 층당 세대 수. None=첫수표가 정한다 — 층마다 (바닥−코어)/max_net_area 를 "
+            "반올림한 수(최소 1): 전용 상한 안에서 가장 큰 세대(building-generator #436)."
+        ),
     )
     units_by_level: dict[int, int] = Field(
         default_factory=dict,
+        json_schema_extra={"empty": "auto"},
         description=(
             "층별 세대 수 override. 예: {1: 0, 2: 4, 3: 4, 4: 4, 5: 3}. "
-            "1층=피로티면 0. units_per_floor보다 우선."
+            "1층=피로티면 0. units_per_floor보다 우선. 빈 층은 첫수표가 정한다."
         ),
     )
     max_net_area: Optional[float] = Field(
         default=60.0,
+        json_schema_extra={"empty": "default"},
         description=(
             "세대 전용면적 상한(㎡, 발코니 제외). 넘는 세대가 나오면 컴파일 에러 "
             "UnitAreaExceeded. "
@@ -200,9 +212,10 @@ class Core(BaseModel):
 
     type: Optional[CoreType] = Field(
         default=None,
+        json_schema_extra={"empty": "auto"},
         description=(
             "코어 형상 타입 (DWG→sbim 코어 라이브러리 — giga core_library.json이 진실). "
-            "None=auto(매스 형상 prior). "
+            "None=첫수표가 정한다(매스 형상). "
             "이름은 외곽 형태(세장형·정방형·ㄱ자형)로 가르고, 외곽이 같은 것은 "
             "괄호의 계단 형식으로 갈린다. "
             "1=세장형(꺾은계단, 2.8×6.8)·2=세장형(직선계단, 2.8×8.05)·"
@@ -220,6 +233,7 @@ class Core(BaseModel):
         Literal["n", "ne", "e", "se", "s", "sw", "w", "nw", "c"]
     ] = Field(
         default=None,
+        json_schema_extra={"empty": "auto"},
         description=(
             "코어 자리 (EPSG 절대 방위). 정방위(n·e·s·w)=매스의 그 변 가운데, "
             "대각(ne·nw·se·sw)=그 모서리, c=매스 안쪽(주접도 프레임 축을 따라 매스 "
@@ -230,6 +244,7 @@ class Core(BaseModel):
     )
     core_rotation: Optional[Literal[0, 90, 180, 270]] = Field(
         default=None,
+        json_schema_extra={"empty": "auto"},
         description=(
             "코어 배향 — core_side로 정해진 변 기준 절대 회전각. "
             "c일 때 기준 변은 주접도 변이다. "
@@ -244,6 +259,7 @@ class Core(BaseModel):
     )
     core_mirror: Optional[bool] = Field(
         default=None,
+        json_schema_extra={"empty": "auto"},
         description=(
             "코어 좌우 뒤집기 — true=코어 기준자세를 거울처럼 뒤집은 모양(앉은 변에서 "
             "봐서 계단·EV의 좌우가 바뀐 반대 손잡이)으로 앉힌 뒤 core_rotation만큼 "
@@ -255,6 +271,7 @@ class Core(BaseModel):
     )
     core_entries: Optional[int] = Field(
         default=None,
+        json_schema_extra={"empty": "default"},
         description=(
             "코어(복도) 보행 출입구 수 1|2. 2=코어 문 반대편에도 문 — 보행로가 도로에서 "
             "꼬이는 필지(합정동 441-31). None=문 하나(엔진이 둘째 문을 스스로 켜지 않는다 "
@@ -291,7 +308,7 @@ class Parking(BaseModel):
 
     parking_angle: Optional[Literal[45, 60, 90]] = Field(
         default=None,
-        json_schema_extra={"auto": True},
+        json_schema_extra={"empty": "auto"},
         description=(
             "내부 차로 주차 각도. 45/60=사선(fishbone) — 차로폭은 "
             "주차장법 시행규칙 11조⑤1호 법정값(45° 3.5m·60° 4.0m), 연접(back) 없음, "
@@ -303,23 +320,26 @@ class Parking(BaseModel):
     )
     parallel: Optional[bool] = Field(
         default=None,
+        json_schema_extra={"empty": "auto"},
         description=(
             "평행주차 열 사용 — True=평행 열을 쓴다(직각이 안 들어가는 폭에서 평행으로), "
-            "False=평행 열을 쓰지 않는다. None=첫수표·엔진 규칙이 정한다."
+            "False=평행 열을 쓰지 않는다. None=첫수표가 정한다."
         ),
     )
     tandem: Optional[bool] = Field(
         default=None,
-        description="연접(직렬 2단) 백칸 허용 (제11조⑤4호). None=법정 대수 부족 시 자동.",
+        json_schema_extra={"empty": "auto"},
+        description="연접(직렬 2단) 백칸 허용 (제11조⑤4호). None=첫수표가 정한다.",
     )
     exit_road: Optional[int] = Field(
         default=None,
+        json_schema_extra={"empty": "law"},
         description="보행통로 출구 도로변 인덱스 (필지 폴리곤 기준). None=자동(최근접 도로변).",
     )
     parking_graph: Optional[list[tuple[Dir8, Literal["road", "yard", "aisle"]]]] = Field(
         default=None,
         min_length=1,
-        json_schema_extra={"auto": True},
+        json_schema_extra={"empty": "auto"},
         description=(
             "주차 버블 — (진입 도로 방위, road|yard|aisle) 튜플의 배열. 위상만 적는다 — "
             "칸 수·면 자리·정렬은 대수가 결과이듯 엔진이 정한다. 배열은 명령 순서가 아니라 "
@@ -461,14 +481,13 @@ class Dimensions(BaseModel):
         ),
     )
     min_col_dist: float = Field(default=3.0, description="기둥 최소 간격 (m).")
-    preferred_min_span: float = Field(
-        default=4.2, description="엣지 분할 과밀 방지 하한 (m).")
 
     @model_validator(mode="before")
     @classmethod
     def _drop_removed(cls, data):
-        """주차 칸·차로 치수 제거 — 주차장법 상수다(2026-09-28)."""
-        return _drop(data, _PARKING_DIMS)
+        """주차 칸·차로 치수 제거 — 주차장법 상수다(2026-09-28).
+        `preferred_min_span` 제거 — 엔진이 읽지 않았다(2026-10-08)."""
+        return _drop(data, (*_PARKING_DIMS, "preferred_min_span"))
 
 
 # ═════════════════════════════════════════════════════════════════════
@@ -731,6 +750,7 @@ class RegulationOverrides(BaseModel):
 
     far_limit_override: Optional[float] = Field(
         default=None,
+        json_schema_extra={"empty": "law"},
         description=(
             "용적률 법정 한도 덮어쓰기 (%) — 지구단위계획·완화 등 용도지역 룩업이 틀린 "
             "예외 필지용. None=법이 정한다. (구 이름 far_target)"
@@ -738,6 +758,7 @@ class RegulationOverrides(BaseModel):
     )
     bcr_limit_override: Optional[float] = Field(
         default=None,
+        json_schema_extra={"empty": "law"},
         description=(
             "건폐율 법정 한도 덮어쓰기 (%) — 지구단위계획·완화 등 용도지역 룩업이 틀린 "
             "예외 필지용. None=법이 정한다. (구 이름 bcr_target)"
@@ -749,6 +770,7 @@ class RegulationOverrides(BaseModel):
     )
     road_setback: Optional[float] = Field(
         default=None,
+        json_schema_extra={"empty": "law"},
         description=(
             "주차구획 전면선의 주도로 경계 셋백 (m). None=도로산입 derive — "
             "주차장법 시행규칙 11조⑤2호: 직각주차 차로는 도로 포함 6m 이상, "
@@ -760,9 +782,10 @@ class RegulationOverrides(BaseModel):
     )
     pedestrian_width: Optional[float] = Field(
         default=1.5,
+        json_schema_extra={"empty": "default"},
         description=(
             "보행통로 폭 (m). 기본 1.5 (시행령 41조 다세대 유효너비 하한). "
-            "None=용도별 derive (다세대 1.7 등). (구 자리 circulation.pedestrian_width)"
+            "None=용도별 derive (다세대 1.5 등). (구 자리 circulation.pedestrian_width)"
         ),
     )
     ratio_mode: ParkingRatioMode = Field(
@@ -794,7 +817,7 @@ class RegulationOverrides(BaseModel):
         """보행통로 폭 — 명시 > 용도 derive > 기본 1.2 (용도별 규정)."""
         if self.pedestrian_width is not None:
             return self.pedestrian_width
-        table = {"multi_family": 1.7, "dagagu": 1.1, "retail": 1.5}
+        table = {"multi_family": 1.5, "dagagu": 1.1, "retail": 1.5}
         return table.get(use or "", 1.2)
 
     def aisle(self, use: str | None = None) -> float:
@@ -813,7 +836,11 @@ _TO_REGULATIONS = (("parking", "road_setback"), ("parking", "ratio_mode"),
 
 
 class Design(BaseModel):
-    """이 설계에서 고르는 것. 값이 없으면 첫수표가 정한다.
+    """이 설계에서 고르는 것.
+
+    비울 수 있는 필드는 전부 비웠을 때 누가 정하는지를 `json_schema_extra={"empty": …}`
+    하나로 적는다 — `auto`=첫수표가 채운다(ResolvedDesign 에 나온다), `law`=법이 정한다,
+    `default`=적힌 sbim 기본값. `AUTO_FIELDS`가 auto 집합이다.
 
     묶음은 **대상**이다(매스·세대·코어·주차·동선·외장) — 단계로 자르면 같은 대상의
     속성이 두 집에 나뉘어 산다(구 GroundFloor가 주차·코어·동선·기둥을 한 서랍에 담았다).
@@ -860,6 +887,23 @@ class Design(BaseModel):
         return data
 
 
+def _empty_markers() -> dict[str, str]:
+    """design 의 `"<묶음>.<필드>"` → 비웠을 때 누가 정하나(auto|law|default)."""
+    out = {}
+    for sec, f in Design.model_fields.items():
+        if isinstance(f.annotation, type) and issubclass(f.annotation, BaseModel):
+            for name, ff in f.annotation.model_fields.items():
+                extra = ff.json_schema_extra
+                if isinstance(extra, dict) and "empty" in extra:
+                    out[f"{sec}.{name}"] = extra["empty"]
+    return out
+
+
+EMPTY_MARKERS: dict[str, str] = _empty_markers()
+# 첫수표가 채우는 필드 — types.ResolvedDesign 의 잎과 같아야 한다(test_auto_fields.py)
+AUTO_FIELDS: frozenset[str] = frozenset(k for k, v in EMPTY_MARKERS.items() if v == "auto")
+
+
 class Standards(BaseModel):
     """회사 표준 — 사업마다 안 건드리는 값. 소비 UI는 접어 둘 수 있다."""
 
@@ -897,10 +941,10 @@ _GF_TO = {
     "road_setback": "regulations", "pedestrian_width": "regulations",
     "corridor_mode": "circulation",
     "max_span": "dimensions", "cantilever": "dimensions",
-    "min_col_dist": "dimensions", "preferred_min_span": "dimensions",
+    "min_col_dist": "dimensions",
 }
 # 지운 필드 — 옮길 곳이 없어 이행층에서 바로 버린다(2026-09-28 정리)
-_GF_DROPPED = {"bk_offset", "commercial_remainder", "core_along"}
+_GF_DROPPED = {"bk_offset", "commercial_remainder", "core_along", "preferred_min_span"}
 _PARKING_DIMS = ("stall_width", "stall_depth", "aisle_width")
 # 구 이름 → 새 이름 (뜻은 같다)
 _RENAMED = {"entry2": "multi_road"}

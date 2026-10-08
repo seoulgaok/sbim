@@ -142,34 +142,43 @@ export interface Concrete {
  */
 export interface Core {
   /**
-   * 코어 형상 타입 (DWG→sbim 코어 라이브러리 — giga core_library.json이 진실). None=auto(매스 형상 prior). 이름은 외곽 형태(세장형·정방형·ㄱ자형)로 가르고, 외곽이 같은 것은 괄호의 계단 형식으로 갈린다. 1=세장형(꺾은계단, 2.8×6.8)·2=세장형(직선계단, 2.8×8.05)·3=세장형·편복도(직선계단, 2.8×10.15, 복도 내장, 층당 5~7세대 — 류상호 '코어 유형 추가' 2026-09; 도면 실측 2.78×9.95로 라이브러리 재추출 대기)·4=정방형(꺾은계단, 5.2×4.7)·5=정방형(직선계단, 5.2×4.7)·6=정방형(ㄱ자계단, 5.3×4.95 — ㄱ자는 외곽이 아니라 계단 모양)·7=ㄱ자형(EV측면, 4.8×5.9 — 외곽이 ㄱ자로 파인 유일한 유형). 대부분 type2(세장 타워, 회전 fit), 넓은 단독 장변접도만 type4/5. 번호는 2026-09 DWG 시트 순서로 재배열됐다(building-generator #190) — 옛 번호로 저장된 값은 migrate_core_type()으로 옮긴다.
+   * 코어 형상 타입 (DWG→sbim 코어 라이브러리 — giga core_library.json이 진실). None=첫수표가 정한다(매스 형상). 이름은 외곽 형태(세장형·정방형·ㄱ자형)로 가르고, 외곽이 같은 것은 괄호의 계단 형식으로 갈린다. 1=세장형(꺾은계단, 2.8×6.8)·2=세장형(직선계단, 2.8×8.05)·3=세장형·편복도(직선계단, 2.8×10.15, 복도 내장, 층당 5~7세대 — 류상호 '코어 유형 추가' 2026-09; 도면 실측 2.78×9.95로 라이브러리 재추출 대기)·4=정방형(꺾은계단, 5.2×4.7)·5=정방형(직선계단, 5.2×4.7)·6=정방형(ㄱ자계단, 5.3×4.95 — ㄱ자는 외곽이 아니라 계단 모양)·7=ㄱ자형(EV측면, 4.8×5.9 — 외곽이 ㄱ자로 파인 유일한 유형). 대부분 type2(세장 타워, 회전 fit), 넓은 단독 장변접도만 type4/5. 번호는 2026-09 DWG 시트 순서로 재배열됐다(building-generator #190) — 옛 번호로 저장된 값은 migrate_core_type()으로 옮긴다.
    * @default null
+   * @empty auto — None=첫수표가 정한다(resolved_options 에 나온다)
    */
   type?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | null;
   /**
    * 코어 자리 (EPSG 절대 방위). 정방위(n·e·s·w)=매스의 그 변 가운데, 대각(ne·nw·se·sw)=그 모서리, c=매스 안쪽(주접도 프레임 축을 따라 매스 경계에서 1.5m 이상 떨어진 자리 — 상층은 코어 양쪽에 편복도가 선다). 그 자리에 코어가 안 들면 폴백 없이 CoreTypeInfeasible. None=첫수표가 정한다.
    * @default null
+   * @empty auto — None=첫수표가 정한다(resolved_options 에 나온다)
    */
   core_side?: "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw" | "c" | null;
   /**
    * 코어 배향 — core_side로 정해진 변 기준 절대 회전각. c일 때 기준 변은 주접도 변이다. 0=코어 기준자세 그대로 변에 밀착, 90/180/270=그만큼 회전. 코어는 점대칭이 아니라(계단·EV 한쪽 편재, 복도 한 면 접합, 출입구 면이 방향별로 달라 0·90·180·270이 전부 다른 결과) 절반 지정인 구 core_axis(road/depth)로는 같은 축 위 180° 뒤집기를 표현할 수 없어 네 방위를 전부 받는다. 라이브러리 형상 가로세로와 무관한 앉은 변 기준 절대 표현이라 코어 형상이 바뀌어도 뜻이 유지된다. None=첫수표가 정한다.
    * @default null
+   * @empty auto — None=첫수표가 정한다(resolved_options 에 나온다)
    */
   core_rotation?: 0 | 90 | 180 | 270 | null;
   /**
    * 코어 좌우 뒤집기 — true=코어 기준자세를 거울처럼 뒤집은 모양(앉은 변에서 봐서 계단·EV의 좌우가 바뀐 반대 손잡이)으로 앉힌 뒤 core_rotation만큼 돌린다. 회전 네 방위로는 이 모양이 안 나온다 — 회전 180°는 가로·세로를 함께 뒤집어 복도 면까지 옮기지만, 거울은 복도 면을 그대로 두고 좌우만 바꾼다. 회전과 함께 코어가 변에 앉는 여덟 자세를 전부 적는다. false=기준자세 그대로. None=첫수표가 정한다.
    * @default null
+   * @empty auto — None=첫수표가 정한다(resolved_options 에 나온다)
    */
   core_mirror?: boolean | null;
   /**
    * 코어(복도) 보행 출입구 수 1|2. 2=코어 문 반대편에도 문 — 보행로가 도로에서 꼬이는 필지(합정동 441-31). None=문 하나(엔진이 둘째 문을 스스로 켜지 않는다 — 2가 필요하면 옵션으로 준다). scheme `_pedestrian_paths`로 전부 방출.
    * @default null
+   * @empty default — None=설명에 적힌 기본 동작
    */
   core_entries?: number | null;
 }
 
 /**
- * 이 설계에서 고르는 것. 값이 없으면 첫수표가 정한다.
+ * 이 설계에서 고르는 것.
+ *
+ * 비울 수 있는 필드는 전부 비웠을 때 누가 정하는지를 `json_schema_extra={"empty": …}`
+ * 하나로 적는다 — `auto`=첫수표가 채운다(ResolvedDesign 에 나온다), `law`=법이 정한다,
+ * `default`=적힌 sbim 기본값. `AUTO_FIELDS`가 auto 집합이다.
  *
  * 묶음은 **대상**이다(매스·세대·코어·주차·동선·외장) — 단계로 자르면 같은 대상의
  * 속성이 두 집에 나뉘어 산다(구 GroundFloor가 주차·코어·동선·기둥을 한 서랍에 담았다).
@@ -210,11 +219,6 @@ export interface Dimensions {
    * @default 3.0
    */
   min_col_dist?: number;
-  /**
-   * 엣지 분할 과밀 방지 하한 (m).
-   * @default 4.2
-   */
-  preferred_min_span?: number;
 }
 
 /**
@@ -295,13 +299,15 @@ export interface Financing {
 
 export interface Massing {
   /**
-   * 목표 층수. None=사선·일조·FAR 한계까지 자동 stack. 사선제한으로 미달 가능.
+   * 목표 층수. 사선제한으로 미달 가능. None=첫수표가 정한다(사선·일조·FAR 한계까지 쌓는다).
    * @default null
+   * @empty auto — None=첫수표가 정한다(resolved_options 에 나온다)
    */
   target_floor_count?: number | null;
   /**
    * 1층 층고 (m). 필로티 4m+ 권장. None이면 구조방식 기본 층고(structure: 벽식 3.0/라멘 3.3)와 동일.
    * @default null
+   * @empty default — None=설명에 적힌 기본 동작
    */
   first_floor_height?: number | null;
   /**
@@ -311,6 +317,7 @@ export interface Massing {
   /**
    * 상층 매스를 반듯하게 세울 기준 방향 — road=주접도변(도로 경계선)과 나란히, sunlight=일조발생라인(정북 인접 대지경계선)과 나란히. None=첫수표가 정한다.
    * @default null
+   * @empty auto — None=첫수표가 정한다(resolved_options 에 나온다)
    */
   mass_axis?: "road" | "sunlight" | null;
 }
@@ -325,28 +332,31 @@ export interface Parking {
   /**
    * 내부 차로 주차 각도. 45/60=사선(fishbone) — 차로폭은 주차장법 시행규칙 11조⑤1호 법정값(45° 3.5m·60° 4.0m), 연접(back) 없음, 막다른 차로라 일방 진입·후진 퇴출 전제. 90=직각(차로 6m). None=첫수표가 정한다(현행 90). 사선 순차 평가는 2026-09-19에 제거됐다. 외부 도로변 주차는 항상 직각(11조⑤2호 — 도로를 차로로 쓰는 형식은 직각·평행뿐)이라 inner 모드에만 의미.
    * @default null
-   * @auto None=자동
+   * @empty auto — None=첫수표가 정한다(resolved_options 에 나온다)
    */
   parking_angle?: 45 | 60 | 90 | null;
   /**
-   * 평행주차 열 사용 — True=평행 열을 쓴다(직각이 안 들어가는 폭에서 평행으로), False=평행 열을 쓰지 않는다. None=첫수표·엔진 규칙이 정한다.
+   * 평행주차 열 사용 — True=평행 열을 쓴다(직각이 안 들어가는 폭에서 평행으로), False=평행 열을 쓰지 않는다. None=첫수표가 정한다.
    * @default null
+   * @empty auto — None=첫수표가 정한다(resolved_options 에 나온다)
    */
   parallel?: boolean | null;
   /**
-   * 연접(직렬 2단) 백칸 허용 (제11조⑤4호). None=법정 대수 부족 시 자동.
+   * 연접(직렬 2단) 백칸 허용 (제11조⑤4호). None=첫수표가 정한다.
    * @default null
+   * @empty auto — None=첫수표가 정한다(resolved_options 에 나온다)
    */
   tandem?: boolean | null;
   /**
    * 보행통로 출구 도로변 인덱스 (필지 폴리곤 기준). None=자동(최근접 도로변).
    * @default null
+   * @empty law — None=법이 정한다
    */
   exit_road?: number | null;
   /**
    * 주차 버블 — (진입 도로 방위, road|yard|aisle) 튜플의 배열. 위상만 적는다 — 칸 수·면 자리·정렬은 대수가 결과이듯 엔진이 정한다. 배열은 명령 순서가 아니라 하나의 그림이다 — 엔진이 전체를 보고 한 번에 푼다(보행로 띠는 늘 먼저 선다). 셋 다 「도로와 이어진다」가 뜻 안에 있다 — 도로와 끊긴 마당은 yard 가 아니다. 긋는 것은 목뿐이다 — 목은 차가 지나가기만 하는 통로라 차 한 폭(2.5m)이면 되고, 6m 차로는 긋지 않는다(칸이 들어오면 그 앞 6m 박스들의 합집합이 차로가 된다 — 소장이 차로 면적을 아끼는 방식). 방위는 항상 dir8(null 없음)이며 칸이 모인 쪽이 아니라 그 차로가 도로에서 갈라져 나오는 자리다 — 필지에서 본 접도 구간의 방향으로 도로를 고른다(core_side 와 같은 규칙): 정방위(n·e·s·w)=그 변의 가운데, 대각(ne·se·sw·nw)=그 모서리 쪽 끝(주접도도 그 방위로 적는다). road=도로 자체가 차로 — 대지 안에 차로 없음, 칸은 도로에 붙은 한 줄. aisle=도로에서 대지 안으로 곧게 이어지는 목(차 한 폭~6m) — 칸은 목 양옆에 붙고, 칸 앞 6m 박스들이 차로가 된다. yard=도로에서 들어오는 목 끝에서 여러 방향으로 칸이 붙는 것 — 목 끝 둘레에서 칸 앞 박스들이 마당이 된다. 같은 도로에 둘 이상: road + 같은 방위 yard/aisle 이면 앞줄은 그 차로 자리를 비우고 깐다(목이 앞줄을 가른다). 대지 안 노드 뒤 같은 방위 대지 안 노드는 앞 노드의 차로를 지나서 든다. 한 도로에 둘 이상이면 대각으로 어느 끝인지 가른다. 버블은 선호 — 법정 대수 미달일 때만, 모자란 칸에 한해 버블 밖 도로에 덧붙인다. 예: 성북 [["n","road"],["sw","yard"]] — 북측 도로 앞 줄과 남서측 도로에서 들어가는 마당 · 연희 [["nw","yard"],["sw","yard"]] — 같은 서쪽 도로의 북쪽 끝·남쪽 끝에서 든 마당 둘 · 화곡 1033-19 의 두 대안 [["w","yard"]](서쪽 작은 마당에 칸이 세 면)과 [["w","aisle"]](같은 자리 곧은 차로 두 줄). None=첫수표가 정한다.
    * @default null
-   * @auto None=자동
+   * @empty auto — None=첫수표가 정한다(resolved_options 에 나온다)
    */
   parking_graph?: (["n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw", "road" | "yard" | "aisle"])[] | null;
 }
@@ -361,11 +371,13 @@ export interface RegulationOverrides {
   /**
    * 용적률 법정 한도 덮어쓰기 (%) — 지구단위계획·완화 등 용도지역 룩업이 틀린 예외 필지용. None=법이 정한다. (구 이름 far_target)
    * @default null
+   * @empty law — None=법이 정한다
    */
   far_limit_override?: number | null;
   /**
    * 건폐율 법정 한도 덮어쓰기 (%) — 지구단위계획·완화 등 용도지역 룩업이 틀린 예외 필지용. None=법이 정한다. (구 이름 bcr_target)
    * @default null
+   * @empty law — None=법이 정한다
    */
   bcr_limit_override?: number | null;
   /**
@@ -375,11 +387,13 @@ export interface RegulationOverrides {
   /**
    * 주차구획 전면선의 주도로 경계 셋백 (m). None=도로산입 derive — 주차장법 시행규칙 11조⑤2호: 직각주차 차로는 도로 포함 6m 이상, 미달분(max(0, 6−실측 도로폭))만큼 후퇴. 12m↑ 도로·폭 미상은 0. 명시(0 포함) 시 그 값 — 설계자가 도로 여건상 밀착·완화를 판단한 의도 기록 (GT 실측: 6m 미만 이면도로에서도 경계 밀착 다수). (구 자리 parking.road_setback)
    * @default null
+   * @empty law — None=법이 정한다
    */
   road_setback?: number | null;
   /**
-   * 보행통로 폭 (m). 기본 1.5 (시행령 41조 다세대 유효너비 하한). None=용도별 derive (다세대 1.7 등). (구 자리 circulation.pedestrian_width)
+   * 보행통로 폭 (m). 기본 1.5 (시행령 41조 다세대 유효너비 하한). None=용도별 derive (다세대 1.5 등). (구 자리 circulation.pedestrian_width)
    * @default 1.5
+   * @empty default — None=설명에 적힌 기본 동작
    */
   pedestrian_width?: number | null;
   /**
@@ -477,17 +491,20 @@ export interface Standards {
 
 export interface UnitSpec {
   /**
-   * 기준 층당 세대 수. None=면적 기반 자동(45㎡/세대).
+   * 기준 층당 세대 수. None=첫수표가 정한다 — 층마다 (바닥−코어)/max_net_area 를 반올림한 수(최소 1): 전용 상한 안에서 가장 큰 세대(building-generator #436).
    * @default null
+   * @empty auto — None=첫수표가 정한다(resolved_options 에 나온다)
    */
   units_per_floor?: number | null;
   /**
-   * 층별 세대 수 override. 예: {1: 0, 2: 4, 3: 4, 4: 4, 5: 3}. 1층=피로티면 0. units_per_floor보다 우선.
+   * 층별 세대 수 override. 예: {1: 0, 2: 4, 3: 4, 4: 4, 5: 3}. 1층=피로티면 0. units_per_floor보다 우선. 빈 층은 첫수표가 정한다.
+   * @empty auto — None=첫수표가 정한다(resolved_options 에 나온다)
    */
   units_by_level?: Record<string, number>;
   /**
    * 세대 전용면적 상한(㎡, 발코니 제외). 넘는 세대가 나오면 컴파일 에러 UnitAreaExceeded. 기본 60 = 소형주택 선(2026-08-28 변경, 이전 기본은 84). 단지형 다세대(도시형생활주택 전용 85㎡ 이하)로 지을 땐 84, 면적 제한 없는 용도는 None. 상한이 없으면 분할 실패가 조용히 통과한다 — 실측: 상한 없이 돌린 9,067세대 중 84 초과 722(8.0%), 최대 5,431㎡(층 전체가 1세대).
    * @default 60.0
+   * @empty default — None=설명에 적힌 기본 동작
    */
   max_net_area?: number | null;
 }
