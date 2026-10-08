@@ -14,15 +14,11 @@ from pydantic import BaseModel
 
 from seoulgaok_bim_core import options as O
 
-# 취향 필드 — 값이 없으면 첫수표가 정한다 (derive 필드와 구분된다:
-# exit_road처럼 법·기하가 한 값을 계산해 주는 것은 여기 없다)
+# 취향 필드 — 값이 없으면 첫수표가 정한다 (`empty: "auto"` 표시 — derive 필드와 구분된다:
+# exit_road처럼 법·기하가 한 값을 계산해 주는 것은 `law`라 여기 없다)
 CHOICE_FIELDS = [
-    (O.Parking, "parking_angle"),
-    (O.Core, "core_side"),
-    (O.Core, "core_rotation"),
-    (O.Core, "core_mirror"),
-    (O.Massing, "mass_axis"),
-    (O.Parking, "parking_graph"),
+    (O.Design.model_fields[sec].annotation, name)
+    for sec, name in (k.split(".") for k in sorted(O.AUTO_FIELDS))
 ]
 
 # 엔진에게 탐색을 시키는 명세 — 어느 필드에도 없어야 한다

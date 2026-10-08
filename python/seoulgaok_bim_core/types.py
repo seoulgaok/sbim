@@ -303,7 +303,8 @@ class _ResolvedParking(_Base):
 
 
 class ResolvedDesign(_Base):
-    """`BuildOptions.design`과 같은 중첩 모양 — 첫수표가 채울 수 있는 필드만."""
+    """`BuildOptions.design`과 같은 중첩 모양 — 첫수표가 채우는 필드(`empty: "auto"`)만.
+    잎 집합은 `options.AUTO_FIELDS`와 같다(tests/test_auto_fields.py가 지킨다)."""
     massing: Optional[_ResolvedMassing] = None
     units: Optional[_ResolvedUnits] = None
     core: Optional[_ResolvedCore] = None
@@ -318,11 +319,13 @@ class ResolvedOptions(_Base):
     source 키는 "<묶음>.<필드>"(예: "core.core_side"), 값은 user(사용자가 준 값) |
     prior(첫수표가 채운 값). design 에 없는 필드는 source 에도 없다.
 
-    계약: 사용자가 비워 둘 수 있는 `BuildOptions.design` 필드는 전부 ResolvedDesign 에
-    나온다(층수 "massing.target_floor_count"·층별 세대 수 "units.units_by_level" 포함).
-    "units.units_per_floor" 는 모든 층의 세대 수가 같을 때만 채우고, 다르면 null 이며
-    source 에도 없다. 그 밖에 source=="prior" 인 값은 결코 null 이 아니다. design 을 그대로 속성 창으로 되먹이면
-    같은 결과가 재현된다.
+    계약: 첫수표가 채우는 필드(`AUTO_FIELDS` — 층수·층별 세대 수 포함)는 전부 design 에
+    나온다. source=="prior" 인 값은 결코 null 이 아니다 — 단 "units.units_per_floor" 는
+    모든 층의 세대 수가 같을 때만 채우고, 다르면 null 이며 source 에도 없다. design 을
+    (null 잎을 버리고) 요청의 design 에 합쳐 되먹이면 같은 결과(세대·전용면적·주차 대수·
+    compile_errors)가 재현된다. 소비처는 source 를 되보내지 않는다(BuildOptions 는
+    extra="forbid"). 비우면 법이 정하는 필드(`law` — exit_road·한도 덮어쓰기·road_setback)와
+    적힌 기본값이 정하는 필드(`default`)는 여기 없다 — 비워 두는 것이 재현되는 선택이다.
     """
     design: ResolvedDesign
     source: dict[str, Literal["user", "prior"]] = {}

@@ -67,7 +67,6 @@ EXPECTED = [
     ("standards.dimensions.max_span", 7.2),
     ("standards.dimensions.cantilever", 1.4),
     ("standards.dimensions.min_col_dist", 3.1),
-    ("standards.dimensions.preferred_min_span", 4.2),
     ("business.schedule.construction_months", 14),     # 사업성은 도면과 무관
     ("business.financing.land_loan_ltv", 0.7),
 ]
@@ -91,6 +90,7 @@ REMOVED_OR_RENAMED = {
     "stall_width", "stall_depth", "aisle_width",          # 버림
     "interior_aisle", "bcr_target",                       # 버림 · bcr_limit_override
     "parking_axis", "road_edge", "multi_road", "entry2",  # 버블이 대신한 세 필드 + 구 이름
+    "preferred_min_span",                                 # 버림 — 엔진이 읽지 않았다(2026-10-08)
 }
 
 
@@ -208,3 +208,11 @@ def test_every_stored_design_still_loads():
     # 구 parking_axis="core"(이태원동 303-22)도 이제 버려서 열린다 — 축 필드 자체가
     # 삭제됐다(2026-10-05). 어느 저장값도 거부되지 않는다.
     assert failed == [], f"열리지 않는 저장값: {failed}"
+
+
+def test_preferred_min_span_is_swallowed():
+    """`preferred_min_span` 은 엔진이 읽지 않아 지웠다 — 저장값은 거부하지 않고 버린다."""
+    for raw in ({"ground_floor": {"preferred_min_span": 4.2}},
+                {"standards": {"dimensions": {"preferred_min_span": 4.2}}}):
+        o = BuildOptions.model_validate(raw)
+        assert "preferred_min_span" not in o.standards.dimensions.model_dump()
