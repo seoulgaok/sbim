@@ -26,3 +26,7 @@ sbim-editor/src-tauri/target/
 site_filter.json
 sbim_config.json
 .env
+
+
+# 정답(GT) 자산 — 설계 결과·DWG·옵션 추출본. 공개 저장소에 두지 않는다.
+reference/
