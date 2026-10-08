@@ -201,8 +201,8 @@ export interface Dimensions {
    */
   max_span?: number;
   /**
-   * 코너 캔틸레버 한계 (m).
-   * @default 1.2
+   * 코너 캔틸레버 한계 (m). 매스 코너에서 가장 가까운 지지(기둥·벽)까지의 거리를 축별로 재어 수직·벽따라 중 큰 쪽이 이 값 이하여야 한다. GT 1층 203장 중 193장이 3 m 이하(실측).
+   * @default 3.0
    */
   cantilever?: number;
   /**
