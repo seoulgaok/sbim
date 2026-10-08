@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -922,6 +923,8 @@ class Business(BaseModel):
     financing: Financing = Field(default_factory=Financing)
 
 
+_log = logging.getLogger(__name__)
+
 # ── 구 평면 모양(13블록) → 새 모양 이행표 ──────────────────────────────
 # 저장된 설계안은 전부 구 경로다(reference/*/_build_options.json, DB jsonb).
 # 읽는 자리에서 옮겨 받는다 — 데이터 마이그레이션 없이 구 파일이 그대로 열린다.
@@ -994,6 +997,10 @@ class BuildOptions(BaseModel):
         저장된 설계안(파일·DB jsonb) 안에 구 경로가 박혀 있어, 거부하면 기존 데이터가
         통째로 깨진다. 새 키(design/standards/business)가 하나라도 있으면 새 모양으로
         보고 건드리지 않는다 — 섞어 주는 건 받지 않는다(조용한 반쪽 적용을 막는다).
+
+        구 모양 안에서 구 `ground_floor.<k>` 와 신 거처(`core`·`parking`·`regulations`)의
+        같은 키가 함께 오면 **신 위치가 이긴다**(사용자가 채운 칸은 존중) — 값이 다르면
+        경고 로그 한 줄만 남기고 거부하지 않는다(구 모양을 보내는 호출자를 깨지 않는다).
         """
         if not isinstance(data, dict):
             return data
@@ -1028,7 +1035,14 @@ class BuildOptions(BaseModel):
             elif target == "dimensions":
                 dims[k] = v
             else:
-                design.setdefault(target, {})[k] = v
+                slot = design.setdefault(target, {})
+                if k in slot:                       # 신 위치가 이미 채워졌다 — 신 우선
+                    if slot[k] != v:
+                        _log.warning(
+                            "legacy ground_floor.%s=%r ignored: %s.%s=%r already set",
+                            k, v, target, k, slot[k])
+                    continue
+                slot[k] = v
         for old, new in (("windows", "window_style"), ("exterior", "style")):
             val = (data.get(old) or {}).get("style")
             if val is not None:
