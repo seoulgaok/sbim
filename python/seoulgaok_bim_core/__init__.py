@@ -2,6 +2,7 @@
 
 from .config import build_options, load_overrides as load_config
 from .errors import CompileError, CompileErrorType
+from .geometry_check import check_geometry_sanity, storey_envelope
 from .site_filter import (
     SiteFilterNotConfigured,
     build_where as build_site_where,
@@ -125,6 +126,8 @@ __all__ = [
     "AUTO_FIELDS",
     # CompileError (CSP 명제 위반)
     "CompileError",
+    "check_geometry_sanity",
+    "storey_envelope",
     "CompileErrorType",
     # 원클릭 대상 필지 필터
     "build_options",

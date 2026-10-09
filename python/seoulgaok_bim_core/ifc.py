@@ -33,6 +33,8 @@ from typing import Iterable, Sequence
 import ifcopenshell
 import ifcopenshell.guid
 
+from .geometry_check import raise_if_insane
+
 _COL_DEFAULT = 0.4
 
 # ── 뷰어(BuildingMeshVisualizer)와 동일한 색 팔레트 ──
@@ -448,6 +450,8 @@ def generate_ifc(scheme_json, units, parcel_center=None, out_path=None, meta=Non
     meta = meta or {}
     if out_path is None:
         raise TypeError("out_path는 필수입니다")
+    if not meta.get("skip_geometry_check"):
+        raise_if_insane(scheme_json)      # 터진 부재를 조용히 내보내지 않는다
     if parcel_center is None:
         parcel_center = derive_parcel_center(scheme_json)
     cx, cy = float(parcel_center[0]), float(parcel_center[1])
