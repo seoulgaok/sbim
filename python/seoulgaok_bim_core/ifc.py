@@ -923,6 +923,7 @@ def generate_ifc(scheme_json, units, parcel_center=None, out_path=None, meta=Non
                   f" ({ud.get('unit_id', '')})"),
             ObjectPlacement=_on_storey(f, st),
             Representation=dshape,
+            PredefinedType="WINDOW" if is_window else "DOOR",
             OverallHeight=hgt, OverallWidth=w)
         if host_wall is not None:
             f.create_entity(
@@ -1385,6 +1386,12 @@ def generate_ifc(scheme_json, units, parcel_center=None, out_path=None, meta=Non
 
     # ── 건물 Pset (사업개요) ──
     _building_pset(f, building, scheme_json.get("data"), n_units, style_key)
+
+    # 받는 쪽(아키캐드·레빗)은 헤더의 MVD로 처리 방식을 고른다. 우리 파일은 벽이
+    # SweptSolid이고 개구부가 창·문에 물려 있어 편집 가능한 모델로 넘어가야 한다 —
+    # ReferenceView(메시·개구부 선반영)가 아니라 DesignTransferView다.
+    f.header.file_description.description = (
+        "ViewDefinition [DesignTransferView_V1.0]",)
 
     out_path = str(out_path)
     f.write(out_path)

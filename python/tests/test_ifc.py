@@ -191,3 +191,32 @@ def test_railing_not_duplicated_across_floors(model):
     assert positions, "동자가 하나도 없다"
     duplicates = len(positions) - len(set(positions))
     assert duplicates == 0, f"같은 자리에 동자가 겹쳐 있다: {duplicates}개"
+
+
+# ── 받는 쪽(아키캐드·레빗)이 편집 가능한 객체로 받기 위한 계약 ──
+
+
+def test_mvd_is_design_transfer(model):
+    """헤더의 MVD 한 줄로 임포터가 처리 방식을 고른다.
+
+    우리 파일은 벽이 SweptSolid이고 개구부가 창·문에 물려 있다 — 메시를 전제하는
+    ReferenceView가 아니라 편집 가능한 모델로 넘기는 DesignTransferView다.
+    """
+    assert "DesignTransferView" in model.header.file_description.description[0]
+
+
+def test_windows_and_doors_carry_predefined_type(model):
+    """창호일람표가 종류를 가르는 칸 — 타입 객체에만 있으면 개체 표에서 빈칸이 된다."""
+    windows, doors = model.by_type("IfcWindow"), model.by_type("IfcDoor")
+    assert windows and doors
+    assert {w.PredefinedType for w in windows} == {"WINDOW"}
+    assert {d.PredefinedType for d in doors} == {"DOOR"}
+
+
+def test_walls_are_editable_solids(model):
+    """메시로 넘기면 아키캐드에서 Morph가 된다 — 벽은 SweptSolid여야 벽으로 들어간다."""
+    kinds = {sh.RepresentationType
+             for w in model.by_type("IfcWall")
+             for sh in w.Representation.Representations}
+    assert "SweptSolid" in kinds
+    assert "Tessellation" not in kinds
