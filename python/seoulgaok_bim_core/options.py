@@ -321,16 +321,19 @@ class Parking(BaseModel):
     )
     parallel: Optional[bool] = Field(
         default=None,
-        json_schema_extra={"empty": "auto"},
+        json_schema_extra={"empty": "law"},
         description=(
-            "평행주차 열 사용 — True=평행 열을 쓴다(직각이 안 들어가는 폭에서 평행으로), "
-            "False=평행 열을 쓰지 않는다. None=첫수표가 정한다."
+            "평행주차 열 — None=법 폴백(직각 배치가 법정 대수에 못 미칠 때만 평행 열을 쓴다, "
+            "첫수표 행 아님). True=평행 열을 형태로 선택. False=쓰지 않음."
         ),
     )
     tandem: Optional[bool] = Field(
         default=None,
         json_schema_extra={"empty": "auto"},
-        description="연접(직렬 2단) 백칸 허용 (제11조⑤4호). None=첫수표가 정한다.",
+        description=(
+            "연접(직렬 2단) 백칸 허용 (제11조⑤4호). 법 행: 법정 대수 ≤ 8 이면 허용"
+            "(11조⑤4호), None=첫수표가 정한다."
+        ),
     )
     exit_road: Optional[int] = Field(
         default=None,
