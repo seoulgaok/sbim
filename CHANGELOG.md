@@ -101,6 +101,10 @@
   `parking_angle`은 45/60/90만 받아 평행을 적을 곳이 없었다. `None`=첫수표·엔진 규칙이
   정한다. 현재 출하 경로는 `parking.*`를 aaro에 넘기지 않아 배선 수리가 선행된다 —
   엔진 소비는 building-generator 쪽 별도 작업.
+- `Parking.parallel` 빈값 마커 `auto`→`law`(2026-10-10, 선장 10-08 「부족할 때만 평행」) —
+  직각 배치가 법정 대수에 못 미칠 때만 평행 열을 쓰는 법 폴백이지 첫수표 행이 아니다
+  (True=형태 선택으로 존중). auto 집합·`ResolvedDesign`에서 빠졌다. `tandem`은 `auto` 유지,
+  설명에 법 행(법정 대수 ≤ 8 허용, 11조⑤4호)을 적었다.
 - `core_edge`/`align`/`offset` 3필드 → `core_side` 8방위 단일 필드로 통합.
   중앙 의도를 표현할 수 없어 `"c"`를 추가했다.
 - `pedestrian_width` 기본값을 **시행령 41조 다세대 유효너비 하한**에 맞춰

@@ -350,7 +350,7 @@ export interface ResolvedDesign {
     /** 층마다 세대 수가 다르면 units_per_floor는 null — 되먹임은 units_by_level로. */
     units?: Pick<UnitSpec, "units_per_floor" | "units_by_level">;
     core?: Pick<Core, "type" | "core_side" | "core_rotation" | "core_mirror">;
-    parking?: Pick<Parking, "parking_angle" | "parallel" | "tandem" | "parking_graph">;
+    parking?: Pick<Parking, "parking_angle" | "tandem" | "parking_graph">;
 }
 /** 필드 값의 출처 — user=사용자가 준 값, prior=첫수표가 채운 값. */
 export type ResolvedSource = "user" | "prior";
