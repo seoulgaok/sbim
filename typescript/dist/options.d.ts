@@ -199,8 +199,8 @@ export interface Design {
  */
 export interface Dimensions {
     /**
-     * 기둥 최대 간격 (m).
-     * @default 8.0
+     * 기둥 최대 간격 (m). 소장 템플릿 T꺾임 8.1 수용, 2026-10-11 선장 결정.
+     * @default 8.1
      */
     max_span?: number;
     /**

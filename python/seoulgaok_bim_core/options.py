@@ -59,8 +59,8 @@ StructureSystem = Literal["wall", "rahmen", "steel"]
 # 라멘/철골은 하중을 기둥이 받아 벽이 얇아짐(전용↑), 철골은 장스팬(넓은 주차·기둥간격).
 # 층고는 base_floor_height property에서 별도 derive. 실적치는 보정 노브.
 STRUCTURE_PRESET = {
-    "wall":   {"wall_thickness": 0.20, "max_span": 8.0,  "min_col_dist": 3.0},
-    "rahmen": {"wall_thickness": 0.15, "max_span": 8.0,  "min_col_dist": 3.0},
+    "wall":   {"wall_thickness": 0.20, "max_span": 8.1,  "min_col_dist": 3.0},
+    "rahmen": {"wall_thickness": 0.15, "max_span": 8.1,  "min_col_dist": 3.0},
     "steel":  {"wall_thickness": 0.12, "max_span": 12.0, "min_col_dist": 6.0},
 }
 
@@ -475,7 +475,10 @@ class Dimensions(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    max_span: float = Field(default=8.0, description="기둥 최대 간격 (m).")
+    max_span: float = Field(
+        default=8.1,
+        description="기둥 최대 간격 (m). 소장 템플릿 T꺾임 8.1 수용, 2026-10-11 선장 결정.",
+    )
     cantilever: float = Field(
         default=3.0,
         description=(

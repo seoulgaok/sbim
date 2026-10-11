@@ -216,3 +216,16 @@ def test_preferred_min_span_is_swallowed():
                 {"standards": {"dimensions": {"preferred_min_span": 4.2}}}):
         o = BuildOptions.model_validate(raw)
         assert "preferred_min_span" not in o.standards.dimensions.model_dump()
+
+
+def test_max_span_default_is_8_1():
+    """옵션을 비우면 기둥 최대 간격은 8.1 — 소장 템플릿 T꺾임 코어(8.1m) 수용(2026-10-11).
+
+    기본(벽식)과 라멘은 프리셋이 채우므로 둘 다 본다. 명시 값은 프리셋을 이긴다.
+    """
+    assert BuildOptions().standards.dimensions.max_span == 8.1
+    for structure in ("wall", "rahmen"):
+        o = BuildOptions.model_validate({"design": {"structure": structure}})
+        assert o.standards.dimensions.max_span == 8.1
+    o = BuildOptions.model_validate({"standards": {"dimensions": {"max_span": 7.5}}})
+    assert o.standards.dimensions.max_span == 7.5

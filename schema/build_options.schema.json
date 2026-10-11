@@ -308,8 +308,8 @@
       "description": "구조 치수 표준 — 사업마다 고르는 값이 아니라 회사가 정해 두는 값.\n\n주차 칸·차로 치수(2.5×5.0·6.0)는 주차장법 상수라 엔진이 갖는다 — 옵션이 아니다.",
       "properties": {
         "max_span": {
-          "default": 8.0,
-          "description": "기둥 최대 간격 (m).",
+          "default": 8.1,
+          "description": "기둥 최대 간격 (m). 소장 템플릿 T꺾임 8.1 수용, 2026-10-11 선장 결정.",
           "title": "Max Span",
           "type": "number"
         },
