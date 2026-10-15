@@ -439,6 +439,29 @@ class UnitRecord(_Base):
     fixtures: Optional[list[UnitFixture]] = None   # 가구·기구 — 제안(#549), 미방출
 
 
+# --- site.json (제안 2026-10-16, #549 덧붙임 — 엔진 미방출) ---------------------------------
+
+
+class SiteInfo(_Base):
+    """설계안 폴더의 `site.json` — 필지·도로·외곽선. 키 이름·좌표(EPSG:5186 절대)는 엔진 building_info 와 같다.
+
+    scheme.json 에 없어 에디터가 대지 경계·도로·정북 한계선을 못 그리던 것을 채운다. TS `SiteInfo` 와 같은 모양."""
+    parcel_polygon: Ring = []
+    parcel_center: Point2 = (0, 0)
+    road_polygon: Optional[list[Ring]] = None
+    road_polygon_wide: Optional[list[Ring]] = None
+    road_centerlines: Optional[list[Ring]] = None
+    road_centerline_widths: Optional[list[float]] = None
+    effective_parcel_outline: Optional[Ring] = None
+    buildable_outline: Optional[Ring] = None
+    footprint_outline: Optional[Ring] = None
+    north_datum_offset: Optional[float] = None
+    raw_parcel_area: Optional[float] = None
+    effective_parcel_area: Optional[float] = None
+    road_widening_area: Optional[float] = None
+    corner_cut_area: Optional[float] = None
+
+
 # --- Surroundings ----------------------------------------------------------
 
 

@@ -32,3 +32,14 @@ def test_new_keys_round_trip():
     })
     assert isinstance(s.mep[0], MepItem) and s.mep[0].name == "급수분배기"
     assert json.loads(s.model_dump_json(by_alias=True))["_mep"][0]["system"] == "water"
+
+
+def test_site_json_contract_round_trip(tmp_path):
+    from seoulgaok_bim_core import SiteInfo
+    from seoulgaok_bim_core.io import load_site
+    site = SiteInfo(parcel_polygon=[(0, 0), (20, 0), (20, 15), (0, 15)], parcel_center=(10, 7.5),
+                    road_polygon=[[(0, -6), (20, -6), (20, 0), (0, 0)]], road_centerline_widths=[6.0])
+    p = tmp_path / "site.json"
+    p.write_text(site.model_dump_json(), encoding="utf-8")
+    back = load_site(p)
+    assert back.parcel_center == (10, 7.5) and back.road_polygon and back.road_centerline_widths == [6.0]

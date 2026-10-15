@@ -316,3 +316,9 @@ CompileError`가 정본이므로(type·reason·details·suggestion) 새 필드�
 `Scheme._mep[]`(설비: system·kind·name·floor_id·origin|path·size). 어휘는 BIMx 샘플에서 뽑았다.
 같이 고친 것: Python `UnitRecord.geom` 이 `UnitGeometry` 로 묶여 있어 실제 units.json(BufferGeometryData 리스트)이
 안 열렸다 → TS 와 같은 `Any`.
+
+## site.json — 필지·도로 계약 (2026-10-16, #549 덧붙임)
+
+필지 경계·도로·외곽선은 scheme.json 에 없고 엔진 `building_info`(DB jsonb)에만 있어, 설계안 폴더만 가진 소비처(sbim-editor)가
+대지·도로·정북 한계선을 그릴 수 없었다. `site.json`(TS `SiteInfo`·Python `SiteInfo`·`load_site`)을 옵셔널 파일로 둔다 —
+키 이름·좌표(EPSG:5186 절대)는 `building_info` 의 공간 부분과 같다. 엔진이 scheme.json 옆에 같이 쓰면 된다.

@@ -62,6 +62,7 @@ from .types import (
     UnitRecord,
     UnitRoom,
     UnitFixture,
+    SiteInfo,
     MepItem,
     WallUserData,
     WindowUserData,
@@ -91,6 +92,7 @@ __all__ = [
     "UnitAreaBreakdown",
     "UnitRoom",
     "UnitFixture",
+    "SiteInfo",
     "MepItem",
     # scheme 공간 계약
     "CoreLayout",

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .types import Scheme, SurroundingBuilding, Unit
+from .types import Scheme, SiteInfo, SurroundingBuilding, Unit
 
 
 def load_scheme(path: str | Path) -> Scheme:
@@ -51,3 +51,9 @@ def save_surroundings(surroundings: list[SurroundingBuilding], path: str | Path)
     tmp = p.with_suffix(p.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     tmp.replace(p)
+
+
+def load_site(path: str | Path) -> SiteInfo:
+    """site.json(필지·도로) 로드 — 제안 계약(#549)."""
+    with open(path, encoding="utf-8") as f:
+        return SiteInfo.model_validate(json.load(f))

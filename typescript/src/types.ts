@@ -556,6 +556,38 @@ export interface UnitRecord {
   fixtures?: UnitFixture[];
 }
 
+// --- site.json (제안 2026-10-16, building-generator #549 덧붙임 — 엔진 미방출) ----------------
+// 필지·도로·외곽선은 scheme.json 에 없고 엔진 building_info(DB jsonb)에만 있어 에디터가 그릴 수 없다.
+// 설계안 폴더에 `site.json` 으로 같이 쓰는 계약. 키 이름·좌표는 building_info 와 같다(EPSG:5186 절대).
+
+export interface SiteInfo {
+  /** 합필이면 단일 union 링 */
+  parcel_polygon: Ring;
+  /** 메시 좌표의 원점 (EPSG 절대) — scheme 메시 positions 는 이 점 기준 상대 */
+  parcel_center: Point2;
+  /** 접도 폴리곤들 */
+  road_polygon?: Ring[];
+  /** 반경 안 도로 전부 (접도 포함) */
+  road_polygon_wide?: Ring[];
+  /** 도로 중심선들 */
+  road_centerlines?: Ring[];
+  /** 중심선과 1:1 도로 폭 (m) */
+  road_centerline_widths?: number[];
+  /** 도로 확폭·가각 뒤의 유효 대지 외곽 */
+  effective_parcel_outline?: Ring | null;
+  /** 건축 가능 범위 외곽 */
+  buildable_outline?: Ring | null;
+  /** 상층 footprint 외곽 */
+  footprint_outline?: Ring | null;
+  /** 정북 기산면 보정 — scheme._north_datum_offset 과 같은 값 */
+  north_datum_offset?: number | null;
+  /** 면적 (㎡) */
+  raw_parcel_area?: number;
+  effective_parcel_area?: number;
+  road_widening_area?: number;
+  corner_cut_area?: number;
+}
+
 // --- Surroundings ----------------------------------------------------------
 
 export interface SurroundingGeometry {
