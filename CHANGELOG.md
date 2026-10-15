@@ -26,7 +26,10 @@
 - `schema/scheme·units·surroundings.schema.json`이 생성물로 교체, `buffer-geometry.schema.json`
   삭제 — 그 파일을 참조하던 소비처는 `scheme.schema.json` 안의 정의를 쓴다.
 - `fixtures/build_options/` 신설 — 입력 → 정규화 `BuildOptions` 정답 쌍. 소비처는 같은 파일로
-  자기 쪽 이행층을 검사한다.
+  자기 쪽 이행층을 검사한다. `fixtures/migrations.json`(이행 표)·`presets.json`(구조 프리셋)도 같이.
+- `rust/sbim-types`·`elixir/sbim` 신설 — pydantic 에서 생성한 serde 타입 / Elixir 구조체. 기본값은
+  정규화된 기본값(`empty` fixture)에서 박힌다. building-generator 의 손 사본 `options.ex` 와
+  sbim-editor 의 `sbim-doc` 은 이걸 가져다 쓰고 자기 검증기만 남긴다.
 - `sbim-editor/`(Tauri 초기본)·`visualizer/`·`viewer/` 삭제 — 소비처(nextbase)가 자체 렌더러를
   쓰고 에디터는 별도 Rust 프로젝트라, 이 저장소는 계약·생성물·fixture 만 둔다(git 이력 c893c46
   까지 남아 있다).

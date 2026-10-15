@@ -1,0 +1,16 @@
+[package]
+name = "sbim-types"
+# 판은 python/pyproject.toml 과 같이 올린다 — python/tests/test_emit_rust.py 가 지킨다
+version = "0.1.0"
+edition = "2021"
+description = "sbim 계약(BuildOptions · scheme · units · surroundings)의 Rust 타입 — pydantic 정본에서 생성"
+license = "Apache-2.0"
+repository = "https://github.com/seoulgaok/sbim"
+
+[lib]
+# 생성된 `///` 문서는 options.py 설명을 그대로 옮긴 것이라 코드 블록이 아니다 — doctest 로 돌리지 않는다
+doctest = false
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

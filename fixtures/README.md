@@ -15,8 +15,9 @@
 - `expected` = `BuildOptions.model_validate(input).model_dump(mode="json")`. 키 순서는
   `model_fields` 선언 순서 그대로다(정렬하지 않는다 — Elixir 포트가 이 순서를 거울로 삼는다).
   `dict[int, …]` 필드(`floor_use`·`units_by_level`)의 키는 JSON 이라 문자열이다.
-- 소비처(Elixir·Rust·TS) 테스트는 `input` 을 자기 모델에 넣고 결과가 `expected` 와 같은지
-  본다. 케이스는 `gen_build_options.py` 의 `FIXTURE_CASES` 에 있다 — 기본값 전부(`empty`),
+- 이행 로직을 가진 소비처는 `input` 을 자기 모델에 넣고 결과가 `expected` 와 같은지 본다.
+  이행 로직이 없는 생성 판(`rust/`·`elixir/`)은 `expected` 를 읽고 되쓰면 같은지(round-trip)와
+  빈 입력의 기본값이 `empty` 의 `expected` 와 같은지를 본다. 케이스는 `gen_build_options.py` 의 `FIXTURE_CASES` 에 있다 — 기본값 전부(`empty`),
   구조 프리셋(`structure_*`), 구 평면 모양(`legacy_*`), 구 주차 노드(`parking_graph_legacy_*`),
   옮긴 법규 보정 이름(`regulations_renamed`), 지운 키 버리기(`dropped_keys`).
 - `python/tests/test_fixtures.py` 가 정본으로 되검사하고, `typescript/tests/fixtures.test.ts`

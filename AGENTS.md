@@ -22,7 +22,9 @@
 - TS `BuildOptions`는 **생성물**이다(`python/scripts/gen_build_options.py` →
   `schema/build_options.schema.json` → `typescript/src/options.ts`). 옵션을 바꾸면 생성을
   돌리고 dist를 굽는다 — `test_build_options_schema.py`가 어긋남을 잡는다.
-  `schema/scheme·units.schema.json`과 `fixtures/build_options/`도 같은 스크립트의 생성물이다.
+  `schema/scheme·units.schema.json`·`fixtures/`·`rust/sbim-types/src/*.rs`·
+  `elixir/sbim/lib/sbim/generated/*.ex`도 같은 스크립트의 생성물이다(방출기 `emit_rust.py`·
+  `emit_elixir.py`). Rust·Elixir 기본값은 `empty` fixture 에서 박힌다 — 이행 로직은 안 만든다.
   정본은 pydantic 하나(`options.py`·`types.py`); `typescript/src/types.ts`만 손으로 맞추고
   `test_types_parity.py`가 지킨다. 기본값·필드가 바뀌면 버전을 올리고 CHANGELOG 맨 위에 한 줄.
 

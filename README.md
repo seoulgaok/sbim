@@ -25,6 +25,8 @@ BufferGeometry로 들어 있어 소비처의 렌더러가 그대로 그리고, `
 | --- | --- | --- |
 | [python/](python) | pydantic 타입, io, 설계 옵션, 설정 오버레이, IFC 내보내기·되읽기 | Python |
 | [typescript/](typescript) | 동일 타입, operations, BufferGeometry 변환 | TypeScript |
+| [rust/](rust) | `sbim-types` 크레이트 — serde 타입·기본값·이행 표. 생성물 | Rust |
+| [elixir/](elixir) | `sbim` 앱 — 구조체·기본값·이행 표·from_map/to_map. 생성물 | Elixir |
 | [schema/](schema) | pydantic 에서 생성한 JSON Schema — 손으로 고치지 않는다 | JSON Schema |
 | [fixtures/](fixtures) | 입력 → 정규화 `BuildOptions` 정답 쌍. 소비처 시험용, 생성물 | JSON |
 | [examples/](examples) | 샘플 `scheme.json`·`units.json`, 설정 예시 | — |
@@ -39,7 +41,7 @@ BufferGeometry로 들어 있어 소비처의 렌더러가 그대로 그리고, `
 
 | 파일 | 무엇 |
 | --- | --- |
-| `schema/*.json`, `typescript/src/options.ts`, `fixtures/build_options/*.json` | 생성물. 손으로 고치지 않는다 |
+| `schema/*.json`, `typescript/src/options.ts`, `fixtures/*.json`, `rust/sbim-types/src/*.rs`, `elixir/sbim/lib/sbim/generated/*.ex` | 생성물. 손으로 고치지 않는다 |
 | `typescript/src/types.ts` | 손으로 맞춘 TS 판. `python/tests/test_types_parity.py`가 필드 집합이 같은지 지킨다 |
 
 옵션이나 타입을 바꿀 때는 이 순서입니다.
@@ -50,7 +52,12 @@ BufferGeometry로 들어 있어 소비처의 렌더러가 그대로 그리고, `
 3. `pnpm -r build`로 dist를 굽는다.
 4. 기본값이 바뀌거나 필드가 늘고 줄었으면 버전을 올리고 [CHANGELOG](CHANGELOG.md) 맨 위에
    한 줄 적는다. 버전은 `python/pyproject.toml`·`typescript/package.json`·
-   `__version__` 셋이 같아야 한다(`test_version_sync.py`).
+   `__version__`·`rust/sbim-types/Cargo.toml`·`elixir/sbim/mix.exs`가 전부 같아야 한다
+   (`test_version_sync.py`).
+
+Rust·Elixir 판은 타입·기본값·이행 **표**까지만 생성한다. 옛 저장값을 새 모양으로 접는 로직은
+각 소비처가 `fixtures/migrations.json`의 표를 읽어 두고, `fixtures/build_options/`로 결과를
+검사한다.
 
 판은 git 태그로 찍습니다 — 머지 뒤에 사람이 `git tag v0.1.0`. 소비처는 그 태그로 고정합니다.
 

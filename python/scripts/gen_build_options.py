@@ -15,6 +15,9 @@
   schema/surroundings.schema.json (SurroundingBuilding 배열)
 - fixtures/build_options/<case>.json — 소비처(Elixir·Rust·TS)가 같은 정답으로 검사하는
   입력→정규화 BuildOptions 짝(`FIXTURE_CASES`). fixtures/core_type_renumber.json — 코어 번호 개번 표.
+  fixtures/migrations.json — 이행 표, fixtures/presets.json — STRUCTURE_PRESET.
+- rust/sbim-types/src/*.rs · elixir/sbim/lib/sbim/generated/*.ex — 언어별 방출기(emit_rust.py ·
+  emit_elixir.py)가 같은 묶음(`bundle()`)에서 쓴다. 기본값은 `empty` fixture 의 expected 에서.
 
 옵션을 바꾸면 이걸 돌리고 `pnpm -r build`로 dist를 다시 굽는다. `tests/test_build_options_schema.py`·
 `tests/test_fixtures.py`가 생성물이 정본과 같은지 지킨다.
