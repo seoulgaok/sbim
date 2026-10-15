@@ -31,7 +31,7 @@ EXPECTED = {
     "core.core_mirror": "auto",
     "core.core_entries": "default",
     "parking.parking_angle": "auto",
-    "parking.parallel": "auto",
+    "parking.parallel": "law",
     "parking.tandem": "auto",
     "parking.exit_road": "law",
     "parking.parking_graph": "auto",
@@ -91,3 +91,15 @@ def test_generated_schema_carries_the_marker():
         sec, name = key.split(".")
         model = Design.model_fields[sec].annotation.__name__
         assert sch["$defs"][model]["properties"][name]["empty"] == marker, key
+
+
+def test_parallel_is_a_law_fallback_not_a_first_move_row():
+    """평행 열은 법 폴백이다 — auto 집합·ResolvedDesign 에 없고 tandem 은 남는다(선장 2026-10-08)."""
+    from seoulgaok_bim_core import Parking
+
+    extra = Parking.model_fields["parallel"].json_schema_extra
+    assert extra == {"empty": "law"}
+    assert "parking.parallel" not in AUTO_FIELDS
+    assert "parking.tandem" in AUTO_FIELDS
+    resolved = typing.get_args(ResolvedDesign.model_fields["parking"].annotation)[0]
+    assert "parallel" not in resolved.model_fields

@@ -403,7 +403,6 @@ export interface ResolvedDesign {
   parking?: Pick<
     Parking,
     | "parking_angle"
-    | "parallel"
     | "tandem"
     | "parking_graph"
   >;

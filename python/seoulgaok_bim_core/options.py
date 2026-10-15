@@ -59,8 +59,8 @@ StructureSystem = Literal["wall", "rahmen", "steel"]
 # 라멘/철골은 하중을 기둥이 받아 벽이 얇아짐(전용↑), 철골은 장스팬(넓은 주차·기둥간격).
 # 층고는 base_floor_height property에서 별도 derive. 실적치는 보정 노브.
 STRUCTURE_PRESET = {
-    "wall":   {"wall_thickness": 0.20, "max_span": 8.0,  "min_col_dist": 3.0},
-    "rahmen": {"wall_thickness": 0.15, "max_span": 8.0,  "min_col_dist": 3.0},
+    "wall":   {"wall_thickness": 0.20, "max_span": 8.1,  "min_col_dist": 3.0},
+    "rahmen": {"wall_thickness": 0.15, "max_span": 8.1,  "min_col_dist": 3.0},
     "steel":  {"wall_thickness": 0.12, "max_span": 12.0, "min_col_dist": 6.0},
 }
 
@@ -321,16 +321,19 @@ class Parking(BaseModel):
     )
     parallel: Optional[bool] = Field(
         default=None,
-        json_schema_extra={"empty": "auto"},
+        json_schema_extra={"empty": "law"},
         description=(
-            "평행주차 열 사용 — True=평행 열을 쓴다(직각이 안 들어가는 폭에서 평행으로), "
-            "False=평행 열을 쓰지 않는다. None=첫수표가 정한다."
+            "평행주차 열 — None=법 폴백(직각 배치가 법정 대수에 못 미칠 때만 평행 열을 쓴다, "
+            "첫수표 행 아님). True=평행 열을 형태로 선택. False=쓰지 않음."
         ),
     )
     tandem: Optional[bool] = Field(
         default=None,
         json_schema_extra={"empty": "auto"},
-        description="연접(직렬 2단) 백칸 허용 (제11조⑤4호). None=첫수표가 정한다.",
+        description=(
+            "연접(직렬 2단) 백칸 허용 (제11조⑤4호). 법 행: 법정 대수 ≤ 8 이면 허용"
+            "(11조⑤4호), None=첫수표가 정한다."
+        ),
     )
     exit_road: Optional[int] = Field(
         default=None,
@@ -472,7 +475,10 @@ class Dimensions(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    max_span: float = Field(default=8.0, description="기둥 최대 간격 (m).")
+    max_span: float = Field(
+        default=8.1,
+        description="기둥 최대 간격 (m). 소장 템플릿 T꺾임 8.1 수용, 2026-10-11 선장 결정.",
+    )
     cantilever: float = Field(
         default=3.0,
         description=(

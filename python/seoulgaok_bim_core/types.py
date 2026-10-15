@@ -297,7 +297,6 @@ class _ResolvedCore(_Base):
 
 class _ResolvedParking(_Base):
     parking_angle: Optional[Literal[45, 60, 90]] = None
-    parallel: Optional[bool] = None
     tandem: Optional[bool] = None
     parking_graph: Optional[list[tuple[str, str]]] = None   # 엔진이 실제로 푼 버블 (방위, road|yard|aisle)
 
