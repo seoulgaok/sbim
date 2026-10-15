@@ -145,7 +145,8 @@ export interface WindowUserData {
   p1: Point2;
   width: number;
   height: number;
-  /** 창대 높이 (층 바닥 기준 m) */
+  /** 창대 바닥 z — **절대 m**(층 바닥 기준이 아니다: 3.9·6.9… = 층 바닥 + 0.9). 층 기준 높이는 sill - 그 층 floor_bottom_height.
+   *  엔진(lod300·iso3d·벽 뚫기)이 전부 절대로 읽어 값은 그대로 두고 설명을 바로잡았다(2026-10-16 에디터 지적). */
   sill: number;
   /** 호스트 벽 구조 두께 (m) */
   wall_t?: number;
@@ -174,7 +175,8 @@ export interface RailingUserData {
   wall_top_z: number;
   /** 손스침 단면 (m) */
   bar: number;
-  /** 난간 라인 세그먼트들 (절대) */
+  /** 난간 중심선 세그먼트들 — **parcel_center 상대**(메시 좌표계. 다른 userData 의 p0·p1·quad 와 달리 절대가 아니다).
+   *  파생 `posts`(동자 중심점)도 같은 좌표계. 절대로 쓰려면 + parcel_center(2026-10-16 에디터 지적, 엔진 facade_ai 도 그렇게 되돌린다). */
   lines: Ring[];
 }
 

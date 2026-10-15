@@ -144,7 +144,7 @@ class WindowUserData(_Base):
     p1: Point2 = (0, 0)
     width: float = 0
     height: float = 0
-    sill: float = 0         # 창대 높이 (층 바닥 기준)
+    sill: float = 0         # 창대 바닥 z — 절대 m (층 바닥 기준 아님: 층 바닥 + 0.9). 층 기준은 sill - floor_bottom_height
     wall_t: Optional[float] = None
     wall_total: Optional[float] = None  # 개구는 총두께로 뚫어야 단열 띠까지
     type: Optional[str] = None
@@ -167,7 +167,7 @@ class RailingUserData(_Base):
     top_z: float = 0
     wall_top_z: float = 0   # 하부 낮은벽 상단 (0 = 동자+손스침만)
     bar: float = 0          # 손스침 단면
-    lines: list[Ring] = []
+    lines: list[Ring] = []  # 난간 중심선 — parcel_center 상대(메시 좌표계, p0·p1 과 달리 절대 아님). posts 도 같다
 
 
 class StairMemberUserData(_Base):
