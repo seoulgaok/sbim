@@ -27,7 +27,7 @@ def test_rust_and_elixir_versions_match():
     with (ROOT / "rust" / "sbim-types" / "Cargo.toml").open("rb") as f:
         cargo = tomllib.load(f)["package"]["version"]
     mix = (ROOT / "elixir" / "sbim" / "mix.exs").read_text()
-    m = re.search(r'version:\s*"([^"]+)"', mix)
+    m = re.search(r'@version\s+"([^"]+)"', mix)
     assert m, "mix.exs 에 version: 이 없다"
     assert cargo == _py_version(), "Cargo.toml"
     assert m.group(1) == _py_version(), "mix.exs"
