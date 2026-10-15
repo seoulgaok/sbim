@@ -412,12 +412,31 @@ def _building_pset(f, building, data, n_units, style_name):
 
 
 def derive_parcel_center(scheme_json) -> list:
-    """scheme의 절대좌표(EPSG) 링에서 대지 중심을 추정한다.
+    """scheme에서 대지 중심(EPSG 절대)을 되찾는다 — 메시(parcel 상대)와 userData(절대)를 같은 프레임에 놓기 위해.
 
-    generate_ifc는 메시(로컬 좌표)와 세대 polygon(절대 좌표)을 같은 프레임으로
-    맞추기 위해 중심이 필요하다. 파이프라인이 parcel_center를 따로 들고 있으면
-    그 값을 쓰는 게 정확하고, 없을 때의 대비책이다.
+    정확한 길: 벽의 userData(절대 quad/p0p1) bbox 중심 − 같은 벽들의 메시 bbox 중심. 둘은 같은 부재라
+    차이가 곧 parcel_center 다(sample-medium 에서 (200400.000, 500000.000), 오차 1e-4 m).
+    옛 길(밑줄 키 전체 bbox 중심)은 `_north_ref_edges`·`_pedestrian_path` 처럼 대지 밖 링까지 넣어
+    sample-medium 에서 Y 가 4.33 m 어긋났다(2026-10-16, sbim-editor 가 IFC 에서 벽·계단이 갈라진 것으로 발견).
+    벽 userData 가 없는 구 scheme 은 옛 길로 떨어진다.
     """
+    axs, ays, mxs, mys = [], [], [], []
+    for fp in (scheme_json or {}).get("floor_plans", []) or []:
+        for arr in (fp.get("geom", {}) or {}).get("walls", []) or []:
+            for g in (arr if isinstance(arr, list) else [arr]):
+                ud = (g or {}).get("userData") or {}
+                pts = ud.get("quad") or ([ud["p0"], ud["p1"]] if "p0" in ud and "p1" in ud else [])
+                pos = (((g or {}).get("data") or {}).get("attributes") or {}).get("position") or {}
+                arr_ = pos.get("array") or []
+                if not pts or len(arr_) < 3:
+                    continue
+                axs += [float(p[0]) for p in pts]; ays += [float(p[1]) for p in pts]
+                mxs += [float(v) for v in arr_[0::3]]; mys += [float(v) for v in arr_[1::3]]
+    if axs and mxs:
+        return [(min(axs) + max(axs)) / 2 - (min(mxs) + max(mxs)) / 2,
+                (min(ays) + max(ays)) / 2 - (min(mys) + max(mys)) / 2]
+
+    # 구 scheme(벽 userData 없음): 밑줄 키의 절대좌표 bbox 중심 — 대지 밖 링이 섞이면 어긋날 수 있다
     xs, ys = [], []
 
     def walk(o):

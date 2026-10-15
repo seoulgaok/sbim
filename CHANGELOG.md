@@ -365,3 +365,10 @@ CompileError`가 정본이므로(type·reason·details·suggestion) 새 필드�
 필지 경계·도로·외곽선은 scheme.json 에 없고 엔진 `building_info`(DB jsonb)에만 있어, 설계안 폴더만 가진 소비처(sbim-editor)가
 대지·도로·정북 한계선을 그릴 수 없었다. `site.json`(TS `SiteInfo`·Python `SiteInfo`·`load_site`)을 옵셔널 파일로 둔다 —
 키 이름·좌표(EPSG:5186 절대)는 `building_info` 의 공간 부분과 같다. 엔진이 scheme.json 옆에 같이 쓰면 된다.
+
+## derive_parcel_center 정정 (2026-10-16)
+
+밑줄 키 전체 bbox 중심을 쓰던 것이 `_north_ref_edges`·`_pedestrian_path` 같은 대지 밖 링까지 넣어 sample-medium 에서
+Y 가 4.33 m 어긋났다 — 그 IFC 에서 userData 부재(벽·창·세대)와 메시 부재(계단·난간)가 갈라져 보였다(sbim-editor 가 발견).
+이제 벽 userData(절대) bbox 중심 − 벽 메시(상대) bbox 중심으로 되찾는다(오차 1e-4 m). 엔진은 parcel_center 를 명시로
+넘기므로 배치 IFC 는 영향이 없었고, 명시 없이 부르는 쪽(시험·에디터 참조)만 틀렸었다. 벽 userData 없는 구 scheme 은 옛 길.

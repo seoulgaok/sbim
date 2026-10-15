@@ -58,13 +58,14 @@ def test_spaces_have_area(model):
 
 
 def test_derive_parcel_center_matches_explicit(tmp_path):
-    """parcel_center 자동 도출이 명시 전달과 같은 결과를 내는지."""
+    """parcel_center 자동 도출 = 벽 userData(절대) 와 벽 메시(상대)의 bbox 중심 차.
+
+    옛 방식(밑줄 키 전체 bbox)은 정북 기준선·보행로까지 넣어 sample-medium 에서 Y 가 4.33 m 어긋났고,
+    그 IFC 에서 벽(userData 기준)과 계단·난간(메시 기준)이 갈라져 보였다(sbim-editor 발견, 2026-10-16)."""
     scheme = json.loads((SAMPLE / "scheme.json").read_text(encoding="utf-8"))
     center = derive_parcel_center(scheme)
     assert len(center) == 2
-    # 샘플은 합성 원점(20xxxx, 5000xx) 근처로 평행이동돼 있다
-    assert 100000 < center[0] < 400000
-    assert 300000 < center[1] < 750000
+    assert abs(center[0] - 200400.0) < 1e-3 and abs(center[1] - 500000.0) < 1e-3, center
 
 
 def test_derive_parcel_center_rejects_empty():
