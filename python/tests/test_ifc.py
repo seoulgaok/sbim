@@ -65,7 +65,20 @@ def test_derive_parcel_center_matches_explicit(tmp_path):
     scheme = json.loads((SAMPLE / "scheme.json").read_text(encoding="utf-8"))
     center = derive_parcel_center(scheme)
     assert len(center) == 2
-    assert abs(center[0] - 200400.0) < 1e-3 and abs(center[1] - 500000.0) < 1e-3, center
+    # 같은 값을 시험 안에서 독립적으로 센다: 벽 userData quad bbox 중심 − 벽 메시 bbox 중심
+    ax, ay, mx, my = [], [], [], []
+    for fp in scheme["floor_plans"]:
+        for arr in fp["geom"]["walls"]:
+            for g in arr:
+                ud = g.get("userData") or {}
+                for q in ud.get("quad") or [ud["p0"], ud["p1"]]:
+                    ax.append(q[0]); ay.append(q[1])
+                pos = g["data"]["attributes"]["position"]["array"]
+                mx += pos[0::3]; my += pos[1::3]
+    want = [(min(ax) + max(ax)) / 2 - (min(mx) + max(mx)) / 2, (min(ay) + max(ay)) / 2 - (min(my) + max(my)) / 2]
+    assert abs(center[0] - want[0]) < 1e-3 and abs(center[1] - want[1]) < 1e-3, (center, want)
+    # 샘플은 합성 원점(20xxxx, 5000xx) 근처로 평행이동돼 있다
+    assert 100000 < center[0] < 400000 and 300000 < center[1] < 750000
 
 
 def test_derive_parcel_center_rejects_empty():
