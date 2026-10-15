@@ -12,7 +12,7 @@
 쓰는 것:
 - schema/build_options.schema.json · typescript/src/options.ts  (BuildOptions)
 - schema/scheme.schema.json (Scheme) · schema/units.schema.json (UnitRecord 배열) ·
-  schema/surroundings.schema.json (SurroundingBuilding 배열)
+  schema/surroundings.schema.json (SurroundingBuilding 배열) · schema/site.schema.json (SiteInfo)
 - fixtures/build_options/<case>.json — 소비처(Elixir·Rust·TS)가 같은 정답으로 검사하는
   입력→정규화 BuildOptions 짝(`FIXTURE_CASES`). fixtures/core_type_renumber.json — 코어 번호 개번 표.
   fixtures/migrations.json — 이행 표, fixtures/presets.json — STRUCTURE_PRESET.
@@ -33,7 +33,7 @@ from pydantic import TypeAdapter
 
 from seoulgaok_bim_core import options as O
 from seoulgaok_bim_core.options import CORE_TYPE_RENUMBER_2026_09, BuildOptions
-from seoulgaok_bim_core.types import Scheme, SurroundingBuilding, UnitRecord
+from seoulgaok_bim_core.types import Scheme, SiteInfo, SurroundingBuilding, UnitRecord
 
 # 언어별 방출기 — 같은 스키마 묶음을 받아 rust/·elixir/ 를 쓴다. 이 디렉터리를 경로에 올려
 # 스크립트로 돌리든 테스트가 spec 으로 읽든 같은 모듈이 잡히게 한다.
@@ -49,6 +49,7 @@ SCHEMA_PATH = SCHEMA_DIR / "build_options.schema.json"
 SCHEME_SCHEMA_PATH = SCHEMA_DIR / "scheme.schema.json"
 UNITS_SCHEMA_PATH = SCHEMA_DIR / "units.schema.json"
 SURROUNDINGS_SCHEMA_PATH = SCHEMA_DIR / "surroundings.schema.json"
+SITE_SCHEMA_PATH = SCHEMA_DIR / "site.schema.json"
 TS_PATH = ROOT / "typescript" / "src" / "options.ts"
 FIXTURES_DIR = ROOT / "fixtures" / "build_options"
 CORE_TYPE_FIXTURE_PATH = ROOT / "fixtures" / "core_type_renumber.json"
@@ -90,6 +91,10 @@ def array_schema(model: type, title: str, description: str) -> dict:
 
 def scheme_schema() -> dict:
     return Scheme.model_json_schema()
+
+
+def site_schema() -> dict:
+    return SiteInfo.model_json_schema()
 
 
 def units_schema() -> dict:
@@ -302,6 +307,7 @@ def bundle() -> dict:
         "scheme": scheme_schema(),
         "units": units_schema(),
         "surroundings": surroundings_schema(),
+        "site": site_schema(),
         "migrations": migrations_fixture(),
         "structure_preset": {k: dict(v) for k, v in O.STRUCTURE_PRESET.items()},
         "fixtures": {name: fixture(raw) for name, raw in FIXTURE_CASES.items()},
@@ -317,6 +323,7 @@ def outputs() -> dict[Path, str]:
         SCHEME_SCHEMA_PATH: render_json(b["scheme"]),
         UNITS_SCHEMA_PATH: render_json(b["units"]),
         SURROUNDINGS_SCHEMA_PATH: render_json(b["surroundings"]),
+        SITE_SCHEMA_PATH: render_json(b["site"]),
         CORE_TYPE_FIXTURE_PATH: render_json(core_type_fixture()),
         MIGRATIONS_FIXTURE_PATH: render_json(b["migrations"]),
         PRESETS_FIXTURE_PATH: render_json({"structure_preset": b["structure_preset"]}),

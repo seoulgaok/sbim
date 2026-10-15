@@ -2,7 +2,7 @@
 # 정본: python/seoulgaok_bim_core/types.py (pydantic Scheme·UnitRecord·SurroundingBuilding)
 # 생성: cd python && uv run python scripts/gen_build_options.py
 #
-# 세 스키마(schema/scheme·units·surroundings.schema.json)의 `$defs` 를 이름으로 합쳤다.
+# 네 스키마(schema/scheme·units·surroundings·site.schema.json)의 `$defs` 를 이름으로 합쳤다.
 # 기본값은 전부 nil 이고 to_map 은 nil 인 선택 필드를 뺀다 — 밑줄 키의 「없음 ≠ null」.
 # 값은 Jason 이 준 그대로(정수·실수를 강제하지 않는다). units.json 은 아직 구
 # `Unit(geom/data)` 모양이라 UnitRecord 로 안 읽힌다.
@@ -1199,6 +1199,89 @@ defmodule Sbim.Scheme.Scheme do
         {"resolved_options", :resolved_options, {:model, Sbim.Scheme.ResolvedOptions}}
       ],
       required: ["data", "floor_plans", "unit_ids"],
+      extra?: true,
+      omit_nil?: true
+    }
+  end
+end
+
+defmodule Sbim.Scheme.SiteInfo do
+  @moduledoc ~S"""
+  설계안 폴더의 `site.json` — 필지·도로·외곽선. 키 이름·좌표(EPSG:5186 절대)는 엔진
+  building_info 와 같다.
+
+  scheme.json 에 없어 에디터가 대지 경계·도로·정북 한계선을 못 그리던 것을 채운다. TS `SiteInfo`
+  와 같은 모양.
+  """
+
+  @type t :: %__MODULE__{
+          parcel_polygon: [[number()]],
+          parcel_center: [number()],
+          road_polygon: [[[number()]]] | nil,
+          road_polygon_wide: [[[number()]]] | nil,
+          road_centerlines: [[[number()]]] | nil,
+          road_centerline_widths: [number()] | nil,
+          effective_parcel_outline: [[number()]] | nil,
+          buildable_outline: [[number()]] | nil,
+          footprint_outline: [[number()]] | nil,
+          north_datum_offset: number() | nil,
+          raw_parcel_area: number() | nil,
+          effective_parcel_area: number() | nil,
+          road_widening_area: number() | nil,
+          corner_cut_area: number() | nil,
+          extra: %{optional(String.t()) => term()}
+        }
+
+  defstruct [
+    parcel_polygon: nil,
+    parcel_center: nil,
+    road_polygon: nil,
+    road_polygon_wide: nil,
+    road_centerlines: nil,
+    road_centerline_widths: nil,
+    effective_parcel_outline: nil,
+    buildable_outline: nil,
+    footprint_outline: nil,
+    north_datum_offset: nil,
+    raw_parcel_area: nil,
+    effective_parcel_area: nil,
+    road_widening_area: nil,
+    corner_cut_area: nil,
+    # 스키마에 없는 키 — from_map 이 여기 담고 to_map 이 도로 펼친다
+    extra: %{}
+  ]
+
+  @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `extra` 에 담는다."
+  @spec from_map(map()) :: {:ok, t()} | {:error, term()}
+  def from_map(map), do: Sbim.Codec.decode(__MODULE__, map)
+
+  @spec from_map!(map()) :: t()
+  def from_map!(map), do: Sbim.Codec.decode!(__MODULE__, map)
+
+  @doc "struct → 문자열 키 map(중첩 재귀). nil 인 선택 필드는 뺀다(없음 ≠ null); extra 는 펼친다."
+  @spec to_map(t()) :: map()
+  def to_map(%__MODULE__{} = s), do: Sbim.Codec.encode(s)
+
+  @doc false
+  def __shape__ do
+    %{
+      fields: [
+        {"parcel_polygon", :parcel_polygon, :value},
+        {"parcel_center", :parcel_center, :value},
+        {"road_polygon", :road_polygon, :value},
+        {"road_polygon_wide", :road_polygon_wide, :value},
+        {"road_centerlines", :road_centerlines, :value},
+        {"road_centerline_widths", :road_centerline_widths, :value},
+        {"effective_parcel_outline", :effective_parcel_outline, :value},
+        {"buildable_outline", :buildable_outline, :value},
+        {"footprint_outline", :footprint_outline, :value},
+        {"north_datum_offset", :north_datum_offset, :value},
+        {"raw_parcel_area", :raw_parcel_area, :value},
+        {"effective_parcel_area", :effective_parcel_area, :value},
+        {"road_widening_area", :road_widening_area, :value},
+        {"corner_cut_area", :corner_cut_area, :value}
+      ],
+      required: [],
       extra?: true,
       omit_nil?: true
     }

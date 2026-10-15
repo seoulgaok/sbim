@@ -364,20 +364,23 @@ def render_build_options(sch: dict, empty_expected: dict) -> str:
 
 
 # ── scheme.rs ─────────────────────────────────────────────────────────────────
-def render_scheme(scheme: dict, units: dict, surroundings: dict) -> str:
+def render_scheme(scheme: dict, units: dict, surroundings: dict, site: dict) -> str:
     defs: dict[str, dict] = {}
-    for sch in (scheme, units, surroundings):
-        for name, d in sch["$defs"].items():
+    for sch in (scheme, units, surroundings, site):
+        for name, d in sch.get("$defs", {}).items():   # SiteInfo 는 평평해 $defs 가 없다
             if name in defs and defs[name] != d:
                 raise ValueError(f"$defs 가 파일마다 다르다: {name}")
             defs.setdefault(name, d)
-    if scheme["title"] in defs:
-        raise ValueError(f"$defs 에 {scheme['title']} 이 이미 있다")
+    for r in (scheme, site):
+        if r["title"] in defs:
+            raise ValueError(f"$defs 에 {r['title']} 이 이미 있다")
     em = _Emitter(defs)
     root = {k: v for k, v in scheme.items() if k != "$defs"}
     firsts = [scheme["title"], units["items"]["$ref"].rsplit("/", 1)[-1],
               surroundings["items"]["$ref"].rsplit("/", 1)[-1]]
-    blocks = [em.struct(scheme["title"], root, options=False, default_values=None)]
+    site_root = {k: v for k, v in site.items() if k != "$defs"}
+    blocks = [em.struct(scheme["title"], root, options=False, default_values=None),
+              em.struct(site["title"], site_root, options=False, default_values=None)]
     for name in firsts[1:] + sorted(n for n in defs if n not in firsts):
         blocks.append(em.struct(name, defs[name], options=False, default_values=None))
     blocks.append([f"/// {units['description']}", f"pub type {units['title']} = Vec<{model_ident(firsts[1])}>;",
@@ -386,7 +389,7 @@ def render_scheme(scheme: dict, units: dict, surroundings: dict) -> str:
     blocks += em.enum_blocks()
     head = """\
 //
-// scheme.json · units.json · surroundings.json 레코드. 세 스키마의 `$defs` 를 이름으로 합쳐 한 파일에 둔다.
+// scheme.json · units.json · surroundings.json · site.json 레코드. 네 스키마의 `$defs` 를 이름으로 합쳐 한 파일에 둔다.
 // 모델은 전부 extra=allow — 모르는 키는 `extra` 로 지나보낸다. 선택 필드는 없으면 빼고 적는다
 // (Option + skip_serializing_if) — 샘플(examples/samples)이 그 모양이다. 명시 null 은 None 으로 읽혀
 // 되쓰면 빠진다.
@@ -492,7 +495,7 @@ def outputs(root: Path, bundle: dict) -> dict[Path, str]:
     return {
         src / "build_options.rs": render_build_options(bundle["build_options"],
                                                        bundle["fixtures"]["empty"]["expected"]),
-        src / "scheme.rs": render_scheme(bundle["scheme"], bundle["units"], bundle["surroundings"]),
+        src / "scheme.rs": render_scheme(bundle["scheme"], bundle["units"], bundle["surroundings"], bundle["site"]),
         src / "migrations.rs": render_migrations(bundle["migrations"]),
         src / "presets.rs": render_presets(bundle["structure_preset"]),
     }

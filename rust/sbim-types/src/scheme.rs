@@ -2,7 +2,7 @@
 // 정본: python/seoulgaok_bim_core/types.py (pydantic)
 // 생성: cd python && uv run python scripts/gen_build_options.py
 //
-// scheme.json · units.json · surroundings.json 레코드. 세 스키마의 `$defs` 를 이름으로 합쳐 한 파일에 둔다.
+// scheme.json · units.json · surroundings.json · site.json 레코드. 네 스키마의 `$defs` 를 이름으로 합쳐 한 파일에 둔다.
 // 모델은 전부 extra=allow — 모르는 키는 `extra` 로 지나보낸다. 선택 필드는 없으면 빼고 적는다
 // (Option + skip_serializing_if) — 샘플(examples/samples)이 그 모양이다. 명시 null 은 None 으로 읽혀
 // 되쓰면 빠진다.
@@ -109,6 +109,58 @@ pub struct Scheme {
     /// 기본값: null
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub resolved_options: Option<ResolvedOptions>,
+    /// 스키마에 없는 키 — 거부하지 않고 지나보낸다(extra=allow).
+    #[serde(flatten)]
+    pub extra: BTreeMap<String, serde_json::Value>,
+}
+
+/// 설계안 폴더의 `site.json` — 필지·도로·외곽선. 키 이름·좌표(EPSG:5186 절대)는 엔진 building_info 와 같다.
+///
+/// scheme.json 에 없어 에디터가 대지 경계·도로·정북 한계선을 못 그리던 것을 채운다. TS `SiteInfo` 와 같은 모양.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SiteInfo {
+    /// 기본값: []
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parcel_polygon: Option<Vec<(f64, f64)>>,
+    /// 기본값: [0, 0]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parcel_center: Option<(f64, f64)>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub road_polygon: Option<Vec<Vec<(f64, f64)>>>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub road_polygon_wide: Option<Vec<Vec<(f64, f64)>>>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub road_centerlines: Option<Vec<Vec<(f64, f64)>>>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub road_centerline_widths: Option<Vec<f64>>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub effective_parcel_outline: Option<Vec<(f64, f64)>>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub buildable_outline: Option<Vec<(f64, f64)>>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub footprint_outline: Option<Vec<(f64, f64)>>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub north_datum_offset: Option<f64>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub raw_parcel_area: Option<f64>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub effective_parcel_area: Option<f64>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub road_widening_area: Option<f64>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub corner_cut_area: Option<f64>,
     /// 스키마에 없는 키 — 거부하지 않고 지나보낸다(extra=allow).
     #[serde(flatten)]
     pub extra: BTreeMap<String, serde_json::Value>,

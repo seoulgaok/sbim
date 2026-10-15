@@ -31,7 +31,7 @@
   정규화된 기본값(`empty` fixture)에서 박힌다. building-generator 의 손 사본 `options.ex` 와
   sbim-editor 의 `sbim-doc` 은 이걸 가져다 쓰고 자기 검증기만 남긴다.
 - 제안 키(#549, 전부 옵셔널, 엔진 미방출) — `wall.role`·`UnitRoom` 용도 확장·`UnitRecord.fixtures`·
-  `Scheme._mep`, 그리고 `site.json`(`SiteInfo`: 필지·도로·중심선·외곽선). `UnitRecord.geom`은
+  `Scheme._mep`, 그리고 `site.json`(`SiteInfo`: 필지·도로·중심선·외곽선 — `schema/site.schema.json`·Rust·Elixir 판도 생성). `UnitRecord.geom`은
   `Any`로(실제 units.json 이 안 열리던 것). 아래 설계 결정 기록의 #549 절 참조.
 - `sbim-editor/`(Tauri 초기본)·`visualizer/`·`viewer/` 삭제 — 소비처(nextbase)가 자체 렌더러를
   쓰고 에디터는 별도 Rust 프로젝트라, 이 저장소는 계약·생성물·fixture 만 둔다(git 이력 c893c46

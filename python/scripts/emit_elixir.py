@@ -419,10 +419,11 @@ def _merged_defs(schemas: dict[str, dict]) -> dict[str, dict]:
     return merged
 
 
-def render_scheme(scheme: dict, units: dict, surroundings: dict) -> str:
-    defs = _merged_defs({"scheme": scheme, "units": units, "surroundings": surroundings})
-    root = {k: v for k, v in scheme.items() if k != "$defs"}
-    defs[root["title"]] = root
+def render_scheme(scheme: dict, units: dict, surroundings: dict, site: dict) -> str:
+    defs = _merged_defs({"scheme": scheme, "units": units, "surroundings": surroundings, "site": site})
+    for r in (scheme, site):
+        root = {k: v for k, v in r.items() if k != "$defs"}
+        defs[root["title"]] = root
 
     names: dict[str, str] = {}
     for n in defs:
@@ -438,7 +439,7 @@ def render_scheme(scheme: dict, units: dict, surroundings: dict) -> str:
               for n in topo(defs)]
     head = header("python/seoulgaok_bim_core/types.py (pydantic Scheme·UnitRecord·SurroundingBuilding)") + (
         "#\n"
-        "# 세 스키마(schema/scheme·units·surroundings.schema.json)의 `$defs` 를 이름으로 합쳤다.\n"
+        "# 네 스키마(schema/scheme·units·surroundings·site.schema.json)의 `$defs` 를 이름으로 합쳤다.\n"
         "# 기본값은 전부 nil 이고 to_map 은 nil 인 선택 필드를 뺀다 — 밑줄 키의 「없음 ≠ null」.\n"
         "# 값은 Jason 이 준 그대로(정수·실수를 강제하지 않는다). units.json 은 아직 구\n"
         "# `Unit(geom/data)` 모양이라 UnitRecord 로 안 읽힌다.\n"
@@ -518,7 +519,7 @@ def outputs(root: Path, bundle: dict) -> dict[Path, str]:
     return {
         gen / "options.ex": render_options(bundle["build_options"],
                                            bundle["fixtures"]["empty"]["expected"]),
-        gen / "scheme.ex": render_scheme(bundle["scheme"], bundle["units"], bundle["surroundings"]),
+        gen / "scheme.ex": render_scheme(bundle["scheme"], bundle["units"], bundle["surroundings"], bundle["site"]),
         gen / "migrations.ex": render_migrations(bundle["migrations"]),
         gen / "presets.ex": render_presets(bundle["structure_preset"]),
     }
