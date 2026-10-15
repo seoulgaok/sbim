@@ -1,8 +1,9 @@
 """scheme.json 의 `_compile_errors` — 엔진이 스스로 이 설계안을 거절한 사유.
 
 컴파일 거절은 결과를 버리는 사유가 아니라 **저장된 설계에 남아야 하는 경고**다
-(설계는 저장되지만 화면에서는 경고와 함께 보여야 한다). 밑줄 키이므로 pydantic은
-검증하지 않고 extra=allow로 통과시킨다 — 계약은 Scheme docstring + TS SchemeSpatial.
+(설계는 저장되지만 화면에서는 경고와 함께 보여야 한다). JSON 키 `_compile_errors` 는
+alias 다 — 파이썬 속성은 `scheme.compile_errors`(CompileError 목록), 덤프는 alias 로
+나간다. TS SchemeSpatial 과 같은 계약.
 
 값 모양은 생성기가 오늘 실제로 방출하는 것(building-generator pipeline.py·units.py 의
 compile_errors.append 사이트: type · reason · details · suggestion)과 같고, 그 정의가
@@ -54,16 +55,17 @@ def _payload(errors=None):
 
 
 def test_scheme_keeps_engine_rejections():
-    """엔진이 낸 거절 사유가 scheme를 통과해 그대로 남는다 (extra=allow 밑줄 키)."""
+    """엔진이 낸 거절 사유가 scheme를 통과해 그대로 남는다 (alias 밑줄 키)."""
     scheme = Scheme.model_validate(_payload(ENGINE_ERRORS))
-    assert scheme._compile_errors == ENGINE_ERRORS
+    assert [e.model_dump() for e in scheme.compile_errors] == ENGINE_ERRORS
     assert scheme.model_dump()["_compile_errors"] == ENGINE_ERRORS
 
 
 def test_items_satisfy_compile_error_contract():
-    """방출값이 errors.py 정본으로 그대로 검증된다 — 새 필드가 새 어휘를 만들지 않는다."""
+    """방출값이 errors.py 정본 그대로 검증된다 — 새 필드가 새 어휘를 만들지 않는다."""
     scheme = Scheme.model_validate(_payload(ENGINE_ERRORS))
-    parsed = [CompileError.model_validate(e) for e in scheme._compile_errors]
+    parsed = scheme.compile_errors
+    assert all(isinstance(e, CompileError) for e in parsed)
     assert [p.type for p in parsed] == ["UnitUnreachable", "ParkingSufficiency"]
     assert parsed[0].details["unit"] == "502"
     assert parsed[1].details["shortfall"] == 2
@@ -78,17 +80,17 @@ def test_save_load_round_trip(tmp_path):
     save_scheme(load_scheme(src), out)
 
     assert json.loads(out.read_text(encoding="utf-8"))["_compile_errors"] == ENGINE_ERRORS
-    assert load_scheme(out)._compile_errors == ENGINE_ERRORS
+    assert load_scheme(out).model_dump()["_compile_errors"] == ENGINE_ERRORS
 
 
 def test_absent_and_empty_are_distinguishable():
     """없음(구 scheme)은 키 자체가 없고, [] 는 엔진이 보고할 게 없었다는 정직한 값. 둘 다 컴파일 통과."""
     old = Scheme.model_validate(_payload(None))
     assert "_compile_errors" not in old.model_dump()
-    assert getattr(old, "_compile_errors", None) is None
+    assert old.compile_errors is None
 
     clean = Scheme.model_validate(_payload([]))
-    assert clean._compile_errors == []
+    assert clean.compile_errors == []
     assert clean.model_dump()["_compile_errors"] == []
 
     # 실제 샘플(생성기 방출물)은 아직 이 키를 안 싣는다 — 소비처는 부재를 '구 버전'으로 본다.

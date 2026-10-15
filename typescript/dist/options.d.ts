@@ -219,7 +219,7 @@ export interface Dimensions {
  */
 export interface Exterior {
     /**
-     * 외장재 preset (외벽·천장/테라스 색 페어). white=화이트·라이트그레이, sandstone=사암·웜그레이, brick=벽돌브라운·라이트그레이(default), concrete=노출콘크리트·짙은회색. visualizer가 hex로 매핑.
+     * 외장재 preset (외벽·천장/테라스 색 페어). white=화이트·라이트그레이, sandstone=사암·웜그레이, brick=벽돌브라운·라이트그레이(default), concrete=노출콘크리트·짙은회색. 소비처 렌더러가 hex로 매핑.
      * @default "brick"
      */
     style?: "white" | "sandstone" | "brick" | "concrete";

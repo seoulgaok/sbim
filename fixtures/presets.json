@@ -1,0 +1,19 @@
+{
+  "structure_preset": {
+    "wall": {
+      "wall_thickness": 0.2,
+      "max_span": 8.1,
+      "min_col_dist": 3.0
+    },
+    "rahmen": {
+      "wall_thickness": 0.15,
+      "max_span": 8.1,
+      "min_col_dist": 3.0
+    },
+    "steel": {
+      "wall_thickness": 0.12,
+      "max_span": 12.0,
+      "min_col_dist": 6.0
+    }
+  }
+}

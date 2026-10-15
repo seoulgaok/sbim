@@ -6,11 +6,12 @@ sbim
 </p>
 
 sbim은 다세대주택 BIM 데이터를 다루는 오픈소스([Apache 2.0]) 라이브러리입니다.
-`scheme.json` 하나를 단일 정의로 두고 Python·TypeScript가 같은 타입을 공유하며,
-3D 렌더링([three.js])과 [IFC4] 내보내기·되읽기를 지원합니다.
+타입의 정본은 Python(pydantic) 하나이고 TypeScript는 거기에 맞춰, 둘이 같은
+`scheme.json`을 읽고 씁니다. 기하는 [three.js] BufferGeometry 모양의 계약으로 담고,
+[IFC4] 내보내기·되읽기를 지원합니다.
 
 건물 하나가 `scheme.json` + `units.json`으로 떨어집니다. 층별 형상은 three.js
-BufferGeometry로 들어 있어 뷰어가 그대로 그리고, `IfcTriangulatedFaceSet`으로
+BufferGeometry로 들어 있어 소비처의 렌더러가 그대로 그리고, `IfcTriangulatedFaceSet`으로
 그대로 나가기 때문에 화면과 IFC가 어긋나지 않습니다. 세대는 `IfcSpace`에
 `NetFloorArea`가 붙어 적산에 바로 씁니다.
 
@@ -24,20 +25,59 @@ BufferGeometry로 들어 있어 뷰어가 그대로 그리고, `IfcTriangulatedF
 | --- | --- | --- |
 | [python/](python) | pydantic 타입, io, 설계 옵션, 설정 오버레이, IFC 내보내기·되읽기 | Python |
 | [typescript/](typescript) | 동일 타입, operations, BufferGeometry 변환 | TypeScript |
-| [visualizer/](visualizer) | `BimCanvas` — React + [R3F] 3D 뷰어 컴포넌트 | TypeScript |
-| [viewer/](viewer) | 드래그앤드롭 뷰어. 샘플 내장 | TypeScript |
-| [sbim-editor/](sbim-editor) | 평면도 벡터 에디터 ([Tauri] 데스크탑 앱) | TypeScript + Rust |
-| [schema/](schema) | JSON Schema. 타입 정의의 원본 | JSON Schema |
+| [rust/](rust) | `sbim-types` 크레이트 — serde 타입·기본값·이행 표. 생성물 | Rust |
+| [elixir/](elixir) | `sbim` 앱 — 구조체·기본값·이행 표·from_map/to_map. 생성물 | Elixir |
+| [schema/](schema) | pydantic 에서 생성한 JSON Schema — 손으로 고치지 않는다 | JSON Schema |
+| [fixtures/](fixtures) | 입력 → 정규화 `BuildOptions` 정답 쌍. 소비처 시험용, 생성물 | JSON |
 | [examples/](examples) | 샘플 `scheme.json`·`units.json`, 설정 예시 | — |
 
 `scheme.json`을 만드는 생성기는 비공개입니다. 이 저장소는 그 결과를 읽고 쓰는 쪽입니다.
+
+정본
+----
+
+정본은 pydantic 하나입니다 — `python/seoulgaok_bim_core/options.py`의 `BuildOptions`와
+`types.py`의 scheme·units 모델. 나머지는 거기서 나옵니다.
+
+| 파일 | 무엇 |
+| --- | --- |
+| `schema/*.json`, `typescript/src/options.ts`, `fixtures/*.json`, `rust/sbim-types/src/*.rs`, `elixir/sbim/lib/sbim/generated/*.ex` | 생성물. 손으로 고치지 않는다 |
+| `typescript/src/types.ts` | 손으로 맞춘 TS 판. `python/tests/test_types_parity.py`가 필드 집합이 같은지 지킨다 |
+
+옵션이나 타입을 바꿀 때는 이 순서입니다.
+
+1. pydantic 모델을 고친다(`types.py`를 고쳤으면 `types.ts`도 손으로 맞춘다).
+2. `cd python && uv run python scripts/gen_build_options.py` — 생성물을 다시 쓴다
+   (`--check`는 어긋나면 1로 끝난다).
+3. `pnpm -r build`로 dist를 굽는다.
+4. 기본값이 바뀌거나 필드가 늘고 줄었으면 버전을 올리고 [CHANGELOG](CHANGELOG.md) 맨 위에
+   한 줄 적는다. 버전은 `python/pyproject.toml`·`typescript/package.json`·
+   `__version__`·`rust/sbim-types/Cargo.toml`·`elixir/sbim/mix.exs`가 전부 같아야 한다
+   (`test_version_sync.py`).
+
+Rust·Elixir 판은 타입·기본값·이행 **표**까지만 생성한다. 옛 저장값을 새 모양으로 접는 로직은
+각 소비처가 `fixtures/migrations.json`의 표를 읽어 두고, `fixtures/build_options/`로 결과를
+검사한다.
+
+판은 git 태그로 찍습니다 — 머지 뒤에 사람이 `git tag v0.1.0`. 소비처는 그 태그로 고정합니다.
+
+```jsonc
+// package.json
+"@seoulgaok/bim-core": "github:seoulgaok/sbim#v0.1.0&path:typescript"
+```
+
+```toml
+# pyproject.toml (uv)
+[tool.uv.sources]
+seoulgaok-bim-core = { git = "https://github.com/seoulgaok/sbim", tag = "v0.1.0", subdirectory = "python" }
+```
 
 시작하기
 --------
 
 ```bash
 pip install -e "./python[ifc]"     # IFC 불필요하면 ./python
-pnpm install && pnpm dev           # 뷰어 — 시작 화면에 샘플 3건
+pnpm install && pnpm -r build      # TS 패키지 빌드
 ```
 
 ```python
@@ -88,5 +128,3 @@ where, params = build_site_where(alias="l")
 [Apache 2.0]: LICENSE "Apache License 2.0"
 [IFC4]: https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/ "IFC4 Add2 TC1"
 [three.js]: https://threejs.org "three.js"
-[R3F]: https://r3f.docs.pmnd.rs "React Three Fiber"
-[Tauri]: https://tauri.app "Tauri"

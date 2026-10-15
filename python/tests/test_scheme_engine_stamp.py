@@ -5,8 +5,9 @@
 찍는다: 어떤 커밋·플랫폼·파이썬·시각에 만들어졌는지. 소비처(서버)는 그 결과의 출처를
 이 키로 추적한다.
 
-밑줄 키이므로 pydantic은 검증하지 않고 extra=allow로 통과시킨다 — 계약은 Scheme
-docstring + TS SchemeSpatial(EngineStamp). 값은 전부 문자열. 없음 = 구 scheme.
+JSON 키 `_engine_stamp` 는 alias 다 — 파이썬 속성은 `scheme.engine_stamp`(EngineStamp 모델),
+덤프는 alias 로 나간다. TS SchemeSpatial(EngineStamp) 과 같은 계약. 값은 전부 문자열.
+없음 = 구 scheme.
 """
 
 import json
@@ -15,7 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from seoulgaok_bim_core.io import load_scheme, save_scheme
-from seoulgaok_bim_core.types import Scheme
+from seoulgaok_bim_core.types import EngineStamp, Scheme
 
 ROOT = Path(__file__).resolve().parents[2]
 SAMPLES = ROOT / "examples" / "samples"
@@ -39,18 +40,19 @@ def _payload(stamp=None):
 
 
 def test_scheme_keeps_engine_stamp():
-    """엔진이 찍은 빌드 도장이 scheme를 통과해 그대로 남는다 (extra=allow 밑줄 키)."""
+    """엔진이 찍은 빌드 도장이 scheme를 통과해 그대로 남는다 (alias 밑줄 키)."""
     scheme = Scheme.model_validate(_payload(ENGINE_STAMP))
-    assert scheme._engine_stamp == ENGINE_STAMP
+    assert scheme.engine_stamp == EngineStamp(**ENGINE_STAMP)
     assert scheme.model_dump()["_engine_stamp"] == ENGINE_STAMP
 
 
 def test_all_stamp_fields_are_strings():
     """계약: 네 칸(engine_commit·platform·python·compiled_at) 전부 문자열."""
     scheme = Scheme.model_validate(_payload(ENGINE_STAMP))
-    stamp = scheme._engine_stamp
+    stamp = scheme.engine_stamp.model_dump()
     assert set(stamp) == {"engine_commit", "platform", "python", "compiled_at"}
     assert all(isinstance(v, str) for v in stamp.values())
+    assert all(f.annotation is str for f in EngineStamp.model_fields.values())
 
 
 def test_compiled_at_is_iso8601_utc():
@@ -69,14 +71,14 @@ def test_save_load_round_trip(tmp_path):
     save_scheme(load_scheme(src), out)
 
     assert json.loads(out.read_text(encoding="utf-8"))["_engine_stamp"] == ENGINE_STAMP
-    assert load_scheme(out)._engine_stamp == ENGINE_STAMP
+    assert load_scheme(out).engine_stamp.model_dump() == ENGINE_STAMP
 
 
 def test_absent_on_old_scheme():
     """없음(구 scheme)은 키 자체가 없다 — 소비처는 부재를 '구 버전'으로 처리한다."""
     old = Scheme.model_validate(_payload(None))
     assert "_engine_stamp" not in old.model_dump()
-    assert getattr(old, "_engine_stamp", None) is None
+    assert old.engine_stamp is None
 
     # 실제 샘플(생성기 방출물)은 아직 이 키를 안 싣는다.
     assert "_engine_stamp" not in load_scheme(SAMPLES / "scheme.json").model_dump()

@@ -1,48 +1,494 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://seoulgaok.com/sbim/units.schema.json",
   "title": "Units",
-  "description": "세대 정보 배열. scheme.json과 별도 파일로 관리.",
+  "description": "units.json — 생성기 세대 레코드(UnitRecord) 배열.",
   "type": "array",
-  "items": { "$ref": "#/$defs/Unit" },
+  "items": {
+    "$ref": "#/$defs/UnitRecord"
+  },
   "$defs": {
-    "Unit": {
-      "type": "object",
-      "required": ["geom", "data"],
+    "UnitAreaBreakdown": {
+      "additionalProperties": true,
       "properties": {
-        "geom": { "$ref": "#/$defs/UnitGeometry" },
-        "data": { "$ref": "#/$defs/UnitData" }
-      }
-    },
-    "UnitGeometry": {
-      "type": "object",
-      "required": ["boundary"],
-      "properties": {
-        "boundary": {
-          "type": "array",
-          "items": { "$ref": "buffer-geometry.schema.json" }
+        "net": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Net"
+        },
+        "common": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Common"
+        },
+        "land_portion": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Land Portion"
+        },
+        "contract": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Contract"
+        },
+        "veranda": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Veranda"
+        },
+        "veranda_eq": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Veranda Eq"
+        },
+        "balcony": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Balcony"
+        },
+        "balcony_depth": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Balcony Depth"
+        },
+        "service": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Service"
+        },
+        "actual_use": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Actual Use"
+        },
+        "duplex_upper": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Duplex Upper"
         }
-      }
+      },
+      "title": "UnitAreaBreakdown",
+      "type": "object"
     },
-    "UnitData": {
-      "type": "object",
-      "required": ["id", "floor_id"],
+    "UnitFixture": {
+      "additionalProperties": true,
+      "description": "세대 안 가구·기구 (제안 2026-10-16, #549 — 엔진 미방출).\n\n소비처는 kind 별 2D 기호·3D 상자만 그린다 — 종류 이름과 자리·치수면 된다.\nkind 어휘(BIMx 샘플): 싱크·쿡탑·인덕션·후드·냉장고·세탁기·상부장·하부장·아일랜드식탁·\n세면대·대변기·샤워부스·젠다이·신발장·침대·소파·의자·식탁.",
       "properties": {
-        "id": { "type": "string", "description": "UUID" },
-        "name": { "type": "string", "description": "세대명 (예: 도생 A, 도생 B)" },
-        "price": { "type": "number", "description": "분양/임대 가격 (원)" },
-        "floor_id": { "type": "integer" },
-        "floor_height": { "type": "number" },
-        "floor_bottom_height": { "type": "number" },
-        "area_net": { "type": "number", "description": "전용 (㎡) — 발코니 차감 후 (주차 산정 기준)" },
-        "area_common": { "type": "number", "description": "공용 (㎡) — 계단·EV·복도 지분 안분" },
-        "land_portion": { "type": "number", "description": "대지지분 (㎡)" },
-        "area_contract": { "type": "number", "description": "분양 (㎡) = net + common" },
-        "area_veranda": { "type": "number", "description": "베란다 (㎡) — 위층 step-back 슬래브 (건축법 정의)" },
-        "area_balcony": { "type": "number", "description": "발코니 (㎡) — 외벽 캔틸레버 (목적: 전용 임계 하향 → 주차 절감)" },
-        "balcony_depth": { "type": "number", "description": "발코니 실효 폭 (m, ≤ 1.5 법정)" },
-        "area_service": { "type": "number", "description": "legacy alias = area_veranda (호환용)" }
-      }
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "origin": {
+          "default": [
+            0,
+            0
+          ],
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Origin",
+          "type": "array"
+        },
+        "angle_deg": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Angle Deg"
+        },
+        "w": {
+          "default": 0,
+          "title": "W",
+          "type": "number"
+        },
+        "d": {
+          "default": 0,
+          "title": "D",
+          "type": "number"
+        },
+        "h": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "H"
+        },
+        "room_index": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Room Index"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "UnitFixture",
+      "type": "object"
+    },
+    "UnitRecord": {
+      "additionalProperties": true,
+      "description": "units.json 레코드 — 생성기 units 직렬화 계약.",
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "floor": {
+          "title": "Floor",
+          "type": "integer"
+        },
+        "floor_height": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Floor Height"
+        },
+        "floor_bottom_height": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Floor Bottom Height"
+        },
+        "price": {
+          "default": 0,
+          "title": "Price",
+          "type": "number"
+        },
+        "area": {
+          "$ref": "#/$defs/UnitAreaBreakdown",
+          "default": {
+            "net": null,
+            "common": null,
+            "land_portion": null,
+            "contract": null,
+            "veranda": null,
+            "veranda_eq": null,
+            "balcony": null,
+            "balcony_depth": null,
+            "service": null,
+            "actual_use": null,
+            "duplex_upper": null
+          }
+        },
+        "geom": {
+          "anyOf": [
+            {},
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Geom"
+        },
+        "polygon": {
+          "anyOf": [
+            {
+              "items": {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Polygon"
+        },
+        "duplex_upper_polygon": {
+          "anyOf": [
+            {
+              "items": {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Duplex Upper Polygon"
+        },
+        "balcony_polygons": {
+          "anyOf": [
+            {
+              "items": {
+                "items": {
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "prefixItems": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ],
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Balcony Polygons"
+        },
+        "polygons_by_floor": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "items": {
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "prefixItems": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ],
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Polygons By Floor"
+        },
+        "rooms": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/UnitRoom"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rooms"
+        },
+        "fixtures": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/UnitFixture"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fixtures"
+        }
+      },
+      "required": [
+        "id",
+        "floor"
+      ],
+      "title": "UnitRecord",
+      "type": "object"
+    },
+    "UnitRoom": {
+      "additionalProperties": true,
+      "description": "방 최소 의미론 — 벽·문 기하는 geom userData가 따로 옴.\n\n지금 엔진은 욕실·주방만 낸다. 거실·침실·현관·발코니·다용도실·복도 는 제안(#549).",
+      "properties": {
+        "use": {
+          "default": "",
+          "title": "Use",
+          "type": "string"
+        },
+        "polygon": {
+          "default": [],
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Polygon",
+          "type": "array"
+        },
+        "floor_finish": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Floor Finish"
+        },
+        "ceiling_h": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ceiling H"
+        }
+      },
+      "title": "UnitRoom",
+      "type": "object"
     }
   }
 }

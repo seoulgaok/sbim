@@ -1,37 +1,234 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://seoulgaok.com/sbim/surroundings.schema.json",
   "title": "Surroundings",
-  "description": "주변 건물 컨텍스트. 일조권 분석·시각화에 사용.",
+  "description": "surroundings.json — 주변 건물(SurroundingBuilding) 배열. 일조·시각화용.",
   "type": "array",
-  "items": { "$ref": "#/$defs/SurroundingBuilding" },
+  "items": {
+    "$ref": "#/$defs/SurroundingBuilding"
+  },
   "$defs": {
-    "SurroundingBuilding": {
-      "type": "object",
-      "required": ["geom", "data"],
+    "BufferAttributeData": {
+      "additionalProperties": true,
       "properties": {
-        "geom": { "$ref": "#/$defs/SurroundingGeometry" },
-        "data": { "$ref": "#/$defs/SurroundingData" }
-      }
-    },
-    "SurroundingGeometry": {
-      "type": "object",
-      "required": ["boundary"],
-      "properties": {
-        "boundary": {
-          "type": "array",
-          "items": { "$ref": "buffer-geometry.schema.json" }
+        "itemSize": {
+          "title": "Itemsize",
+          "type": "integer"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "array": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Array",
+          "type": "array"
         }
-      }
+      },
+      "required": [
+        "itemSize",
+        "type",
+        "array"
+      ],
+      "title": "BufferAttributeData",
+      "type": "object"
+    },
+    "BufferGeometryData": {
+      "additionalProperties": true,
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/_BufferGeometryMetadata"
+        },
+        "uuid": {
+          "title": "Uuid",
+          "type": "string"
+        },
+        "type": {
+          "const": "BufferGeometry",
+          "title": "Type",
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/_BufferGeometryInner"
+        },
+        "userData": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Userdata"
+        }
+      },
+      "required": [
+        "metadata",
+        "uuid",
+        "type",
+        "data"
+      ],
+      "title": "BufferGeometryData",
+      "type": "object"
+    },
+    "SurroundingBuilding": {
+      "additionalProperties": true,
+      "properties": {
+        "geom": {
+          "$ref": "#/$defs/SurroundingGeometry"
+        },
+        "data": {
+          "$ref": "#/$defs/SurroundingData"
+        }
+      },
+      "required": [
+        "geom",
+        "data"
+      ],
+      "title": "SurroundingBuilding",
+      "type": "object"
     },
     "SurroundingData": {
-      "type": "object",
-      "required": ["height", "floor"],
+      "additionalProperties": true,
       "properties": {
-        "address": { "type": "string", "description": "예: '57-22대'" },
-        "height": { "type": "number", "description": "건물 높이 (m)" },
-        "floor": { "type": "integer", "description": "층수" }
-      }
+        "address": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Address"
+        },
+        "height": {
+          "title": "Height",
+          "type": "number"
+        },
+        "floor": {
+          "title": "Floor",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "height",
+        "floor"
+      ],
+      "title": "SurroundingData",
+      "type": "object"
+    },
+    "SurroundingGeometry": {
+      "additionalProperties": true,
+      "properties": {
+        "boundary": {
+          "items": {
+            "$ref": "#/$defs/BufferGeometryData"
+          },
+          "title": "Boundary",
+          "type": "array"
+        }
+      },
+      "required": [
+        "boundary"
+      ],
+      "title": "SurroundingGeometry",
+      "type": "object"
+    },
+    "_BufferAttributes": {
+      "additionalProperties": true,
+      "properties": {
+        "position": {
+          "$ref": "#/$defs/BufferAttributeData"
+        },
+        "normal": {
+          "$ref": "#/$defs/BufferAttributeData"
+        },
+        "uv": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BufferAttributeData"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "position",
+        "normal"
+      ],
+      "title": "_BufferAttributes",
+      "type": "object"
+    },
+    "_BufferGeometryInner": {
+      "additionalProperties": true,
+      "properties": {
+        "attributes": {
+          "$ref": "#/$defs/_BufferAttributes"
+        },
+        "index": {
+          "$ref": "#/$defs/_BufferIndex"
+        }
+      },
+      "required": [
+        "attributes",
+        "index"
+      ],
+      "title": "_BufferGeometryInner",
+      "type": "object"
+    },
+    "_BufferGeometryMetadata": {
+      "additionalProperties": true,
+      "properties": {
+        "version": {
+          "title": "Version",
+          "type": "number"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "generator": {
+          "title": "Generator",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "type",
+        "generator"
+      ],
+      "title": "_BufferGeometryMetadata",
+      "type": "object"
+    },
+    "_BufferIndex": {
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "array": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Array",
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "array"
+      ],
+      "title": "_BufferIndex",
+      "type": "object"
     }
   }
 }

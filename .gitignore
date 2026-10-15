@@ -17,10 +17,7 @@ __pycache__/
 .vscode/
 .idea/
 
-# 앱 빌드 산출물 (라이브러리 typescript/dist·visualizer/dist는 배포 대상이라 추적)
-viewer/dist/
-sbim-editor/dist/
-sbim-editor/src-tauri/target/
+# 라이브러리 typescript/dist는 배포 대상이라 추적
 
 # 사업 설정값 — 절대 커밋 금지 (examples/*.example.json만 추적)
 site_filter.json
@@ -30,3 +27,11 @@ sbim_config.json
 
 # 정답(GT) 자산 — 설계 결과·DWG·옵션 추출본. 공개 저장소에 두지 않는다.
 reference/
+
+# Elixir (elixir/sbim) — mix.lock 은 추적한다
+elixir/sbim/_build/
+elixir/sbim/deps/
+
+# Rust (rust/sbim-types) — Cargo.lock 은 추적한다
+rust/target/
+rust/sbim-types/target/

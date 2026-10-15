@@ -1,3 +1,46 @@
+# 변경 기록(소비처용)
+
+소비처(building-generator·nextbase 등)가 판을 올릴 때 알아야 할 것만 적는다.
+규칙: 기본값이 바뀌거나 필드가 늘고 줄면 여기 한 줄 + 버전 올림. 판은 머지 뒤
+`git tag v<버전>`으로 찍는다.
+
+## 0.1.0 — 2026-10-16
+
+- 정본을 pydantic 하나로 선언 — `schema/*.json`·`typescript/src/options.ts`는 생성물,
+  `types.ts`는 손으로 맞추되 `test_types_parity.py`가 지킨다. 손으로 schema 를 고치던 소비처는
+  pydantic 쪽에 PR 을 낸다.
+- 버전 통일 0.1.0 — Python `0.0.1`·`__version__ 0.0.13`·TS `0.0.2`가 전부 `0.1.0`.
+  소비처는 태그 `v0.1.0`으로 고정한다(README 「정본」 절).
+- 기본값 변경 `Dimensions.max_span` 8.0 → 8.1 (#41). `STRUCTURE_PRESET`의 wall·rahmen도 8.1.
+  소장 템플릿 T꺾임 코어 8.1m 수용 — `max_span`을 안 주던 소비처는 결과 스팬이 달라질 수 있다.
+- 삭제 `parking_axis`·`road_edge`·`multi_road`(2026-10-05) — 저장값에 남은 키는 조용히 버린다.
+  주차 버블 `Parking.parking_graph`가 대신한다.
+- 추가 주차 버블 종류 `aisle` — `parking_graph` 둘째 값이 `road|yard|aisle`. 옛 값은 그대로
+  통과한다.
+- `Parking.parallel` 빈값 마커 auto → law (#40) — `ResolvedDesign`에서 `parallel` 제외.
+  `AUTO_FIELDS`를 읽던 소비처는 집합이 하나 줄었다.
+- `window.sill`·`railing.lines` 설명 정정 (#42) — `sill`은 절대 z, `lines`는 `parcel_center`
+  상대. 값은 그대로, 읽는 쪽 해석만 맞춘다.
+- Python `Scheme`에 밑줄 키(`_engine_stamp`·`_column_sections` 등)가 정식 필드로 추가 —
+  이전엔 `extra`로만 통과했다. 생성된 scheme 스키마에 그 키가 보인다.
+- `schema/scheme·units·surroundings.schema.json`이 생성물로 교체, `buffer-geometry.schema.json`
+  삭제 — 그 파일을 참조하던 소비처는 `scheme.schema.json` 안의 정의를 쓴다.
+- `fixtures/build_options/` 신설 — 입력 → 정규화 `BuildOptions` 정답 쌍. 소비처는 같은 파일로
+  자기 쪽 이행층을 검사한다. `fixtures/migrations.json`(이행 표)·`presets.json`(구조 프리셋)도 같이.
+- `rust/sbim-types`·`elixir/sbim` 신설 — pydantic 에서 생성한 serde 타입 / Elixir 구조체. 기본값은
+  정규화된 기본값(`empty` fixture)에서 박힌다. building-generator 의 손 사본 `options.ex` 와
+  sbim-editor 의 `sbim-doc` 은 이걸 가져다 쓰고 자기 검증기만 남긴다.
+- 제안 키(#549, 전부 옵셔널, 엔진 미방출) — `wall.role`·`UnitRoom` 용도 확장·`UnitRecord.fixtures`·
+  `Scheme._mep`, 그리고 `site.json`(`SiteInfo`: 필지·도로·중심선·외곽선 — `schema/site.schema.json`·Rust·Elixir 판도 생성). `UnitRecord.geom`은
+  `Any`로(실제 units.json 이 안 열리던 것). 아래 설계 결정 기록의 #549 절 참조.
+- `sbim-editor/`(Tauri 초기본)·`visualizer/`·`viewer/` 삭제 — 소비처(nextbase)가 자체 렌더러를
+  쓰고 에디터는 별도 Rust 프로젝트라, 이 저장소는 계약·생성물·fixture 만 둔다(git 이력 c893c46
+  까지 남아 있다).
+
+이전 판(0.0.x)은 기록 없음 — 아래 설계 결정 기록을 본다.
+
+---
+
 # 설계 결정 기록
 
 공개 이전 개발 과정에서 내려진 주요 결정과 그 근거.
@@ -62,7 +105,7 @@
 **목적함수(`objective`)는 폐기됐다.** "좋음"의 우선순위를 사용자가 리스트로
 주는 방식(`attach` 추가 → 제거 → 전체 폐기)을 세 번 시도한 끝에,
 선택은 엔진 내부 결합 목적함수로 완결하는 것으로 정리했다.
-사용자가 가중치를 튜닝하게 만드는 설계는 실패했다.
+사용자가 가중치를 튜닝하게 만드는 설계는 실패했다(기록은 git 이력 `docs/objective.md`).
 
 ---
 

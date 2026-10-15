@@ -1,8 +1,12 @@
-"""Pydantic types — scheme.json / units.json 데이터 계약 (typescript/src/types.ts와 동기).
+"""Pydantic types — scheme.json / units.json 데이터 계약의 **정본**.
 
-규율: 생성기가 새 키·userData kind를 방출하려면 **여기와 TS에 먼저** 정의하고
-sbim을 푸시한 뒤 소비처가 물어간다. schema/*.json은 walls/floors/roof 시절의
-산물 — 현재 정본은 types.ts + 이 파일이다.
+이 파일이 정본이다. typescript/src/types.ts 는 손으로 맞춘 TS 판이고
+tests/test_types_parity.py 가 두 쪽의 필드 집합이 같은지 지킨다.
+schema/scheme.schema.json·units.schema.json 은 여기서 생성된다
+(scripts/gen_build_options.py) — 손으로 고치지 않는다.
+
+규율: 생성기가 새 키·userData kind를 방출하려면 **여기에 먼저** 정의하고 TS 를
+맞춘 뒤 sbim을 푸시하고, 소비처가 물어간다.
 
 userData 계열은 검증 강제 없음(extra=allow·전 필드 기본값) — 계약 문서화 목적.
 좌표계: 링·점은 EPSG:5186 절대, 메시 positions만 parcel_center 상대.
@@ -12,8 +16,9 @@ from __future__ import annotations
 
 from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, SerializerFunctionWrapHandler, model_serializer
 
+from .errors import CompileError
 from .options import CoreType
 
 
@@ -254,28 +259,133 @@ class CoreLayout(_Base):
     ev_front: Optional[Ring] = None
 
 
-class Scheme(_Base):
-    """scheme.json — 밑줄 키(SchemeSpatial 상당)는 extra=allow로 통과.
+class EngineStamp(_Base):
+    """이 설계안을 만든 엔진 빌드 도장 — 서버 결과를 추적·재현한다. 전부 문자열.
+    같은 소스라도 CPU 아키텍처가 다르면 컴파일 분기가 갈릴 수 있어 platform 을 남긴다."""
+    engine_commit: str = Field(description="엔진 저장소 커밋 SHA — 이 도면을 만든 빌드")
+    platform: str = Field(description='엔진이 돈 플랫폼 — "linux-x86_64" · "darwin-arm64" 등')
+    python: str = Field(description="엔진 파이썬 버전 문자열")
+    compiled_at: str = Field(description="컴파일 시각 — ISO-8601 UTC")
 
-    생성기가 방출하는 밑줄 키 계약(TS SchemeSpatial 동일):
-    _core_layout(CoreLayout)·_parking_stalls·_column_centers·_basement_outline·
-    _floor_outlines·_pedestrian_path·_pedestrian_paths(보행로 전부, [0]=_pedestrian_path —
-    코어 문 2개 #35)·_halls({level: [ring, …]} DH 공용 홀 — 코어 복도 띠를 늘인 팔·EV 로비(연희 75-9 GT), 접면 연결계 = 복도∪홀)·
-    _penthouse_outline·_common_footprint·_validation·_north_ref_edges·_north_datum_offset·
-    _column_size·_column_sections(기둥 실단면 목록 {center:[x,y], w, d, angle_deg} —
-    _column_centers와 같은 좌표 프레임·같은 순서; w는 빔 축 방향, d는 그 가로, angle_deg는
-    w 축의 각(도). 있음이면 소비처는 이것으로 그리고 없음 = _column_size 정사각 폴백)·
-    _legal_checks(법규 33항목 판정 실값 — key는 legal_checklist.yaml, #16)·
-    _compile_errors(이 설계안에 대한 엔진 스스로의 거절 사유 — errors.py CompileError[].
-    없음 또는 [] = 컴파일 통과, 하나 이상이면 설계는 저장됐지만 경고와 함께 보여야 한다)·
-    _engine_stamp(이 설계안을 만든 엔진 빌드를 적는 도장 — 서버 결과를 추적·재현한다.
-    engine_commit·platform·python·compiled_at(ISO-8601 UTC) 전부 str. 없음 = 구 scheme)."""
+
+class ColumnSection(_Base):
+    """기둥 실단면 하나 — _column_centers의 같은 자리 기둥을 정사각이 아니라 이 단면으로 그린다.
+    w는 빔 축 방향, d는 그 가로, angle_deg는 w 축의 각(도)."""
+    center: Point2 = Field(description="기둥 중심 (EPSG:5186 절대) — _column_centers와 같은 프레임·같은 순서")
+    w: float = Field(description="단면 치수 (m) — 빔 축 방향")
+    d: float = Field(description="단면 치수 (m) — 빔 축의 가로")
+    angle_deg: float = Field(description="w 축의 각 (도)")
+
+
+class LegalCheck(_Base):
+    """법규 체크리스트 한 항목의 판정 실값 — key는 giga legal_checklist.yaml 의 key(변경 금지,
+    그래프 노드 id)."""
+    key: str
+    group: str
+    item: str
+    status: str = Field(description="'적용' | '해당없음' | '검토' | '참고' 또는 실값 포함('적용 (확폭 12㎡)')")
+    apply: str = Field(description="적용 내용 — 산출값 채워진 문장")
+    law: str = Field(description="근거 조문")
+    note: Optional[str] = None
+
+
+def _spatial(alias: str, description: str | None = None):
+    """밑줄 키 필드 — pydantic 은 `_` 로 시작하는 이름을 private 로 보므로 alias 로 받는다."""
+    return Field(default=None, alias=alias, description=description)
+
+
+class SchemeSpatial(_Base):
+    """scheme.json 최상위 밑줄 키 — 생성기 scheme 방출부 방출 계약. 전부 옵셔널(구 scheme 호환).
+
+    JSON 키는 `_core_layout` 처럼 밑줄로 시작하고(alias), 파이썬 속성은 밑줄을 뗀 이름이다
+    (`scheme.core_layout`). 덤프는 늘 alias 로 나가고(serialize_by_alias), 입력에 없던 키는
+    덤프에서도 빠진다 — 「없음 = 구 scheme」과 `_compile_errors` 의 「없음 vs []」를 지킨다.
+    """
+
+    model_config = ConfigDict(
+        extra="allow", validate_by_name=True, validate_by_alias=True, serialize_by_alias=True,
+    )
+
+    core_layout: Optional[CoreLayout] = _spatial("_core_layout")
+    parking_stalls: Optional[list[Ring]] = _spatial("_parking_stalls")
+    column_centers: Optional[list[Point2]] = _spatial("_column_centers")
+    basement_outline: Optional[Ring] = _spatial("_basement_outline")
+    floor_outlines: Optional[dict[str, Ring]] = _spatial(
+        "_floor_outlines", "층별 footprint ring — 복도(=층외곽−세대−코어) 유도 기준")
+    pedestrian_path: Optional[Ring] = _spatial(
+        "_pedestrian_path", "보행 출입로 (도로→코어) — 보행 경로 산출. 1F 전용")
+    pedestrian_paths: Optional[list[Ring]] = _spatial(
+        "_pedestrian_paths", "보행 출입로 전부 — 코어 문 2개(#35)면 2개. [0] === _pedestrian_path (호환)")
+    halls: Optional[dict[str, list[Ring]]] = _spatial(
+        "_halls",
+        "DH 공용 홀 — {level: ring[]}. 코어 복도 띠를 양옆으로 늘인 팔·EV 로비(연희 75-9 GT T자 홀 — "
+        "코어로 갈라진 2조각이라 링 목록). 세대에서 차감된 공용, 접면 연결계 = 코어 복도 ∪ 홀")
+    penthouse_outline: Optional[Ring] = _spatial(
+        "_penthouse_outline", "옥탑(계단탑) 외곽 — 옥탑층·지붕층 평면이 공유")
+    common_footprint: Optional[Ring] = _spatial("_common_footprint", "전층 교집합 — 코어 탐색공간")
+    validation: Optional[list[str]] = _spatial("_validation", "준법 위반·경고 메모")
+    column_size: Optional[float] = _spatial(
+        "_column_size",
+        "기둥 단면 한 변 (m) — Concrete.column_size 확정값. 도면 재구성이 scheme만 보고도 "
+        "같은 크기를 그리도록 방출(폴백 이원화 방지).")
+    column_sections: Optional[list[ColumnSection]] = _spatial(
+        "_column_sections",
+        "기둥 실단면 목록 — _column_centers와 같은 좌표 프레임·같은 순서. 있음이면 소비처는 "
+        "정사각 대신 이것으로 그린다(얇은 단면 기둥을 정사각으로 그리면 주차 칸을 문다). "
+        "없음 = _column_size 정사각 폴백 (구 scheme).")
+    north_ref_edges: Optional[list[tuple[Point2, Point2]]] = _spatial(
+        "_north_ref_edges",
+        "정북일조 기준선 (EPSG:5186 절대, 변마다 [p1,p2]) — 3D 뷰어 천공면. 북향 변마다 별도 "
+        "엣지(상업 인접 면제·도로 인접은 중심선 offset), 매스 깎기(apply_north_setback)와 "
+        "동일 기준. 면제면 [].")
+    north_datum_offset: Optional[float] = _spatial(
+        "_north_datum_offset",
+        "정북일조 기산면 보정 (m) — 영 119조①5호 나목: 높이는 본 대지와 북측 인접대지의 평균 "
+        "수평면 기준. z0 − 본 대지 지표면 = 고저차의 1/2. 천공면 그리기: 유효높이 h' = z − 이 값 "
+        "(경사지에서 프로파일이 수직으로 이동). 미방출·null이면 0(평지 가정).")
+    legal_checks: Optional[list[LegalCheck]] = _spatial(
+        "_legal_checks",
+        "법규 체크리스트 33항목 판정 실값 (giga legal_checklist.yaml SSOT, #16). 합격/불합격이 "
+        "아니라 적용여부 + 산출값이다 — 엔진은 규제를 생성 단계에서 지켜버리므로(사선은 매스를 "
+        "깎고, 미충족은 compile_errors) 완성 설계에 '미달' 항목이 존재할 수 없다. law-graph가 "
+        "결정 노드에서 근거 조문으로 엣지를 이을 때 이 실값을 쓴다. 구 scheme엔 없다 — 소비처는 "
+        "부재를 \"구 버전\"으로 처리할 것.")
+    compile_errors: Optional[list[CompileError]] = _spatial(
+        "_compile_errors",
+        "엔진이 이 설계안을 스스로 거절한 사유 (errors.py CompileError — type·reason·details·"
+        "suggestion). 없음 또는 [] = 컴파일 통과. 하나 이상이면 설계는 저장됐지만 경고와 함께 "
+        "보여야 한다.")
+    engine_stamp: Optional[EngineStamp] = _spatial(
+        "_engine_stamp",
+        "이 설계안을 만든 엔진 빌드 도장 (EngineStamp) — 서버 결과를 추적·재현한다. 전부 문자열. "
+        "구 scheme엔 없다 — 소비처는 부재를 \"구 버전\"으로 처리할 것.")
+    mep: Optional[list["MepItem"]] = _spatial(
+        "_mep",
+        "설비 (제안 2026-10-16, #549 — 엔진 미방출). 계통별 평면도(위생·냉난방·환기·가스·전기)의 "
+        "재료. 처음엔 기기(kind: \"device\") 자리만이어도 도면이 된다. 좌표 EPSG 절대.")
+
+    @model_serializer(mode="wrap")
+    def _omit_unset_spatial(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        """입력에 없던 밑줄 키는 덤프에도 없다 — 없음(구 scheme)이 null 로 바뀌지 않는다."""
+        out = handler(self)
+        spatial = {}
+        for name, f in SchemeSpatial.model_fields.items():
+            for key in (f.alias, name):
+                if key in out:
+                    v = out.pop(key)
+                    if name in self.model_fields_set:
+                        spatial[key] = v
+        out.update(spatial)                      # 밑줄 키는 data·floor_plans 뒤에 둔다
+        return out
+
+
+class Scheme(SchemeSpatial):
+    """scheme.json — data·floor_plans·unit_ids + 밑줄 키(SchemeSpatial)."""
     data: SchemeData
     floor_plans: list[FloorPlan]
     unit_ids: list[str]
-    resolved_options: Optional["ResolvedOptions"] = None
-    # 설비 — 제안(#549), 엔진 미방출. 계통별 평면도의 재료. TS SchemeSpatial._mep 와 같은 모양.
-    mep: Optional[list[MepItem]] = Field(default=None, alias="_mep")
+    resolved_options: Optional["ResolvedOptions"] = Field(
+        default=None, description="엔진이 실제로 쓴 속성 창 값 + 출처. 구 scheme엔 없다.")
 
 
 # --- resolved_options (엔진이 채운 속성 창) -----------------------------------

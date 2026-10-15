@@ -1,0 +1,89 @@
+{
+  "legacy_top_blocks": [
+    "massing",
+    "units",
+    "core",
+    "structure",
+    "windows",
+    "parking",
+    "ground_floor",
+    "concrete",
+    "schedule",
+    "financing",
+    "exterior",
+    "regulations"
+  ],
+  "ground_floor_to": {
+    "core_side": "core",
+    "core_rotation": "core",
+    "core_axis": "core",
+    "core_entries": "core",
+    "core_mirror": "core",
+    "parallel": "parking",
+    "multi_road": "parking",
+    "parking_axis": "parking",
+    "parking_angle": "parking",
+    "road_edge": "parking",
+    "entry2": "parking",
+    "tandem": "parking",
+    "exit_road": "parking",
+    "parking_graph": "parking",
+    "interior_aisle": "parking",
+    "road_setback": "regulations",
+    "pedestrian_width": "regulations",
+    "corridor_mode": "circulation",
+    "max_span": "dimensions",
+    "cantilever": "dimensions",
+    "min_col_dist": "dimensions"
+  },
+  "ground_floor_dropped": [
+    "bk_offset",
+    "commercial_remainder",
+    "core_along",
+    "preferred_min_span"
+  ],
+  "parking_dims_dropped": [
+    "stall_width",
+    "stall_depth",
+    "aisle_width"
+  ],
+  "renamed": {
+    "entry2": "multi_road"
+  },
+  "regulations_renamed": {
+    "far_target": "far_limit_override",
+    "bcr_target": "bcr_limit_override"
+  },
+  "moved_to_regulations": [
+    [
+      "parking",
+      "road_setback"
+    ],
+    [
+      "parking",
+      "ratio_mode"
+    ],
+    [
+      "circulation",
+      "pedestrian_width"
+    ]
+  ],
+  "dropped": {
+    "financing": [
+      "presale_start_offset",
+      "presale_period",
+      "deposit_pct",
+      "mid_pct",
+      "balance_pct"
+    ]
+  },
+  "core_type_old_to_new": {
+    "1": 2,
+    "2": 1,
+    "3": 4,
+    "4": 5,
+    "5": 7,
+    "6": 6,
+    "7": 3
+  }
+}

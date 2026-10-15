@@ -1,0 +1,142 @@
+{
+  "input": {
+    "design": {
+      "massing": {
+        "target_floor_count": 5,
+        "commercial_remainder": true
+      },
+      "units": {
+        "units_per_floor": 4,
+        "cut_axis": "road"
+      },
+      "core": {
+        "type": 1,
+        "core_axis": "road",
+        "core_along": "mid",
+        "composition": "stair"
+      },
+      "parking": {
+        "count": 6,
+        "type": "perpendicular",
+        "bk_offset": 5.5,
+        "interior_aisle": true,
+        "parking_axis": "auto",
+        "road_edge": 2,
+        "multi_road": true,
+        "tandem": true
+      }
+    },
+    "standards": {
+      "dimensions": {
+        "stall_width": 2.6,
+        "stall_depth": 5.2,
+        "aisle_width": 6.5,
+        "preferred_min_span": 4.2
+      }
+    }
+  },
+  "expected": {
+    "land_ids": [],
+    "primary_land_id": "",
+    "design": {
+      "massing": {
+        "target_floor_count": 5,
+        "first_floor_height": null,
+        "floor_use": {},
+        "mass_axis": null
+      },
+      "units": {
+        "units_per_floor": 4,
+        "units_by_level": {},
+        "max_net_area": 60.0
+      },
+      "core": {
+        "type": 1,
+        "core_side": null,
+        "core_rotation": null,
+        "core_mirror": null,
+        "core_entries": null
+      },
+      "parking": {
+        "parking_angle": null,
+        "parallel": null,
+        "tandem": true,
+        "exit_road": null,
+        "parking_graph": null
+      },
+      "circulation": {
+        "corridor_mode": "carve"
+      },
+      "exterior": {
+        "style": "brick",
+        "window_style": "open"
+      },
+      "structure": "wall",
+      "regulations": {
+        "far_limit_override": null,
+        "bcr_limit_override": null,
+        "setback_overrides": {},
+        "road_setback": null,
+        "pedestrian_width": 1.5,
+        "ratio_mode": "multi_family"
+      }
+    },
+    "standards": {
+      "concrete": {
+        "wall_thickness": 0.2,
+        "slab_thickness": 0.15,
+        "interior_wall_thickness": 0.1,
+        "party_wall_thickness": 0.2,
+        "basement_wall_thickness": 0.3,
+        "railing_post_size": 0.05,
+        "railing_clear": 0.12,
+        "parapet_wall_height": 0.0,
+        "column_size": 0.6,
+        "foundation_thickness": 0.6,
+        "insulation_thickness": 0.2,
+        "finish_thickness": 0.01,
+        "finish_name": "STO",
+        "transfer_beam_width": 0.6,
+        "transfer_beam_depth": 0.8,
+        "beam_size": 0.6,
+        "stair_riser_max": 0.18,
+        "stair_tread": 0.26,
+        "stair_waist": 0.15,
+        "price_per_m3": 3500000
+      },
+      "dimensions": {
+        "max_span": 8.1,
+        "cantilever": 3.0,
+        "min_col_dist": 3.0
+      }
+    },
+    "business": {
+      "schedule": {
+        "arch_review": null,
+        "struct_review": null,
+        "civil_supervision": null,
+        "other_survey_cost": null,
+        "basic_design": 2.0,
+        "arch_review_mo": 1.5,
+        "build_permit": 1.0,
+        "exec_design": 1.0,
+        "struct_review_mo": 1.5,
+        "constructor_select": 1.5,
+        "constr_notice": 0.5,
+        "construction_months": null,
+        "start_year_month": null
+      },
+      "financing": {
+        "land_loan_ltv": null,
+        "land_loan_rate": null,
+        "fac_loan_ltv": null,
+        "fac_loan_rate": null,
+        "fac_efficiency": null,
+        "post_loan_rate": null,
+        "post_months": null,
+        "handling_fee_rate": null,
+        "handling_fee_on": false
+      }
+    }
+  }
+}

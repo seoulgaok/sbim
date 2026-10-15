@@ -1,0 +1,278 @@
+{
+  "additionalProperties": true,
+  "description": "설계안 폴더의 `site.json` — 필지·도로·외곽선. 키 이름·좌표(EPSG:5186 절대)는 엔진 building_info 와 같다.\n\nscheme.json 에 없어 에디터가 대지 경계·도로·정북 한계선을 못 그리던 것을 채운다. TS `SiteInfo` 와 같은 모양.",
+  "properties": {
+    "parcel_polygon": {
+      "default": [],
+      "items": {
+        "maxItems": 2,
+        "minItems": 2,
+        "prefixItems": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "number"
+          }
+        ],
+        "type": "array"
+      },
+      "title": "Parcel Polygon",
+      "type": "array"
+    },
+    "parcel_center": {
+      "default": [
+        0,
+        0
+      ],
+      "maxItems": 2,
+      "minItems": 2,
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "title": "Parcel Center",
+      "type": "array"
+    },
+    "road_polygon": {
+      "anyOf": [
+        {
+          "items": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Road Polygon"
+    },
+    "road_polygon_wide": {
+      "anyOf": [
+        {
+          "items": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Road Polygon Wide"
+    },
+    "road_centerlines": {
+      "anyOf": [
+        {
+          "items": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Road Centerlines"
+    },
+    "road_centerline_widths": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Road Centerline Widths"
+    },
+    "effective_parcel_outline": {
+      "anyOf": [
+        {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Effective Parcel Outline"
+    },
+    "buildable_outline": {
+      "anyOf": [
+        {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Buildable Outline"
+    },
+    "footprint_outline": {
+      "anyOf": [
+        {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Footprint Outline"
+    },
+    "north_datum_offset": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "North Datum Offset"
+    },
+    "raw_parcel_area": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Raw Parcel Area"
+    },
+    "effective_parcel_area": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Effective Parcel Area"
+    },
+    "road_widening_area": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Road Widening Area"
+    },
+    "corner_cut_area": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Corner Cut Area"
+    }
+  },
+  "title": "SiteInfo",
+  "type": "object"
+}
