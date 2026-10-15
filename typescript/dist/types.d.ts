@@ -50,6 +50,9 @@ export interface MaterialLayer {
 }
 export interface WallUserData {
     kind: "wall";
+    /** 벽 구실 — exterior=외벽, unit_boundary=세대경계벽, partition=세대 안 칸막이, core=코어벽.
+     *  (제안 2026-10-16, building-generator #549 — 엔진 미방출. 없으면 소비처는 `exterior` 불리언으로 가른다) */
+    role?: "exterior" | "unit_boundary" | "partition" | "core" | string;
     /** 벽 중심선 양끝 (EPSG:5186 절대) */
     p0: Point2;
     p1: Point2;
@@ -335,6 +338,21 @@ export interface SchemeSpatial {
     /** 이 설계안을 만든 엔진 빌드 도장 (EngineStamp) — 서버 결과를 추적·재현한다.
      *  전부 문자열. 구 scheme엔 없다 — 소비처는 부재를 "구 버전"으로 처리할 것. */
     _engine_stamp?: EngineStamp;
+    /** 설비 (제안 2026-10-16, #549 — 엔진 미방출). 계통별 평면도(위생·냉난방·환기·가스·전기)의 재료.
+     *  처음엔 기기(`kind: "device"`) 자리만이어도 도면이 된다. 좌표 EPSG 절대. */
+    _mep?: MepItem[];
+}
+/** 설비 항목 하나 — 배관·덕트는 path, 기기는 origin. */
+export interface MepItem {
+    system: "water" | "drain" | "heating" | "vent" | "gas" | "elec" | string;
+    kind: "pipe" | "duct" | "device" | string;
+    /** 기기 이름 (급수분배기 · 온수분배기 · 전열교환기 · 배기팬 · 보일러 · 가스계량기 · 에어컨 실외기 …) */
+    name?: string;
+    floor_id?: number;
+    origin?: Point2;
+    path?: Ring;
+    /** 지름·폭 (m) */
+    size?: number;
 }
 export interface Scheme extends SchemeSpatial {
     data: SchemeData;
@@ -421,8 +439,31 @@ export interface UnitAreaBreakdown {
 }
 /** 방 최소 의미론 — 벽·문 기하는 geom userData가 따로 옴 */
 export interface UnitRoom {
-    use: "욕실" | "주방" | string;
+    /** 지금 엔진은 욕실·주방만 낸다. 나머지 용도는 제안(#549) — 구획 못 하면 남는 면적을 `거실` 하나로. */
+    use: "욕실" | "주방" | "거실" | "침실" | "현관" | "발코니" | "다용도실" | "복도" | string;
     polygon: Ring;
+    /** 바닥 마감 이름 (강마루10 · 타일10 …) — 제안, 미방출 */
+    floor_finish?: string;
+    /** 천장고 m — 제안, 미방출 */
+    ceiling_h?: number;
+}
+/** 세대 안 가구·기구 (제안 2026-10-16, #549 — 엔진 미방출).
+ *  소비처는 kind 별 2D 기호·3D 상자만 그린다 — 종류 이름과 자리·치수면 된다.
+ *  kind 어휘(BIMx 샘플에서): 싱크·쿡탑·인덕션·후드·냉장고·세탁기·상부장·하부장·아일랜드식탁·
+ *  세면대·대변기·샤워부스·젠다이·신발장·침대·소파·의자·식탁. */
+export interface UnitFixture {
+    kind: string;
+    /** 바닥 발자국의 기준점 (EPSG 절대) — w×d 사각의 왼쪽 아래, angle_deg 로 회전 */
+    origin: Point2;
+    /** w 축의 각 (도, 반시계) — 없으면 0 */
+    angle_deg?: number;
+    /** 발자국 (m) */
+    w: number;
+    d: number;
+    /** 높이 (m) — 없으면 종류 기본값 */
+    h?: number;
+    /** 속한 방 — `rooms` 인덱스 */
+    room_index?: number;
 }
 /** units.json 레코드 — 생성기 units 직렬화 계약 */
 export interface UnitRecord {
@@ -441,6 +482,8 @@ export interface UnitRecord {
     /** 층별 점유 맵 {floor: ring} — 복층 포함 단일 표현 (생성기 계약 ③) */
     polygons_by_floor?: Record<string, Ring>;
     rooms?: UnitRoom[];
+    /** 가구·기구 — 제안(#549), 미방출 */
+    fixtures?: UnitFixture[];
 }
 export interface SurroundingGeometry {
     boundary: BufferGeometryData[];

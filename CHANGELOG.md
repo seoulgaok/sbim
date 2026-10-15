@@ -306,3 +306,13 @@ CompileError`가 정본이므로(type·reason·details·suggestion) 새 필드�
 이 시점에서 공개 이전 커밋 이력은 단일 커밋으로 정리되었다.
 사업 정보가 이력에 남아 있었기 때문이다. 기술적 결정의 근거는
 이 문서에 보존한다.
+
+## LOD300 완성형을 위한 계약 제안 키 (2026-10-16, building-generator #549)
+
+에디터가 못 그리는 것은 전부 엔진이 안 주는 것이었다(BIMx 샘플 대조). 엔진이 방출하기 **전에** 모양을
+여기 먼저 둔다 — 전부 옵셔널, 구 scheme/units 는 그대로 열린다.
+`wall.role`(exterior|unit_boundary|partition|core) · `UnitRoom.use` 확장(거실·침실·현관·발코니·다용도실·복도)
++ `floor_finish`·`ceiling_h` · `UnitRecord.fixtures[]`(가구·기구: kind·origin·angle_deg·w·d·h·room_index) ·
+`Scheme._mep[]`(설비: system·kind·name·floor_id·origin|path·size). 어휘는 BIMx 샘플에서 뽑았다.
+같이 고친 것: Python `UnitRecord.geom` 이 `UnitGeometry` 로 묶여 있어 실제 units.json(BufferGeometryData 리스트)이
+안 열렸다 → TS 와 같은 `Any`.
