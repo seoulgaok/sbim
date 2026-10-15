@@ -96,6 +96,11 @@ pub struct Scheme {
     /// 기본값: null
     #[serde(rename = "_engine_stamp", default, skip_serializing_if = "Option::is_none")]
     pub engine_stamp: Option<EngineStamp>,
+    /// 설비 (제안 2026-10-16, #549 — 엔진 미방출). 계통별 평면도(위생·냉난방·환기·가스·전기)의 재료. 처음엔 기기(kind: "device") 자리만이어도 도면이 된다. 좌표 EPSG 절대.
+    ///
+    /// 기본값: null
+    #[serde(rename = "_mep", default, skip_serializing_if = "Option::is_none")]
+    pub mep: Option<Vec<MepItem>>,
     pub data: SchemeData,
     pub floor_plans: Vec<FloorPlan>,
     pub unit_ids: Vec<String>,
@@ -128,7 +133,7 @@ pub struct UnitRecord {
     pub area: Option<UnitAreaBreakdown>,
     /// 기본값: null
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub geom: Option<UnitGeometry>,
+    pub geom: Option<serde_json::Value>,
     /// 기본값: null
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub polygon: Option<Vec<(f64, f64)>>,
@@ -144,6 +149,9 @@ pub struct UnitRecord {
     /// 기본값: null
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rooms: Option<Vec<UnitRoom>>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fixtures: Option<Vec<UnitFixture>>,
     /// 스키마에 없는 키 — 거부하지 않고 지나보낸다(extra=allow).
     #[serde(flatten)]
     pub extra: BTreeMap<String, serde_json::Value>,
@@ -339,6 +347,33 @@ pub struct LegalCheck {
     pub extra: BTreeMap<String, serde_json::Value>,
 }
 
+/// 설비 항목 하나 (제안 2026-10-16, #549 — 엔진 미방출). 배관·덕트는 path, 기기는 origin.
+///
+/// system: water|drain|heating|vent|gas|elec · kind: pipe|duct|device · 좌표 EPSG 절대.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct MepItem {
+    pub system: String,
+    pub kind: String,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub floor_id: Option<i64>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin: Option<(f64, f64)>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<Vec<(f64, f64)>>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub size: Option<f64>,
+    /// 스키마에 없는 키 — 거부하지 않고 지나보낸다(extra=allow).
+    #[serde(flatten)]
+    pub extra: BTreeMap<String, serde_json::Value>,
+}
+
 /// `BuildOptions.design`과 같은 중첩 모양 — 첫수표가 채우는 필드(`empty: "auto"`)만.
 /// 잎 집합은 `options.AUTO_FIELDS`와 같다(tests/test_auto_fields.py가 지킨다).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -457,15 +492,40 @@ pub struct UnitAreaBreakdown {
     pub extra: BTreeMap<String, serde_json::Value>,
 }
 
+/// 세대 안 가구·기구 (제안 2026-10-16, #549 — 엔진 미방출).
+///
+/// 소비처는 kind 별 2D 기호·3D 상자만 그린다 — 종류 이름과 자리·치수면 된다.
+/// kind 어휘(BIMx 샘플): 싱크·쿡탑·인덕션·후드·냉장고·세탁기·상부장·하부장·아일랜드식탁·
+/// 세면대·대변기·샤워부스·젠다이·신발장·침대·소파·의자·식탁.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct UnitGeometry {
-    pub boundary: Vec<BufferGeometryData>,
+pub struct UnitFixture {
+    pub kind: String,
+    /// 기본값: [0, 0]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub origin: Option<(f64, f64)>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub angle_deg: Option<f64>,
+    /// 기본값: 0
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub w: Option<f64>,
+    /// 기본값: 0
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub d: Option<f64>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub h: Option<f64>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub room_index: Option<i64>,
     /// 스키마에 없는 키 — 거부하지 않고 지나보낸다(extra=allow).
     #[serde(flatten)]
     pub extra: BTreeMap<String, serde_json::Value>,
 }
 
-/// 방 최소 의미론(욕실·주방) — 벽·문 기하는 geom userData가 따로 옴.
+/// 방 최소 의미론 — 벽·문 기하는 geom userData가 따로 옴.
+///
+/// 지금 엔진은 욕실·주방만 낸다. 거실·침실·현관·발코니·다용도실·복도 는 제안(#549).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnitRoom {
     /// 기본값: ""
@@ -474,6 +534,12 @@ pub struct UnitRoom {
     /// 기본값: []
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub polygon: Option<Vec<(f64, f64)>>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub floor_finish: Option<String>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ceiling_h: Option<f64>,
     /// 스키마에 없는 키 — 거부하지 않고 지나보낸다(extra=allow).
     #[serde(flatten)]
     pub extra: BTreeMap<String, serde_json::Value>,

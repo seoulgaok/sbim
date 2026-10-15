@@ -23,7 +23,7 @@ from .options import CoreType
 
 
 class _Base(BaseModel):
-    model_config = ConfigDict(extra="allow")  # 알려지지 않은 필드 허용
+    model_config = ConfigDict(extra="allow", populate_by_name=True)  # 알려지지 않은 필드 허용 · 밑줄 별칭
 
 
 # --- BufferGeometry (THREE.js 직렬화 형식) ----------------------------------
@@ -81,6 +81,8 @@ class MaterialLayer(_Base):
 
 class WallUserData(_Base):
     kind: Literal["wall"] = "wall"
+    # 벽 구실 exterior|unit_boundary|partition|core — 제안(#549), 엔진 미방출. 없으면 exterior 불리언으로.
+    role: Optional[str] = None
     p0: Point2 = (0, 0)     # 벽 중심선 양끝 (EPSG 절대)
     p1: Point2 = (0, 0)
     t: float = 0            # 구조 두께 — 중심선 양쪽 t/2
@@ -357,6 +359,10 @@ class SchemeSpatial(_Base):
         "_engine_stamp",
         "이 설계안을 만든 엔진 빌드 도장 (EngineStamp) — 서버 결과를 추적·재현한다. 전부 문자열. "
         "구 scheme엔 없다 — 소비처는 부재를 \"구 버전\"으로 처리할 것.")
+    mep: Optional[list["MepItem"]] = _spatial(
+        "_mep",
+        "설비 (제안 2026-10-16, #549 — 엔진 미방출). 계통별 평면도(위생·냉난방·환기·가스·전기)의 "
+        "재료. 처음엔 기기(kind: \"device\") 자리만이어도 도면이 된다. 좌표 EPSG 절대.")
 
     @model_serializer(mode="wrap")
     def _omit_unset_spatial(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
@@ -487,9 +493,41 @@ class UnitAreaBreakdown(_Base):
 
 
 class UnitRoom(_Base):
-    """방 최소 의미론(욕실·주방) — 벽·문 기하는 geom userData가 따로 옴."""
-    use: str = ""           # 욕실 | 주방
+    """방 최소 의미론 — 벽·문 기하는 geom userData가 따로 옴.
+
+    지금 엔진은 욕실·주방만 낸다. 거실·침실·현관·발코니·다용도실·복도 는 제안(#549)."""
+    use: str = ""           # 욕실 | 주방 | 거실 | 침실 | 현관 | 발코니 | 다용도실 | 복도
     polygon: Ring = []
+    floor_finish: Optional[str] = None   # 바닥 마감 이름 — 제안, 미방출
+    ceiling_h: Optional[float] = None    # 천장고 m — 제안, 미방출
+
+
+class UnitFixture(_Base):
+    """세대 안 가구·기구 (제안 2026-10-16, #549 — 엔진 미방출).
+
+    소비처는 kind 별 2D 기호·3D 상자만 그린다 — 종류 이름과 자리·치수면 된다.
+    kind 어휘(BIMx 샘플): 싱크·쿡탑·인덕션·후드·냉장고·세탁기·상부장·하부장·아일랜드식탁·
+    세면대·대변기·샤워부스·젠다이·신발장·침대·소파·의자·식탁."""
+    kind: str
+    origin: Point2 = (0, 0)          # 발자국 기준점(EPSG 절대) — w×d 사각의 왼쪽 아래
+    angle_deg: Optional[float] = None  # w 축의 각(도, 반시계) — 없으면 0
+    w: float = 0
+    d: float = 0
+    h: Optional[float] = None        # 없으면 종류 기본값
+    room_index: Optional[int] = None  # rooms 인덱스
+
+
+class MepItem(_Base):
+    """설비 항목 하나 (제안 2026-10-16, #549 — 엔진 미방출). 배관·덕트는 path, 기기는 origin.
+
+    system: water|drain|heating|vent|gas|elec · kind: pipe|duct|device · 좌표 EPSG 절대."""
+    system: str
+    kind: str
+    name: Optional[str] = None       # 급수분배기 · 전열교환기 · 배기팬 · 보일러 …
+    floor_id: Optional[int] = None
+    origin: Optional[Point2] = None
+    path: Optional[Ring] = None
+    size: Optional[float] = None     # 지름·폭 m
 
 
 class UnitRecord(_Base):
@@ -500,12 +538,38 @@ class UnitRecord(_Base):
     floor_bottom_height: Optional[float] = None
     price: float = 0
     area: UnitAreaBreakdown = UnitAreaBreakdown()
-    geom: Optional[UnitGeometry] = None
+    # 메시 — DB 저장 시 Json 이라 모양 미보장(TS `unknown`). 실제 units.json 은 BufferGeometryData 의 **리스트**라
+    # UnitGeometry 로 받으면 샘플이 안 열린다(2026-10-16 확인).
+    geom: Optional[Any] = None
     polygon: Optional[Ring] = None      # 주층 단일 ring (호환용)
     duplex_upper_polygon: Optional[Ring] = None
     balcony_polygons: Optional[list[Ring]] = None
     polygons_by_floor: Optional[dict[str, Ring]] = None  # 층 점유 (생성기 계약 ③)
     rooms: Optional[list[UnitRoom]] = None
+    fixtures: Optional[list[UnitFixture]] = None   # 가구·기구 — 제안(#549), 미방출
+
+
+# --- site.json (제안 2026-10-16, #549 덧붙임 — 엔진 미방출) ---------------------------------
+
+
+class SiteInfo(_Base):
+    """설계안 폴더의 `site.json` — 필지·도로·외곽선. 키 이름·좌표(EPSG:5186 절대)는 엔진 building_info 와 같다.
+
+    scheme.json 에 없어 에디터가 대지 경계·도로·정북 한계선을 못 그리던 것을 채운다. TS `SiteInfo` 와 같은 모양."""
+    parcel_polygon: Ring = []
+    parcel_center: Point2 = (0, 0)
+    road_polygon: Optional[list[Ring]] = None
+    road_polygon_wide: Optional[list[Ring]] = None
+    road_centerlines: Optional[list[Ring]] = None
+    road_centerline_widths: Optional[list[float]] = None
+    effective_parcel_outline: Optional[Ring] = None
+    buildable_outline: Optional[Ring] = None
+    footprint_outline: Optional[Ring] = None
+    north_datum_offset: Optional[float] = None
+    raw_parcel_area: Optional[float] = None
+    effective_parcel_area: Optional[float] = None
+    road_widening_area: Optional[float] = None
+    corner_cut_area: Optional[float] = None
 
 
 # --- Surroundings ----------------------------------------------------------

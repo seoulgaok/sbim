@@ -6,74 +6,6 @@
     "$ref": "#/$defs/UnitRecord"
   },
   "$defs": {
-    "BufferAttributeData": {
-      "additionalProperties": true,
-      "properties": {
-        "itemSize": {
-          "title": "Itemsize",
-          "type": "integer"
-        },
-        "type": {
-          "title": "Type",
-          "type": "string"
-        },
-        "array": {
-          "items": {
-            "type": "number"
-          },
-          "title": "Array",
-          "type": "array"
-        }
-      },
-      "required": [
-        "itemSize",
-        "type",
-        "array"
-      ],
-      "title": "BufferAttributeData",
-      "type": "object"
-    },
-    "BufferGeometryData": {
-      "additionalProperties": true,
-      "properties": {
-        "metadata": {
-          "$ref": "#/$defs/_BufferGeometryMetadata"
-        },
-        "uuid": {
-          "title": "Uuid",
-          "type": "string"
-        },
-        "type": {
-          "const": "BufferGeometry",
-          "title": "Type",
-          "type": "string"
-        },
-        "data": {
-          "$ref": "#/$defs/_BufferGeometryInner"
-        },
-        "userData": {
-          "anyOf": [
-            {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Userdata"
-        }
-      },
-      "required": [
-        "metadata",
-        "uuid",
-        "type",
-        "data"
-      ],
-      "title": "BufferGeometryData",
-      "type": "object"
-    },
     "UnitAreaBreakdown": {
       "additionalProperties": true,
       "properties": {
@@ -213,21 +145,83 @@
       "title": "UnitAreaBreakdown",
       "type": "object"
     },
-    "UnitGeometry": {
+    "UnitFixture": {
       "additionalProperties": true,
+      "description": "세대 안 가구·기구 (제안 2026-10-16, #549 — 엔진 미방출).\n\n소비처는 kind 별 2D 기호·3D 상자만 그린다 — 종류 이름과 자리·치수면 된다.\nkind 어휘(BIMx 샘플): 싱크·쿡탑·인덕션·후드·냉장고·세탁기·상부장·하부장·아일랜드식탁·\n세면대·대변기·샤워부스·젠다이·신발장·침대·소파·의자·식탁.",
       "properties": {
-        "boundary": {
-          "items": {
-            "$ref": "#/$defs/BufferGeometryData"
-          },
-          "title": "Boundary",
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "origin": {
+          "default": [
+            0,
+            0
+          ],
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Origin",
           "type": "array"
+        },
+        "angle_deg": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Angle Deg"
+        },
+        "w": {
+          "default": 0,
+          "title": "W",
+          "type": "number"
+        },
+        "d": {
+          "default": 0,
+          "title": "D",
+          "type": "number"
+        },
+        "h": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "H"
+        },
+        "room_index": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Room Index"
         }
       },
       "required": [
-        "boundary"
+        "kind"
       ],
-      "title": "UnitGeometry",
+      "title": "UnitFixture",
       "type": "object"
     },
     "UnitRecord": {
@@ -289,14 +283,13 @@
         },
         "geom": {
           "anyOf": [
-            {
-              "$ref": "#/$defs/UnitGeometry"
-            },
+            {},
             {
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "title": "Geom"
         },
         "polygon": {
           "anyOf": [
@@ -418,6 +411,21 @@
           ],
           "default": null,
           "title": "Rooms"
+        },
+        "fixtures": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/UnitFixture"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fixtures"
         }
       },
       "required": [
@@ -429,7 +437,7 @@
     },
     "UnitRoom": {
       "additionalProperties": true,
-      "description": "방 최소 의미론(욕실·주방) — 벽·문 기하는 geom userData가 따로 옴.",
+      "description": "방 최소 의미론 — 벽·문 기하는 geom userData가 따로 옴.\n\n지금 엔진은 욕실·주방만 낸다. 거실·침실·현관·발코니·다용도실·복도 는 제안(#549).",
       "properties": {
         "use": {
           "default": "",
@@ -453,100 +461,33 @@
           },
           "title": "Polygon",
           "type": "array"
-        }
-      },
-      "title": "UnitRoom",
-      "type": "object"
-    },
-    "_BufferAttributes": {
-      "additionalProperties": true,
-      "properties": {
-        "position": {
-          "$ref": "#/$defs/BufferAttributeData"
         },
-        "normal": {
-          "$ref": "#/$defs/BufferAttributeData"
-        },
-        "uv": {
+        "floor_finish": {
           "anyOf": [
             {
-              "$ref": "#/$defs/BufferAttributeData"
+              "type": "string"
             },
             {
               "type": "null"
             }
           ],
-          "default": null
+          "default": null,
+          "title": "Floor Finish"
+        },
+        "ceiling_h": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ceiling H"
         }
       },
-      "required": [
-        "position",
-        "normal"
-      ],
-      "title": "_BufferAttributes",
-      "type": "object"
-    },
-    "_BufferGeometryInner": {
-      "additionalProperties": true,
-      "properties": {
-        "attributes": {
-          "$ref": "#/$defs/_BufferAttributes"
-        },
-        "index": {
-          "$ref": "#/$defs/_BufferIndex"
-        }
-      },
-      "required": [
-        "attributes",
-        "index"
-      ],
-      "title": "_BufferGeometryInner",
-      "type": "object"
-    },
-    "_BufferGeometryMetadata": {
-      "additionalProperties": true,
-      "properties": {
-        "version": {
-          "title": "Version",
-          "type": "number"
-        },
-        "type": {
-          "title": "Type",
-          "type": "string"
-        },
-        "generator": {
-          "title": "Generator",
-          "type": "string"
-        }
-      },
-      "required": [
-        "version",
-        "type",
-        "generator"
-      ],
-      "title": "_BufferGeometryMetadata",
-      "type": "object"
-    },
-    "_BufferIndex": {
-      "additionalProperties": true,
-      "properties": {
-        "type": {
-          "title": "Type",
-          "type": "string"
-        },
-        "array": {
-          "items": {
-            "type": "integer"
-          },
-          "title": "Array",
-          "type": "array"
-        }
-      },
-      "required": [
-        "type",
-        "array"
-      ],
-      "title": "_BufferIndex",
+      "title": "UnitRoom",
       "type": "object"
     }
   }

@@ -169,6 +169,8 @@ class _Emitter:
             if isinstance(ap, dict):
                 return f"BTreeMap<String, {self.rs_type(ap, model, field, idx)}>"
             return "BTreeMap<String, serde_json::Value>"
+        if t is None and not s:
+            return "serde_json::Value"   # pydantic `Any` — 스키마가 {} 로 나온다(UnitRecord.geom)
         raise ValueError(f"모르는 스키마: {model}.{field} {s}")
 
     def register_untagged(self, model: str, field: str, subs: list[dict]) -> str:
