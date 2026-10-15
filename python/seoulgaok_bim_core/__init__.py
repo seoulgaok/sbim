@@ -34,20 +34,24 @@ from .types import (
     BeamUserData,
     BufferAttributeData,
     BufferGeometryData,
+    ColumnSection,
     ColumnUserData,
     CoreLayout,
     CoveringUserData,
     DoorUserData,
+    EngineStamp,
     FloorData,
     FloorGeometry,
     FloorPlan,
     HostWallRef,
+    LegalCheck,
     MaterialLayer,
     RailingUserData,
     ResolvedDesign,
     ResolvedOptions,
     Scheme,
     SchemeData,
+    SchemeSpatial,
     SlabUserData,
     StairLayoutItem,
     StairMemberUserData,
@@ -65,7 +69,7 @@ from .types import (
     WindowUserData,
 )
 
-__version__ = "0.0.13"
+__version__ = "0.1.0"
 
 __all__ = [
     # Output types (Scheme 등)
@@ -88,8 +92,12 @@ __all__ = [
     "UnitRecord",
     "UnitAreaBreakdown",
     "UnitRoom",
-    # scheme 공간 계약
+    # scheme 공간 계약 (밑줄 키)
+    "SchemeSpatial",
     "CoreLayout",
+    "ColumnSection",
+    "LegalCheck",
+    "EngineStamp",
     # LOD300 userData (kind 판별)
     "MaterialLayer",
     "HostWallRef",

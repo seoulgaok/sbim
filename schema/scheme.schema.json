@@ -1,82 +1,1488 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://seoulgaok.com/sbim/scheme.schema.json",
-  "title": "Scheme",
-  "description": "서울가옥 BIM scheme — 다세대주택 LoD 100~200 building scheme 단일 진실. 생성기가 출력하고, 에디터가 편집하며, BuildingMeshVisualizer가 렌더링한다.",
-  "type": "object",
-  "required": ["data", "floor_plans", "unit_ids"],
-  "properties": {
-    "data": { "$ref": "#/$defs/SchemeData" },
-    "floor_plans": {
-      "type": "array",
-      "items": { "$ref": "#/$defs/FloorPlan" }
-    },
-    "unit_ids": {
-      "type": "array",
-      "items": { "type": "string" }
-    }
-  },
   "$defs": {
-    "SchemeData": {
-      "type": "object",
-      "description": "프로젝트 레벨 메타데이터",
-      "required": ["lot_area", "build_area", "far", "bcr", "pnu"],
+    "BufferAttributeData": {
+      "additionalProperties": true,
       "properties": {
-        "lot_area": { "type": "number", "description": "대지면적 (㎡)" },
-        "build_area": { "type": "number", "description": "건축면적 (㎡)" },
-        "far": { "type": "number", "description": "용적률" },
-        "bcr": { "type": "number", "description": "건폐율" },
-        "pnu": { "type": ["number", "string"], "description": "부동산고유번호" }
-      }
+        "itemSize": {
+          "title": "Itemsize",
+          "type": "integer"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "array": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Array",
+          "type": "array"
+        }
+      },
+      "required": [
+        "itemSize",
+        "type",
+        "array"
+      ],
+      "title": "BufferAttributeData",
+      "type": "object"
     },
-    "FloorPlan": {
-      "type": "object",
-      "required": ["data", "geom"],
+    "BufferGeometryData": {
+      "additionalProperties": true,
       "properties": {
-        "data": { "$ref": "#/$defs/FloorData" },
-        "geom": { "$ref": "#/$defs/FloorGeometry" }
-      }
+        "metadata": {
+          "$ref": "#/$defs/_BufferGeometryMetadata"
+        },
+        "uuid": {
+          "title": "Uuid",
+          "type": "string"
+        },
+        "type": {
+          "const": "BufferGeometry",
+          "title": "Type",
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/$defs/_BufferGeometryInner"
+        },
+        "userData": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Userdata"
+        }
+      },
+      "required": [
+        "metadata",
+        "uuid",
+        "type",
+        "data"
+      ],
+      "title": "BufferGeometryData",
+      "type": "object"
+    },
+    "ColumnSection": {
+      "additionalProperties": true,
+      "description": "기둥 실단면 하나 — _column_centers의 같은 자리 기둥을 정사각이 아니라 이 단면으로 그린다.\nw는 빔 축 방향, d는 그 가로, angle_deg는 w 축의 각(도).",
+      "properties": {
+        "center": {
+          "description": "기둥 중심 (EPSG:5186 절대) — _column_centers와 같은 프레임·같은 순서",
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "title": "Center",
+          "type": "array"
+        },
+        "w": {
+          "description": "단면 치수 (m) — 빔 축 방향",
+          "title": "W",
+          "type": "number"
+        },
+        "d": {
+          "description": "단면 치수 (m) — 빔 축의 가로",
+          "title": "D",
+          "type": "number"
+        },
+        "angle_deg": {
+          "description": "w 축의 각 (도)",
+          "title": "Angle Deg",
+          "type": "number"
+        }
+      },
+      "required": [
+        "center",
+        "w",
+        "d",
+        "angle_deg"
+      ],
+      "title": "ColumnSection",
+      "type": "object"
+    },
+    "CompileError": {
+      "additionalProperties": false,
+      "description": "sBIM 도메인 명제 위반 — invalid design 발화.\n\ntype: 위반 종류. 프론트엔드 TypeScript에서 discriminated union.\nreason: 사람이 읽는 짧은 설명.\ndetails: 위반 수치 / polygon 정보 (디버깅·LLM용).\nsuggestion: BuildOptions 조정 힌트 (사용자/LLM이 따라 재컴파일).",
+      "properties": {
+        "type": {
+          "enum": [
+            "UnitsInfeasible",
+            "UnitUnreachable",
+            "UnitAreaExceeded",
+            "ParkingSufficiency",
+            "FloorCountInfeasible",
+            "CoreTypeInfeasible"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": true,
+          "default": {},
+          "title": "Details",
+          "type": "object"
+        },
+        "suggestion": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Suggestion"
+        }
+      },
+      "required": [
+        "type",
+        "reason"
+      ],
+      "title": "CompileError",
+      "type": "object"
+    },
+    "CoreLayout": {
+      "additionalProperties": true,
+      "description": "코어 내부 분할 — 링은 EPSG 절대.",
+      "properties": {
+        "ev": {
+          "anyOf": [
+            {
+              "items": {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ev"
+        },
+        "stair": {
+          "anyOf": [
+            {
+              "items": {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stair"
+        },
+        "corridor": {
+          "anyOf": [
+            {
+              "items": {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Corridor"
+        },
+        "ev_front": {
+          "anyOf": [
+            {
+              "items": {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ev Front"
+        }
+      },
+      "title": "CoreLayout",
+      "type": "object"
+    },
+    "EngineStamp": {
+      "additionalProperties": true,
+      "description": "이 설계안을 만든 엔진 빌드 도장 — 서버 결과를 추적·재현한다. 전부 문자열.\n같은 소스라도 CPU 아키텍처가 다르면 컴파일 분기가 갈릴 수 있어 platform 을 남긴다.",
+      "properties": {
+        "engine_commit": {
+          "description": "엔진 저장소 커밋 SHA — 이 도면을 만든 빌드",
+          "title": "Engine Commit",
+          "type": "string"
+        },
+        "platform": {
+          "description": "엔진이 돈 플랫폼 — \"linux-x86_64\" · \"darwin-arm64\" 등",
+          "title": "Platform",
+          "type": "string"
+        },
+        "python": {
+          "description": "엔진 파이썬 버전 문자열",
+          "title": "Python",
+          "type": "string"
+        },
+        "compiled_at": {
+          "description": "컴파일 시각 — ISO-8601 UTC",
+          "title": "Compiled At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "engine_commit",
+        "platform",
+        "python",
+        "compiled_at"
+      ],
+      "title": "EngineStamp",
+      "type": "object"
     },
     "FloorData": {
-      "type": "object",
-      "required": ["floor_id", "floor_area", "floor_height", "floor_bottom_height"],
+      "additionalProperties": true,
       "properties": {
         "floor_id": {
-          "type": "integer",
-          "description": "층 ID. -1=지하1, 0=주차층/필로티, 1+=일반층"
+          "title": "Floor Id",
+          "type": "integer"
         },
-        "floor_area": { "type": "number", "description": "해당 층 면적 (㎡)" },
-        "floor_height": { "type": "number", "description": "층 높이 (m)" },
-        "floor_bottom_height": { "type": "number", "description": "층 바닥 높이 (m)" }
-      }
+        "floor_area": {
+          "title": "Floor Area",
+          "type": "number"
+        },
+        "floor_height": {
+          "title": "Floor Height",
+          "type": "number"
+        },
+        "floor_bottom_height": {
+          "title": "Floor Bottom Height",
+          "type": "number"
+        },
+        "floor_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Floor Name"
+        },
+        "parking_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parking Count"
+        }
+      },
+      "required": [
+        "floor_id",
+        "floor_area",
+        "floor_height",
+        "floor_bottom_height"
+      ],
+      "title": "FloorData",
+      "type": "object"
     },
     "FloorGeometry": {
-      "type": "object",
-      "required": ["walls", "floors"],
+      "additionalProperties": true,
       "properties": {
         "walls": {
-          "type": "array",
-          "description": "벽 mesh 그룹 배열. 각 그룹은 같은 머터리얼/스타일을 공유.",
           "items": {
-            "type": "array",
-            "items": { "$ref": "buffer-geometry.schema.json" }
-          }
+            "items": {
+              "$ref": "#/$defs/BufferGeometryData"
+            },
+            "type": "array"
+          },
+          "title": "Walls",
+          "type": "array"
         },
         "floors": {
-          "type": "array",
           "items": {
-            "type": "array",
-            "items": { "$ref": "buffer-geometry.schema.json" }
-          }
+            "items": {
+              "$ref": "#/$defs/BufferGeometryData"
+            },
+            "type": "array"
+          },
+          "title": "Floors",
+          "type": "array"
         },
         "roof": {
-          "type": "array",
-          "items": {
-            "type": "array",
-            "items": { "$ref": "buffer-geometry.schema.json" }
-          }
+          "anyOf": [
+            {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/BufferGeometryData"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Roof"
+        },
+        "windows": {
+          "anyOf": [
+            {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/BufferGeometryData"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Windows"
+        },
+        "parapets": {
+          "anyOf": [
+            {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/BufferGeometryData"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parapets"
+        },
+        "columns": {
+          "anyOf": [
+            {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/BufferGeometryData"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Columns"
+        },
+        "parking_stalls": {
+          "anyOf": [
+            {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/BufferGeometryData"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parking Stalls"
+        },
+        "doors": {
+          "anyOf": [
+            {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/BufferGeometryData"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Doors"
+        },
+        "beams": {
+          "anyOf": [
+            {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/BufferGeometryData"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Beams"
+        },
+        "stairs": {
+          "anyOf": [
+            {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/BufferGeometryData"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Stairs"
+        },
+        "coverings": {
+          "anyOf": [
+            {
+              "items": {
+                "items": {
+                  "$ref": "#/$defs/BufferGeometryData"
+                },
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Coverings"
         }
-      }
+      },
+      "required": [
+        "walls",
+        "floors"
+      ],
+      "title": "FloorGeometry",
+      "type": "object"
+    },
+    "FloorPlan": {
+      "additionalProperties": true,
+      "properties": {
+        "data": {
+          "$ref": "#/$defs/FloorData"
+        },
+        "geom": {
+          "$ref": "#/$defs/FloorGeometry"
+        }
+      },
+      "required": [
+        "data",
+        "geom"
+      ],
+      "title": "FloorPlan",
+      "type": "object"
+    },
+    "LegalCheck": {
+      "additionalProperties": true,
+      "description": "법규 체크리스트 한 항목의 판정 실값 — key는 giga legal_checklist.yaml 의 key(변경 금지,\n그래프 노드 id).",
+      "properties": {
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "group": {
+          "title": "Group",
+          "type": "string"
+        },
+        "item": {
+          "title": "Item",
+          "type": "string"
+        },
+        "status": {
+          "description": "'적용' | '해당없음' | '검토' | '참고' 또는 실값 포함('적용 (확폭 12㎡)')",
+          "title": "Status",
+          "type": "string"
+        },
+        "apply": {
+          "description": "적용 내용 — 산출값 채워진 문장",
+          "title": "Apply",
+          "type": "string"
+        },
+        "law": {
+          "description": "근거 조문",
+          "title": "Law",
+          "type": "string"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "key",
+        "group",
+        "item",
+        "status",
+        "apply",
+        "law"
+      ],
+      "title": "LegalCheck",
+      "type": "object"
+    },
+    "ResolvedDesign": {
+      "additionalProperties": true,
+      "description": "`BuildOptions.design`과 같은 중첩 모양 — 첫수표가 채우는 필드(`empty: \"auto\"`)만.\n잎 집합은 `options.AUTO_FIELDS`와 같다(tests/test_auto_fields.py가 지킨다).",
+      "properties": {
+        "massing": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/_ResolvedMassing"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "units": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/_ResolvedUnits"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "core": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/_ResolvedCore"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "parking": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/_ResolvedParking"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "ResolvedDesign",
+      "type": "object"
+    },
+    "ResolvedOptions": {
+      "additionalProperties": true,
+      "description": "엔진이 실제로 쓴 속성 창 값 + 필드별 출처 — 엔진이 방출, 소비처가 표시.\n\n사용자가 비운(None) 칸을 첫수표가 채우면 그 값이 여기 적힌다. 소비처는 전문가 칸의\n자동값을 흐리게 「자동 (s · 90° · 2형)」으로 보여 주고, 누르면 그 값으로 고정한다.\nsource 키는 \"<묶음>.<필드>\"(예: \"core.core_side\"), 값은 user(사용자가 준 값) |\nprior(첫수표가 채운 값). design 에 없는 필드는 source 에도 없다.\n\n계약: 첫수표가 채우는 필드(`AUTO_FIELDS` — 층수·층별 세대 수 포함)는 전부 design 에\n나온다. source==\"prior\" 인 값은 결코 null 이 아니다 — 단 \"units.units_per_floor\" 는\n모든 층의 세대 수가 같을 때만 채우고, 다르면 null 이며 source 에도 없다. design 을\n(null 잎을 버리고) 요청의 design 에 합쳐 되먹이면 같은 결과(세대·전용면적·주차 대수·\ncompile_errors)가 재현된다. 소비처는 source 를 되보내지 않는다(BuildOptions 는\nextra=\"forbid\"). 비우면 법이 정하는 필드(`law` — exit_road·한도 덮어쓰기·road_setback)와\n적힌 기본값이 정하는 필드(`default`)는 여기 없다 — 비워 두는 것이 재현되는 선택이다.",
+      "properties": {
+        "design": {
+          "$ref": "#/$defs/ResolvedDesign"
+        },
+        "source": {
+          "additionalProperties": {
+            "enum": [
+              "user",
+              "prior"
+            ],
+            "type": "string"
+          },
+          "default": {},
+          "title": "Source",
+          "type": "object"
+        }
+      },
+      "required": [
+        "design"
+      ],
+      "title": "ResolvedOptions",
+      "type": "object"
+    },
+    "SchemeData": {
+      "additionalProperties": true,
+      "properties": {
+        "lot_area": {
+          "title": "Lot Area",
+          "type": "number"
+        },
+        "build_area": {
+          "title": "Build Area",
+          "type": "number"
+        },
+        "far": {
+          "title": "Far",
+          "type": "number"
+        },
+        "bcr": {
+          "title": "Bcr",
+          "type": "number"
+        },
+        "pnu": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "title": "Pnu"
+        }
+      },
+      "required": [
+        "lot_area",
+        "build_area",
+        "far",
+        "bcr",
+        "pnu"
+      ],
+      "title": "SchemeData",
+      "type": "object"
+    },
+    "_BufferAttributes": {
+      "additionalProperties": true,
+      "properties": {
+        "position": {
+          "$ref": "#/$defs/BufferAttributeData"
+        },
+        "normal": {
+          "$ref": "#/$defs/BufferAttributeData"
+        },
+        "uv": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BufferAttributeData"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "position",
+        "normal"
+      ],
+      "title": "_BufferAttributes",
+      "type": "object"
+    },
+    "_BufferGeometryInner": {
+      "additionalProperties": true,
+      "properties": {
+        "attributes": {
+          "$ref": "#/$defs/_BufferAttributes"
+        },
+        "index": {
+          "$ref": "#/$defs/_BufferIndex"
+        }
+      },
+      "required": [
+        "attributes",
+        "index"
+      ],
+      "title": "_BufferGeometryInner",
+      "type": "object"
+    },
+    "_BufferGeometryMetadata": {
+      "additionalProperties": true,
+      "properties": {
+        "version": {
+          "title": "Version",
+          "type": "number"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "generator": {
+          "title": "Generator",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "type",
+        "generator"
+      ],
+      "title": "_BufferGeometryMetadata",
+      "type": "object"
+    },
+    "_BufferIndex": {
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "array": {
+          "items": {
+            "type": "integer"
+          },
+          "title": "Array",
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "array"
+      ],
+      "title": "_BufferIndex",
+      "type": "object"
+    },
+    "_ResolvedCore": {
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "anyOf": [
+            {
+              "enum": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Type"
+        },
+        "core_side": {
+          "anyOf": [
+            {
+              "enum": [
+                "n",
+                "ne",
+                "e",
+                "se",
+                "s",
+                "sw",
+                "w",
+                "nw",
+                "c"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Core Side"
+        },
+        "core_rotation": {
+          "anyOf": [
+            {
+              "enum": [
+                0,
+                90,
+                180,
+                270
+              ],
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Core Rotation"
+        },
+        "core_mirror": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Core Mirror"
+        }
+      },
+      "title": "_ResolvedCore",
+      "type": "object"
+    },
+    "_ResolvedMassing": {
+      "additionalProperties": true,
+      "properties": {
+        "mass_axis": {
+          "anyOf": [
+            {
+              "enum": [
+                "road",
+                "sunlight"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mass Axis"
+        },
+        "target_floor_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target Floor Count"
+        }
+      },
+      "title": "_ResolvedMassing",
+      "type": "object"
+    },
+    "_ResolvedParking": {
+      "additionalProperties": true,
+      "properties": {
+        "parking_angle": {
+          "anyOf": [
+            {
+              "enum": [
+                45,
+                60,
+                90
+              ],
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parking Angle"
+        },
+        "tandem": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tandem"
+        },
+        "parking_graph": {
+          "anyOf": [
+            {
+              "items": {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "type": "array"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Parking Graph"
+        }
+      },
+      "title": "_ResolvedParking",
+      "type": "object"
+    },
+    "_ResolvedUnits": {
+      "additionalProperties": true,
+      "properties": {
+        "units_per_floor": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Units Per Floor"
+        },
+        "units_by_level": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Units By Level"
+        }
+      },
+      "title": "_ResolvedUnits",
+      "type": "object"
     }
-  }
+  },
+  "additionalProperties": true,
+  "description": "scheme.json — data·floor_plans·unit_ids + 밑줄 키(SchemeSpatial).",
+  "properties": {
+    "_core_layout": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CoreLayout"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "_parking_stalls": {
+      "anyOf": [
+        {
+          "items": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parking Stalls"
+    },
+    "_column_centers": {
+      "anyOf": [
+        {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Column Centers"
+    },
+    "_basement_outline": {
+      "anyOf": [
+        {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Basement Outline"
+    },
+    "_floor_outlines": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "층별 footprint ring — 복도(=층외곽−세대−코어) 유도 기준",
+      "title": "Floor Outlines"
+    },
+    "_pedestrian_path": {
+      "anyOf": [
+        {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "보행 출입로 (도로→코어) — 보행 경로 산출. 1F 전용",
+      "title": "Pedestrian Path"
+    },
+    "_pedestrian_paths": {
+      "anyOf": [
+        {
+          "items": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "보행 출입로 전부 — 코어 문 2개(#35)면 2개. [0] === _pedestrian_path (호환)",
+      "title": "Pedestrian Paths"
+    },
+    "_halls": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "items": {
+              "items": {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "DH 공용 홀 — {level: ring[]}. 코어 복도 띠를 양옆으로 늘인 팔·EV 로비(연희 75-9 GT T자 홀 — 코어로 갈라진 2조각이라 링 목록). 세대에서 차감된 공용, 접면 연결계 = 코어 복도 ∪ 홀",
+      "title": "Halls"
+    },
+    "_penthouse_outline": {
+      "anyOf": [
+        {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "옥탑(계단탑) 외곽 — 옥탑층·지붕층 평면이 공유",
+      "title": "Penthouse Outline"
+    },
+    "_common_footprint": {
+      "anyOf": [
+        {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "전층 교집합 — 코어 탐색공간",
+      "title": "Common Footprint"
+    },
+    "_validation": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "준법 위반·경고 메모",
+      "title": "Validation"
+    },
+    "_column_size": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "기둥 단면 한 변 (m) — Concrete.column_size 확정값. 도면 재구성이 scheme만 보고도 같은 크기를 그리도록 방출(폴백 이원화 방지).",
+      "title": "Column Size"
+    },
+    "_column_sections": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/ColumnSection"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "기둥 실단면 목록 — _column_centers와 같은 좌표 프레임·같은 순서. 있음이면 소비처는 정사각 대신 이것으로 그린다(얇은 단면 기둥을 정사각으로 그리면 주차 칸을 문다). 없음 = _column_size 정사각 폴백 (구 scheme).",
+      "title": "Column Sections"
+    },
+    "_north_ref_edges": {
+      "anyOf": [
+        {
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              }
+            ],
+            "type": "array"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "정북일조 기준선 (EPSG:5186 절대, 변마다 [p1,p2]) — 3D 뷰어 천공면. 북향 변마다 별도 엣지(상업 인접 면제·도로 인접은 중심선 offset), 매스 깎기(apply_north_setback)와 동일 기준. 면제면 [].",
+      "title": "North Ref Edges"
+    },
+    "_north_datum_offset": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "정북일조 기산면 보정 (m) — 영 119조①5호 나목: 높이는 본 대지와 북측 인접대지의 평균 수평면 기준. z0 − 본 대지 지표면 = 고저차의 1/2. 천공면 그리기: 유효높이 h' = z − 이 값 (경사지에서 프로파일이 수직으로 이동). 미방출·null이면 0(평지 가정).",
+      "title": "North Datum Offset"
+    },
+    "_legal_checks": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/LegalCheck"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "법규 체크리스트 33항목 판정 실값 (giga legal_checklist.yaml SSOT, #16). 합격/불합격이 아니라 적용여부 + 산출값이다 — 엔진은 규제를 생성 단계에서 지켜버리므로(사선은 매스를 깎고, 미충족은 compile_errors) 완성 설계에 '미달' 항목이 존재할 수 없다. law-graph가 결정 노드에서 근거 조문으로 엣지를 이을 때 이 실값을 쓴다. 구 scheme엔 없다 — 소비처는 부재를 \"구 버전\"으로 처리할 것.",
+      "title": "Legal Checks"
+    },
+    "_compile_errors": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/CompileError"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "엔진이 이 설계안을 스스로 거절한 사유 (errors.py CompileError — type·reason·details·suggestion). 없음 또는 [] = 컴파일 통과. 하나 이상이면 설계는 저장됐지만 경고와 함께 보여야 한다.",
+      "title": "Compile Errors"
+    },
+    "_engine_stamp": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/EngineStamp"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "이 설계안을 만든 엔진 빌드 도장 (EngineStamp) — 서버 결과를 추적·재현한다. 전부 문자열. 구 scheme엔 없다 — 소비처는 부재를 \"구 버전\"으로 처리할 것."
+    },
+    "data": {
+      "$ref": "#/$defs/SchemeData"
+    },
+    "floor_plans": {
+      "items": {
+        "$ref": "#/$defs/FloorPlan"
+      },
+      "title": "Floor Plans",
+      "type": "array"
+    },
+    "unit_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Unit Ids",
+      "type": "array"
+    },
+    "resolved_options": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ResolvedOptions"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "엔진이 실제로 쓴 속성 창 값 + 출처. 구 scheme엔 없다."
+    }
+  },
+  "required": [
+    "data",
+    "floor_plans",
+    "unit_ids"
+  ],
+  "title": "Scheme",
+  "type": "object"
 }

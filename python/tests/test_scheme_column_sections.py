@@ -5,8 +5,9 @@ scheme에 `_column_centers`·`_column_size`만 있으면 소비처는 모든 기
 보인다(서초 1508-29). `_column_sections`는 기둥마다 실단면을 싣고, 있음이면 소비처는
 이것으로 그린다. 없음(구 scheme) = `_column_size` 정사각 폴백.
 
-밑줄 키이므로 pydantic은 검증하지 않고 extra=allow로 통과시킨다 — 계약은 Scheme
-docstring + TS SchemeSpatial(ColumnSection). center 는 [x, y], w·d·angle_deg 는 수.
+JSON 키 `_column_sections` 는 alias 다 — 파이썬 속성은 `scheme.column_sections`
+(ColumnSection 목록), 덤프는 alias 로 나간다. TS SchemeSpatial(ColumnSection) 과 같은 계약.
+center 는 [x, y], w·d·angle_deg 는 수.
 """
 
 import json
@@ -14,7 +15,7 @@ import re
 from pathlib import Path
 
 from seoulgaok_bim_core.io import load_scheme, save_scheme
-from seoulgaok_bim_core.types import Scheme
+from seoulgaok_bim_core.types import ColumnSection, Scheme
 
 ROOT = Path(__file__).resolve().parents[2]
 SAMPLES = ROOT / "examples" / "samples"
@@ -39,21 +40,21 @@ def _payload(sections=None, centers=None):
 
 
 def test_scheme_keeps_column_sections():
-    """실단면 목록이 scheme를 통과해 그대로 남는다 (extra=allow 밑줄 키)."""
+    """실단면 목록이 scheme를 통과해 그대로 남는다 (alias 밑줄 키)."""
     scheme = Scheme.model_validate(_payload(COLUMN_SECTIONS, COLUMN_CENTERS))
-    assert scheme._column_sections == COLUMN_SECTIONS
-    assert scheme.model_dump()["_column_sections"] == COLUMN_SECTIONS
+    assert [s.model_dump(mode="json") for s in scheme.column_sections] == COLUMN_SECTIONS
+    assert scheme.model_dump(mode="json")["_column_sections"] == COLUMN_SECTIONS
 
 
 def test_section_keys_and_types():
     """계약: 네 칸(center·w·d·angle_deg). center 는 [x, y] 짝, 나머지는 수."""
     scheme = Scheme.model_validate(_payload(COLUMN_SECTIONS, COLUMN_CENTERS))
-    for section in scheme._column_sections:
-        assert set(section) == {"center", "w", "d", "angle_deg"}
-        assert isinstance(section["center"], list) and len(section["center"]) == 2
-        assert all(isinstance(section["center"][i], float) for i in (0, 1))
+    assert set(ColumnSection.model_fields) == {"center", "w", "d", "angle_deg"}
+    for section in scheme.column_sections:
+        assert isinstance(section.center, tuple) and len(section.center) == 2
+        assert all(isinstance(section.center[i], float) for i in (0, 1))
         assert all(
-            isinstance(section[k], float) for k in ("w", "d", "angle_deg")
+            isinstance(getattr(section, k), float) for k in ("w", "d", "angle_deg")
         )
 
 
@@ -61,7 +62,7 @@ def test_order_follows_column_centers():
     """계약: _column_centers와 같은 순서 — i번째 실단면은 i번째 중심의 기둥이다."""
     dumped = Scheme.model_validate(
         _payload(COLUMN_SECTIONS, COLUMN_CENTERS)
-    ).model_dump()
+    ).model_dump(mode="json")
     assert len(dumped["_column_sections"]) == len(dumped["_column_centers"])
     assert [list(s["center"]) for s in dumped["_column_sections"]] == dumped[
         "_column_centers"
@@ -80,14 +81,14 @@ def test_save_load_round_trip(tmp_path):
     save_scheme(load_scheme(src), out)
 
     assert json.loads(out.read_text(encoding="utf-8"))["_column_sections"] == COLUMN_SECTIONS
-    assert load_scheme(out)._column_sections == COLUMN_SECTIONS
+    assert load_scheme(out).model_dump(mode="json")["_column_sections"] == COLUMN_SECTIONS
 
 
 def test_absent_on_old_scheme():
     """없음(구 scheme)은 키 자체가 없다 — 소비처는 _column_size 정사각으로 폴백한다."""
     old = Scheme.model_validate(_payload(None))
     assert "_column_sections" not in old.model_dump()
-    assert getattr(old, "_column_sections", None) is None
+    assert old.column_sections is None
 
     # 실제 샘플(생성기 방출물)은 아직 이 키를 안 싣는다.
     assert "_column_sections" not in load_scheme(SAMPLES / "scheme.json").model_dump()

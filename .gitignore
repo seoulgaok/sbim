@@ -17,10 +17,7 @@ __pycache__/
 .vscode/
 .idea/
 
-# 앱 빌드 산출물 (라이브러리 typescript/dist·visualizer/dist는 배포 대상이라 추적)
-viewer/dist/
-sbim-editor/dist/
-sbim-editor/src-tauri/target/
+# 라이브러리 typescript/dist는 배포 대상이라 추적
 
 # 사업 설정값 — 절대 커밋 금지 (examples/*.example.json만 추적)
 site_filter.json
