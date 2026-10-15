@@ -40,6 +40,7 @@ import emit_rust  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 MIGRATIONS_FIXTURE_PATH = ROOT / "fixtures" / "migrations.json"
+PRESETS_FIXTURE_PATH = ROOT / "fixtures" / "presets.json"
 SCHEMA_DIR = ROOT / "schema"
 SCHEMA_PATH = SCHEMA_DIR / "build_options.schema.json"
 SCHEME_SCHEMA_PATH = SCHEMA_DIR / "scheme.schema.json"
@@ -299,6 +300,7 @@ def bundle() -> dict:
         "units": units_schema(),
         "surroundings": surroundings_schema(),
         "migrations": migrations_fixture(),
+        "structure_preset": {k: dict(v) for k, v in O.STRUCTURE_PRESET.items()},
         "fixtures": {name: fixture(raw) for name, raw in FIXTURE_CASES.items()},
     }
 
@@ -314,6 +316,7 @@ def outputs() -> dict[Path, str]:
         SURROUNDINGS_SCHEMA_PATH: render_json(b["surroundings"]),
         CORE_TYPE_FIXTURE_PATH: render_json(core_type_fixture()),
         MIGRATIONS_FIXTURE_PATH: render_json(b["migrations"]),
+        PRESETS_FIXTURE_PATH: render_json({"structure_preset": b["structure_preset"]}),
     }
     for name, fx in b["fixtures"].items():
         want[FIXTURES_DIR / f"{name}.json"] = render_json(fx)
