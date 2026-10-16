@@ -4,6 +4,12 @@
 규칙: 기본값이 바뀌거나 필드가 늘고 줄면 여기 한 줄 + 버전 올림. 판은 머지 뒤
 `git tag v<버전>`으로 찍는다.
 
+## 미출시
+
+- 추가 Elixir `Sbim.Ifc.generate_ifc/3` — ifc.py 와 같은 IFC4 파일(GlobalId·시각 빼고 바이트까지).
+  면적·오프셋은 `geom:` 으로 GEOS 구현을 넘길 수 있다(`Sbim.Ifc.Geom`). 정답 `fixtures/ifc/`,
+  ifc.py 를 고치면 `gen_ifc_fixtures.py` 로 다시 뜨고 ifc.ex 를 맞춘다(CI 가 둘 다 본다).
+
 ## 0.1.0 — 2026-10-16
 
 - 정본을 pydantic 하나로 선언 — `schema/*.json`·`typescript/src/options.ts`는 생성물,
