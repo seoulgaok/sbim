@@ -16,7 +16,7 @@ defmodule Sbim.MixProject do
   end
 
   def application do
-    [extra_applications: [:logger]]
+    [extra_applications: [:logger, :crypto]]
   end
 
   # jason 은 테스트가 fixtures·samples JSON 을 읽는 데만 쓴다

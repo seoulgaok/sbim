@@ -26,9 +26,9 @@ jobs:
           cache-dependency-glob: python/uv.lock
 
       # dev 는 dependency-group 이 아니라 optional-dependencies 라 --extra 로 받는다.
-      # ifc extra 는 넣지 않는다 — tests/test_ifc.py 가 importorskip("ifcopenshell") 로 건너뛴다.
-      - name: uv sync (dev extra)
-        run: uv sync --locked --extra dev
+      # ifc extra 도 받는다 — IFC 정답(fixtures/ifc/)이 ifc.py 와 같은지 봐야 Elixir 판(elixir/sbim/lib/sbim/ifc.ex)이 갈리지 않는다.
+      - name: uv sync (dev · ifc extra)
+        run: uv sync --locked --extra dev --extra ifc
 
       - name: python version
         run: uv run python --version
@@ -36,6 +36,12 @@ jobs:
       # schema/*.json · typescript/src/options.ts · fixtures/ 가 정본(pydantic)과 같은가
       - name: gen_build_options --check
         run: uv run python scripts/gen_build_options.py --check
+
+      # fixtures/ifc/ 정답 · elixir/sbim/lib/sbim/generated/ifc_schema.ex 가 ifc.py · ifcopenshell 과 같은가
+      - name: gen_ifc_fixtures --check · gen_ifc_schema --check
+        run: |
+          uv run python scripts/gen_ifc_fixtures.py --check
+          uv run python scripts/gen_ifc_schema.py --check
 
       - name: pytest
         run: uv run pytest -q

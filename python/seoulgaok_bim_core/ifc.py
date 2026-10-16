@@ -21,6 +21,10 @@
 모델이다. 여기서는 다루지 않는다.
 
 의존: ifcopenshell (선택 설치) — `pip install -e ./python[ifc]`
+
+Elixir 판: elixir/sbim/lib/sbim/ifc.ex 가 같은 파일을 낸다(개체 순서까지 이 파일을 따른다). 여기를 고치면
+`cd python && uv run python scripts/gen_ifc_fixtures.py` 로 정답(fixtures/ifc/)을 다시 뜨고 ifc.ex 를 맞춘다 —
+CI 가 정답 낡음(--check)과 Elixir 시험을 둘 다 본다.
 """
 
 from __future__ import annotations
