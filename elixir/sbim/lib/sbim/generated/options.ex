@@ -529,8 +529,8 @@ defmodule Sbim.Options.Massing do
     # 목표 층수. 사선제한으로 미달 가능. None=첫수표가 정한다(사선·일조·FAR 한계까지 쌓는다).
     # empty: auto
     target_floor_count: nil,
-    # 1층 층고 (m). 필로티 4m+ 권장. None이면 구조방식 기본 층고(structure: 벽식 3.0/라멘 3.3)와
-    # 동일.
+    # 1층 층고 (m). None이면 1층이 필로티(기본)일 때 3.5 — 주차 유효높이 2.3 + 보·설비 — 그 밖의
+    # 용도는 구조방식 기본 층고(벽식 3.0/라멘 3.3/철골 3.4).
     # empty: default
     first_floor_height: nil,
     # 층번호 → 용도. 예: {1: 'piloti'}. 미지정 시 1층=piloti, 그 외=residential.

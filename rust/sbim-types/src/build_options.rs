@@ -415,7 +415,7 @@ pub struct Massing {
     ///
     /// 비우면: auto — None=첫수표가 정한다(resolved_options 에 나온다)
     pub target_floor_count: Option<i64>,
-    /// 1층 층고 (m). 필로티 4m+ 권장. None이면 구조방식 기본 층고(structure: 벽식 3.0/라멘 3.3)와 동일.
+    /// 1층 층고 (m). None이면 1층이 필로티(기본)일 때 3.5 — 주차 유효높이 2.3 + 보·설비 — 그 밖의 용도는 구조방식 기본 층고(벽식 3.0/라멘 3.3/철골 3.4).
     ///
     /// 기본값: null
     ///
