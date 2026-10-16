@@ -32,6 +32,7 @@ from .options import (
 )
 from .types import (
     BeamUserData,
+    BundleManifest,
     BufferAttributeData,
     BufferGeometryData,
     ColumnSection,
@@ -72,9 +73,17 @@ from .types import (
     WindowUserData,
 )
 
+from .bundle import Bundle, BundleError, pack_bundle, read_bundle
+
 __version__ = "0.1.0"
 
 __all__ = [
+    # 설계안 묶음(.sbim)
+    "Bundle",
+    "BundleError",
+    "BundleManifest",
+    "pack_bundle",
+    "read_bundle",
     # Output types (Scheme 등)
     "BufferAttributeData",
     "BufferGeometryData",

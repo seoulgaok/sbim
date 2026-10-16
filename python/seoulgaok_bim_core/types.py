@@ -572,6 +572,24 @@ class SiteInfo(_Base):
     corner_cut_area: Optional[float] = None
 
 
+# --- 설계안 묶음(.sbim) manifest.json — bundle.py ------------------------------------
+
+
+class BundleManifest(_Base):
+    """`.sbim`(설계안 JSON 들의 zip) 안의 manifest.json. 꼴·항목 규칙은 bundle.py 머리말. TS `BundleManifest` 와 같은 모양."""
+    format: Literal["sbim-bundle"] = "sbim-bundle"
+    bundle_version: int = 1
+    sbim_version: str
+    # ISO 8601 UTC 초 단위 — 2026-10-16T03:00:00Z
+    created_at: str
+    land_ids: list[str] = []
+    design_id: Optional[str] = None
+    # scheme.json 의 `_engine_stamp` 를 옮겨 적는다 — 어느 엔진 판이 낸 안인지
+    engine_stamp: Optional[dict] = None
+    # {항목 이름: sha256 hex} — manifest 자신은 빼고 묶은 항목 전부
+    files: dict[str, str]
+
+
 # --- Surroundings ----------------------------------------------------------
 
 
