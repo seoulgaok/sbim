@@ -27,6 +27,7 @@
   `emit_elixir.py`). Rust·Elixir 기본값은 `empty` fixture 에서 박힌다 — 이행 로직은 안 만든다.
   정본은 pydantic 하나(`options.py`·`types.py`); `typescript/src/types.ts`만 손으로 맞추고
   `test_types_parity.py`가 지킨다. 기본값·필드가 바뀌면 버전을 올리고 CHANGELOG 맨 위에 한 줄.
+  **버전을 올리면 `scripts/gen_bundle_fixtures.py` 도 돌린다** — `.sbim` manifest 에 `sbim_version` 이 박혀 CI `--check` 가 낡았다고 멈춘다(0.1.1 때 한 번 놓쳤다).
 
 ## 엔진에는 "더 좋다"가 없다 (#12)
 
