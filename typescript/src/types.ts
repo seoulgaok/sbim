@@ -64,7 +64,7 @@ export interface MaterialLayer {
 export interface WallUserData {
   kind: "wall";
   /** 벽 구실 — exterior=외벽, unit_boundary=세대경계벽, partition=세대 안 칸막이, core=코어벽.
-   *  (제안 2026-10-16, building-generator #549 — 엔진 미방출. 없으면 소비처는 `exterior` 불리언으로 가른다) */
+   *  (building-generator #549 — 엔진은 세대 안 칸막이에 `"partition"` 만 낸다, 2026-10-16. 없으면 소비처는 `exterior` 불리언으로 가른다) */
   role?: "exterior" | "unit_boundary" | "partition" | "core" | string;
   /** 벽 중심선 양끝 (EPSG:5186 절대) */
   p0: Point2;
@@ -514,7 +514,7 @@ export interface UnitAreaBreakdown {
 
 /** 방 최소 의미론 — 벽·문 기하는 geom userData가 따로 옴 */
 export interface UnitRoom {
-  /** 지금 엔진은 욕실·주방만 낸다. 나머지 용도는 제안(#549) — 구획 못 하면 남는 면적을 `거실` 하나로. */
+  /** 엔진은 욕실·주방과, 그 외 남는 면적을 `거실` 하나로 낸다(#549, 2026-10-16). 침실·현관 등은 제안. */
   use: "욕실" | "주방" | "거실" | "침실" | "현관" | "발코니" | "다용도실" | "복도" | string;
   polygon: Ring;
   /** 바닥 마감 이름 (강마루10 · 타일10 …) — 제안, 미방출 */

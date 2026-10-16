@@ -81,7 +81,8 @@ class MaterialLayer(_Base):
 
 class WallUserData(_Base):
     kind: Literal["wall"] = "wall"
-    # 벽 구실 exterior|unit_boundary|partition|core — 제안(#549), 엔진 미방출. 없으면 exterior 불리언으로.
+    # 벽 구실 exterior|unit_boundary|partition|core — 엔진은 세대 안 칸막이에 "partition" 만 낸다(#549, 2026-10-16).
+    # 없으면 exterior 불리언으로.
     role: Optional[str] = None
     p0: Point2 = (0, 0)     # 벽 중심선 양끝 (EPSG 절대)
     p1: Point2 = (0, 0)
@@ -495,7 +496,7 @@ class UnitAreaBreakdown(_Base):
 class UnitRoom(_Base):
     """방 최소 의미론 — 벽·문 기하는 geom userData가 따로 옴.
 
-    지금 엔진은 욕실·주방만 낸다. 거실·침실·현관·발코니·다용도실·복도 는 제안(#549)."""
+    엔진은 욕실·주방과, 그 외 남는 면적을 거실 하나로 낸다(#549, 2026-10-16). 침실·현관·발코니·다용도실·복도 는 제안."""
     use: str = ""           # 욕실 | 주방 | 거실 | 침실 | 현관 | 발코니 | 다용도실 | 복도
     polygon: Ring = []
     floor_finish: Optional[str] = None   # 바닥 마감 이름 — 제안, 미방출
