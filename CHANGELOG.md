@@ -9,6 +9,8 @@
 - 추가 Elixir `Sbim.Ifc.generate_ifc/3` — ifc.py 와 같은 IFC4 파일(GlobalId·시각 빼고 바이트까지).
   면적·오프셋은 `geom:` 으로 GEOS 구현을 넘길 수 있다(`Sbim.Ifc.Geom`). 정답 `fixtures/ifc/`,
   ifc.py 를 고치면 `gen_ifc_fixtures.py` 로 다시 뜨고 ifc.ex 를 맞춘다(CI 가 둘 다 본다).
+- 의존 ifcopenshell 0.8.5 → 0.9.0 (uv.lock). 0.9 는 실수를 가장 짧게 쓴다(`0.1` — 0.8.5 는 `0.10000000000000001`).
+  값은 같고 표기만 다르다. Elixir 판 기본도 0.9 표기(`real: :shortest`), 옛 표기는 `real: :g17`.
 
 ## 0.1.0 — 2026-10-16
 

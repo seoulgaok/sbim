@@ -9,8 +9,12 @@ defmodule Sbim.Ifc.Step do
     (ifcopenshell 도 같다: 정답 파일에서 IfcPropertySingleValue 번호가 연달아 붙는다).
   - 개체는 만든 순서대로 번호가 붙고 그 순서로 쓴다 — 파이썬과 같은 순서로 만들면 같은 파일이 된다.
 
-  표기는 ifcopenshell 0.8.5 가 쓴 그대로를 정답 파일(fixtures/ifc/format.ifc)에서 맞췄다.
-  - 실수: printf `%.17G` 에 소수점이 없으면 `.` 를 넣는다 — `0.`·`3.`·`0.20000000000000001`·`1.E-300`·`1.E+17`.
+  표기는 ifcopenshell 가 쓴 그대로를 정답(fixtures/ifc/format.json)에서 맞췄다.
+  - 실수(`real:` — 기본 `:shortest`):
+    - `:shortest` = ifcopenshell 0.9.0 — 되읽어 같은 가장 짧은 자릿수, 고정소수·지수 중 짧은 쪽(같으면 고정소수, C++
+      `std::to_chars`). 큰 정수는 실수의 정확한 값 — `0.1`·`1.E-05`·`0.00015`·`123456789012345664.`.
+    - `:g17` = ifcopenshell 0.8.5 — printf `%.17G` — `0.10000000000000001`·`1.0000000000000001E-05`.
+    둘 다 소수점이 없으면 `.` 를 넣는다(`3.`·`1.E+17`).
   - 문자열: `'` → `''`, `\\` → `\\\\`, 0x20~0x7E 밖 글자는 이어진 덩어리마다 `\\X2\\…\\X0\\`(UTF-16 4자리).
     문자열에 BMP 밖 글자가 하나라도 있으면 그 문자열의 덩어리는 전부 `\\X4\\`(8자리)다.
 
@@ -25,19 +29,20 @@ defmodule Sbim.Ifc.Step do
     defstruct [:id, :type, attrs: %{}]
   end
 
-  defstruct [:tab, :seq, :gid]
+  defstruct [:tab, :seq, :gid, real: :shortest]
 
   @type t :: %__MODULE__{}
 
   @doc """
   새 파일. `gid:` 는 GlobalId 를 내는 0인자 함수(기본: ifcopenshell.guid.new 와 같은 무작위 22자).
-  정답과 맞출 때는 `counter_gid/0` 처럼 결정적인 것을 넘긴다.
+  정답과 맞출 때는 `counter_gid/0` 처럼 결정적인 것을 넘긴다. `real:` 은 실수 표기(모듈 문서).
   """
   def new(opts \\ []) do
     %__MODULE__{
       tab: :ets.new(:sbim_ifc, [:ordered_set, :private]),
       seq: :counters.new(1, []),
-      gid: Keyword.get(opts, :gid, &random_gid/0)
+      gid: Keyword.get(opts, :gid, &random_gid/0),
+      real: Keyword.get(opts, :real, :shortest)
     }
   end
 
@@ -47,7 +52,7 @@ defmodule Sbim.Ifc.Step do
   def gid(%__MODULE__{gid: g}), do: g.()
 
   @doc "개체 하나를 만든다. `attrs` 는 키워드(속성 이름 원자 → 값)."
-  def create(%__MODULE__{tab: tab, seq: seq}, type, attrs \\ []) do
+  def create(%__MODULE__{tab: tab, seq: seq, real: rf}, type, attrs \\ []) do
     {step, spec} = Schema.entity!(type)
     attrs = Map.new(attrs)
     known = MapSet.new(spec, &elem(&1, 0))
@@ -62,7 +67,7 @@ defmodule Sbim.Ifc.Step do
       spec
       |> Enum.map(fn
         {_k, :derived} -> "*"
-        {k, kind} -> value(Map.get(attrs, k), kind)
+        {k, kind} -> value(Map.get(attrs, k), kind, rf)
       end)
       |> Enum.intersperse(",")
 
@@ -73,7 +78,7 @@ defmodule Sbim.Ifc.Step do
   @doc "값 타입 인스턴스 — `typed(\"IfcReal\", 0.17)` → `IFCREAL(0.17)`. 번호를 안 먹는다."
   def typed(type, v) do
     {step, kind} = Schema.type!(type)
-    {:typed, [step, "(", value(v, kind), ")"]}
+    {:typed, step, kind, v}
   end
 
   @doc "열거값 — `enum(\"ELEMENT\")` 처럼 쓸 수도 있지만, 스키마가 :enum 인 속성엔 문자열을 그대로 넣어도 된다."
@@ -108,32 +113,79 @@ defmodule Sbim.Ifc.Step do
 
   # ── 값 → STEP 표기 ─────────────────────────────────────────────────────────
 
-  defp value(nil, _kind), do: "$"
-  defp value(%Ref{id: id}, _kind), do: ["#", Integer.to_string(id)]
-  defp value({:typed, io}, _kind), do: io
-  defp value({:enum, name}, _kind), do: [".", name, "."]
-  defp value(v, :enum) when is_binary(v), do: [".", v, "."]
-  defp value(v, :real) when is_number(v), do: real(v)
-  defp value(v, :integer) when is_integer(v), do: Integer.to_string(v)
-  defp value(true, k) when k in [:bool, :logical], do: ".T."
-  defp value(false, k) when k in [:bool, :logical], do: ".F."
-  defp value(:unknown, :logical), do: ".U."
-  defp value(v, :string) when is_binary(v), do: str(v)
+  defp value(nil, _kind, _rf), do: "$"
+  defp value(%Ref{id: id}, _kind, _rf), do: ["#", Integer.to_string(id)]
+  defp value({:typed, step, kind, v}, _kind, rf), do: [step, "(", value(v, kind, rf), ")"]
+  defp value({:enum, name}, _kind, _rf), do: [".", name, "."]
+  defp value(v, :enum, _rf) when is_binary(v), do: [".", v, "."]
+  defp value(v, :real, rf) when is_number(v), do: real(v, rf)
+  defp value(v, :integer, _rf) when is_integer(v), do: Integer.to_string(v)
+  defp value(true, k, _rf) when k in [:bool, :logical], do: ".T."
+  defp value(false, k, _rf) when k in [:bool, :logical], do: ".F."
+  defp value(:unknown, :logical, _rf), do: ".U."
+  defp value(v, :string, _rf) when is_binary(v), do: str(v)
 
-  defp value(v, {:list, k}) when is_list(v) or is_tuple(v) do
+  defp value(v, {:list, k}, rf) when is_list(v) or is_tuple(v) do
     items = if is_tuple(v), do: Tuple.to_list(v), else: v
-    ["(", items |> Enum.map(&value(&1, k)) |> Enum.intersperse(","), ")"]
+    ["(", items |> Enum.map(&value(&1, k, rf)) |> Enum.intersperse(","), ")"]
   end
 
-  defp value(v, kind), do: raise(ArgumentError, "STEP 값으로 못 쓴다: #{inspect(v)} (#{inspect(kind)})")
+  defp value(v, kind, _rf), do: raise(ArgumentError, "STEP 값으로 못 쓴다: #{inspect(v)} (#{inspect(kind)})")
 
   @doc """
-  실수 — printf `%.17G` + 소수점 보장(ifcopenshell 0.8.5). 정수가 오면 실수로 쓴다(ifcopenshell 도
-  REAL 속성의 int 를 `3.` 로 쓴다).
+  실수 표기 — `:shortest`(ifcopenshell 0.9.0) · `:g17`(0.8.5). 정수가 오면 실수로 쓴다(ifcopenshell 도 REAL 속성의
+  int 를 `3.` 로 쓴다).
   """
-  def real(v) when is_integer(v), do: real(v * 1.0)
+  def real(v, rf \\ :shortest)
+  def real(v, rf) when is_integer(v), do: real(v * 1.0, rf)
 
-  def real(v) when is_float(v) do
+  def real(v, :shortest) when is_float(v) do
+    # [:short] = 되읽어 같은 가장 짧은 십진(Ryu). 자릿수와 십진 지수만 뽑아 to_chars 꼴로 다시 짠다
+    <<s::1, _::63>> = <<v::float>>
+    sign = if s == 1, do: "-", else: ""
+    [mant | ex] = v |> abs() |> :erlang.float_to_binary([:short]) |> String.split("e")
+    ex = if ex == [], do: 0, else: String.to_integer(hd(ex))
+    {ip, fp} = case String.split(mant, ".") do
+      [i, f] -> {i, f}
+      [i] -> {i, ""}
+    end
+
+    all = ip <> fp
+    lead = byte_size(all) - byte_size(String.trim_leading(all, "0"))
+    digits = all |> String.trim_leading("0") |> String.trim_trailing("0")
+
+    body =
+      if digits == "" do
+        "0."
+      else
+        e10 = byte_size(ip) - 1 + ex - lead
+        n = byte_size(digits)
+        sci = String.first(digits) <> if(n > 1, do: "." <> String.slice(digits, 1..-1//1), else: "") <>
+              "E" <> if(e10 < 0, do: "-", else: "+") <> (e10 |> abs() |> Integer.to_string() |> String.pad_leading(2, "0"))
+
+        fix =
+          cond do
+            # 정수부가 자릿수보다 길면 실수의 정확한 정수값(to_chars) — 123456789012345664
+            e10 >= n -> v |> abs() |> trunc() |> Integer.to_string()
+            e10 >= 0 -> String.slice(digits, 0, e10 + 1) <> "." <> String.slice(digits, (e10 + 1)..-1//1)
+            true -> "0." <> String.duplicate("0", -e10 - 1) <> digits
+          end
+
+        # 길이는 소수점 보정 전(to_chars 가 고른 것)으로 견준다 — 같으면 고정소수
+        fix_len = byte_size(String.trim_trailing(fix, "."))
+        sci_len = byte_size(String.replace(sci, ".E", "E"))
+        out = if fix_len <= sci_len, do: fix, else: sci
+        cond do
+          String.contains?(out, ".") -> out
+          String.contains?(out, "E") -> String.replace(out, "E", ".E")
+          true -> out <> "."
+        end
+      end
+
+    sign <> body
+  end
+
+  def real(v, :g17) when is_float(v) do
     # %.16e 는 C printf 라 정확히 반올림된 17자리다(io_lib ~e 는 20자리 문자열을 다시 반올림해 어긋날 수 있다)
     [mant, exp] = v |> :erlang.float_to_binary(scientific: 16) |> String.split("e")
     {sign, mant} = if String.starts_with?(mant, "-"), do: {"-", String.slice(mant, 1..-1//1)}, else: {"", mant}

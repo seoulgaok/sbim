@@ -1,5 +1,5 @@
 # 생성 파일 — 손으로 고치지 마라.
-# 정본: ifcopenshell 0.8.5 IFC4 스키마 · 대상 타입 fixtures/ifc/types.txt
+# 정본: ifcopenshell 0.9.0.post1 IFC4 스키마 · 대상 타입 fixtures/ifc/types.txt
 # 생성: cd python && uv run python scripts/gen_ifc_schema.py
 
 defmodule Sbim.Ifc.Schema do
