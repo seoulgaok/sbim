@@ -5,6 +5,7 @@ defmodule Sbim do
   - `Sbim.Options.BuildOptions` 와 그 묶음 — 속성 창. 기본값은 fixtures `empty.expected` 와 같다.
   - `Sbim.Scheme.*` — scheme.json·units.json·surroundings.json 계약(Scheme·UnitRecord·SurroundingBuilding).
   - `Sbim.Migrations` — 옛 저장값을 옮기는 표. `Sbim.Presets` — 구조방식 프리셋.
+  - `Sbim.Bundle` — 설계안 묶음(.sbim: scheme·units·site JSON 의 zip + manifest). 파이썬 bundle.py 와 같은 꼴.
   - `Sbim.Ifc.generate_ifc/3` — scheme + units → IFC4(건축). 이건 생성이 아니라 ifc.py 의 **손 이식**이고,
     파이썬 판과 같은 파일이 나오는지를 fixtures/ifc/(gen_ifc_fixtures.py)로 CI 가 지킨다.
 

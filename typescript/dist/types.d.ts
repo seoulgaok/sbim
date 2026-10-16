@@ -518,6 +518,19 @@ export interface SiteInfo {
     road_widening_area?: number;
     corner_cut_area?: number;
 }
+export interface BundleManifest {
+    format: 'sbim-bundle';
+    bundle_version: number;
+    sbim_version: string;
+    /** ISO 8601 UTC 초 단위 — 2026-10-16T03:00:00Z */
+    created_at: string;
+    land_ids: string[];
+    design_id?: string | null;
+    /** scheme.json 의 `_engine_stamp` — 어느 엔진 판이 낸 안인지 */
+    engine_stamp?: Record<string, unknown> | null;
+    /** {항목 이름: sha256 hex} — manifest 자신은 빼고 묶은 항목 전부 */
+    files: Record<string, string>;
+}
 export interface SurroundingGeometry {
     boundary: BufferGeometryData[];
 }

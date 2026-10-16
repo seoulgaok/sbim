@@ -38,10 +38,11 @@ jobs:
         run: uv run python scripts/gen_build_options.py --check
 
       # fixtures/ifc/ 정답 · elixir/sbim/lib/sbim/generated/ifc_schema.ex 가 ifc.py · ifcopenshell 과 같은가
-      - name: gen_ifc_fixtures --check · gen_ifc_schema --check
+      - name: gen_ifc_fixtures · gen_ifc_schema · gen_bundle_fixtures --check
         run: |
           uv run python scripts/gen_ifc_fixtures.py --check
           uv run python scripts/gen_ifc_schema.py --check
+          uv run python scripts/gen_bundle_fixtures.py --check
 
       - name: pytest
         run: uv run pytest -q

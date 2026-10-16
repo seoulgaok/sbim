@@ -595,6 +595,23 @@ export interface SiteInfo {
   corner_cut_area?: number;
 }
 
+// --- 설계안 묶음(.sbim) manifest.json ---------------------------------------
+// `.sbim` = 설계안 JSON 들(scheme·units 필수, site 선택)의 zip. 꼴·항목 규칙은 python bundle.py 머리말.
+
+export interface BundleManifest {
+  format: 'sbim-bundle';
+  bundle_version: number;
+  sbim_version: string;
+  /** ISO 8601 UTC 초 단위 — 2026-10-16T03:00:00Z */
+  created_at: string;
+  land_ids: string[];
+  design_id?: string | null;
+  /** scheme.json 의 `_engine_stamp` — 어느 엔진 판이 낸 안인지 */
+  engine_stamp?: Record<string, unknown> | null;
+  /** {항목 이름: sha256 hex} — manifest 자신은 빼고 묶은 항목 전부 */
+  files: Record<string, string>;
+}
+
 // --- Surroundings ----------------------------------------------------------
 
 export interface SurroundingGeometry {
