@@ -6,6 +6,9 @@
 
 ## 미출시
 
+- 기본값 `massing.first_floor_height` 가 비었을 때 1층이 필로티(기본 용도)면 **3.5 m** (`PILOTI_FLOOR_HEIGHT`,
+  `get_floor_height`) — 전에는 구조방식 기본(벽식 3.0)을 1층에도 썼다. 다른 1층 용도·상층은 그대로. nextbase 가 늘
+  3.5 를 보내던 것을 계약 기본으로 (#48). 엔진(building-generator)의 `get_floor_height` 도 따라야 한다.
 - 추가 설계안 묶음 `.sbim` — scheme.json·units.json(필수)·site.json(선택)의 zip + `manifest.json`
   (`BundleManifest`: sbim 판·엔진 도장·항목별 sha256). 파이썬 `pack_bundle`/`read_bundle`, Elixir `Sbim.Bundle`,
   TS 는 `BundleManifest` 타입만. surroundings.json 은 넣지 않는다(엔진이 안 만든다).

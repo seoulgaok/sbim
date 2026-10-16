@@ -166,6 +166,23 @@ def test_helpers_read_new_paths():
     assert o.get_upper_floor_ratio(0.5) == 0.55
 
 
+def test_first_floor_height_default_is_piloti_3_5():
+    """비었을 때 1층 기본: 필로티면 3.5(sbim #48), 다른 용도면 구조방식 기본, 상층은 늘 구조방식 기본."""
+    from seoulgaok_bim_core.options import PILOTI_FLOOR_HEIGHT
+
+    o = BuildOptions()
+    assert o.design.massing.first_floor_height is None
+    assert o.get_floor_use(1) == "piloti"
+    assert o.get_floor_height(1) == PILOTI_FLOOR_HEIGHT == 3.5
+    assert o.get_floor_height(2) == o.base_floor_height == 3.0
+    shop = BuildOptions.model_validate({"design": {"massing": {"floor_use": {1: "commercial"}}}})
+    assert shop.get_floor_height(1) == shop.base_floor_height
+    steel = BuildOptions.model_validate({"design": {"structure": "steel"}})
+    assert steel.get_floor_height(1) == 3.5 and steel.get_floor_height(2) == 3.4
+    given = BuildOptions.model_validate({"design": {"massing": {"first_floor_height": 3.2}}})
+    assert given.get_floor_height(1) == 3.2
+
+
 def test_object_helpers_moved_to_their_owners():
     """bk_eff는 주차가(칸 깊이 고정 — bk_offset 삭제), walk_width·aisle은 보행로 폭을
     가진 법규 보정이 갖는다."""

@@ -58,6 +58,10 @@ StructureSystem = Literal["wall", "rahmen", "steel"]
 # 구조방식 → 기하 기본값(명시 override 없을 때만). 벽식=현행 기본값(회귀0).
 # 라멘/철골은 하중을 기둥이 받아 벽이 얇아짐(전용↑), 철골은 장스팬(넓은 주차·기둥간격).
 # 층고는 base_floor_height property에서 별도 derive. 실적치는 보정 노브.
+# 필로티 1층 층고 기본(m) — 주차장법 시행규칙 제6조 유효높이(차로 2.3·주차 2.1) + 보·슬래브·설비 0.7~1.0.
+# 실무 3.3~3.6 중 가장 흔한 값. nextbase sbim-studio 의 STUDIO_DEFAULTS.firstFloorHeight 와 같다(sbim #48).
+PILOTI_FLOOR_HEIGHT = 3.5
+
 STRUCTURE_PRESET = {
     "wall":   {"wall_thickness": 0.20, "max_span": 8.1,  "min_col_dist": 3.0},
     "rahmen": {"wall_thickness": 0.15, "max_span": 8.1,  "min_col_dist": 3.0},
@@ -110,8 +114,8 @@ class Massing(BaseModel):
         default=None,
         json_schema_extra={"empty": "default"},
         description=(
-            "1층 층고 (m). 필로티 4m+ 권장. "
-            "None이면 구조방식 기본 층고(structure: 벽식 3.0/라멘 3.3)와 동일."
+            "1층 층고 (m). None이면 1층이 필로티(기본)일 때 3.5 — 주차 유효높이 2.3 + 보·설비 — "
+            "그 밖의 용도는 구조방식 기본 층고(벽식 3.0/라멘 3.3/철골 3.4)."
         ),
     )
     floor_use: dict[int, FloorUse] = Field(
@@ -1103,9 +1107,14 @@ class BuildOptions(BaseModel):
         return {"rahmen": 3.3, "steel": 3.4}.get(self.design.structure, 3.0)
 
     def get_floor_height(self, level: int) -> float:
-        """층별 층고. 1층은 first_floor_height 우선, 그 외는 구조방식 derive."""
-        if level == 1 and self.design.massing.first_floor_height is not None:
-            return self.design.massing.first_floor_height
+        """층별 층고. 1층은 first_floor_height 우선, 비었으면 필로티 1층은 PILOTI_FLOOR_HEIGHT,
+        그 외는 구조방식 derive. (sbim #48 — nextbase 가 늘 3.5 를 보내던 것을 계약 기본으로.)"""
+        if level == 1:
+            fh = self.design.massing.first_floor_height
+            if fh is not None:
+                return fh
+            if self.get_floor_use(1) == "piloti":
+                return PILOTI_FLOOR_HEIGHT
         return self.base_floor_height
 
     def get_first_floor_ratio(self, default: float = 0.15) -> float:

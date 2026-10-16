@@ -2,7 +2,7 @@ defmodule Sbim.MixProject do
   use Mix.Project
 
   # 판은 python/pyproject.toml 과 같이 올린다
-  @version "0.1.0"
+  @version "0.1.1"
 
   def project do
     [
