@@ -27,6 +27,34 @@
           "description": "천장고 (m) — 바닥 마감면에서 천장 마감면까지.",
           "title": "Ceiling H",
           "type": "number"
+        },
+        "wall_layers": {
+          "default": [
+            [
+              "시멘트몰탈",
+              0.015
+            ],
+            [
+              "타일",
+              0.01
+            ]
+          ],
+          "description": "벽 마감 겹 (이름, 두께 m) — 구조면→실내면 순. 콘크리트 벽의 실내면에 붙는 겹이고 `wall` 은 그 맨 바깥 이름.",
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Wall Layers",
+          "type": "array"
         }
       },
       "title": "BathFinish",
@@ -630,6 +658,30 @@
           "description": "천장고 (m).",
           "title": "Ceiling H",
           "type": "number"
+        },
+        "wall_layers": {
+          "default": [
+            [
+              "석고보드",
+              0.0095
+            ]
+          ],
+          "description": "벽 마감 겹 (이름, 두께 m) — 구조면→실내면 순. 벽지는 두께 없이 `wall` 이름으로만.",
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Wall Layers",
+          "type": "array"
         }
       },
       "title": "KitchenFinish",
@@ -662,6 +714,30 @@
           "description": "천장고 (m).",
           "title": "Ceiling H",
           "type": "number"
+        },
+        "wall_layers": {
+          "default": [
+            [
+              "석고보드",
+              0.0095
+            ]
+          ],
+          "description": "벽 마감 겹 (이름, 두께 m) — 구조면→실내면 순. 벽지는 두께 없이 `wall` 이름으로만.",
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Wall Layers",
+          "type": "array"
         }
       },
       "title": "LivingFinish",
@@ -1121,6 +1197,9 @@
         },
         "openings": {
           "$ref": "#/$defs/Openings"
+        },
+        "walls": {
+          "$ref": "#/$defs/Walls"
         }
       },
       "title": "Standards",
@@ -1168,6 +1247,78 @@
         }
       },
       "title": "UnitSpec",
+      "type": "object"
+    },
+    "Walls": {
+      "additionalProperties": false,
+      "description": "벽 구성 표준 — 세대 안 칸막이의 건식벽 겹. 엔진이 `partition` 벽의 `layers` 를 여기서 채운다(building-generator #597).\n\n(이름, 두께 m) 목록을 한 면→반대 면 순으로. 기본값은 **초안**(구의동 57-93 차하 A11 건식벽 상세 — 석고보드 12.5 양면에\n경량스터드, 합 100 = `concrete.interior_wall_thickness`), 소장 확인 전. 콘크리트 벽(외벽·세대경계·코어)의 실내면 마감 겹은\n`finishes.<용도>.wall_layers` 가 정한다.",
+      "properties": {
+        "partition": {
+          "default": [
+            [
+              "석고보드",
+              0.0125
+            ],
+            [
+              "경량스터드",
+              0.075
+            ],
+            [
+              "석고보드",
+              0.0125
+            ]
+          ],
+          "description": "건식 칸막이 겹 — 한 면→반대 면. 합이 벽 두께.",
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Partition",
+          "type": "array"
+        },
+        "wet_partition": {
+          "default": [
+            [
+              "방수석고보드",
+              0.0125
+            ],
+            [
+              "경량스터드",
+              0.075
+            ],
+            [
+              "방수석고보드",
+              0.0125
+            ]
+          ],
+          "description": "습식 구간(욕실에 면한) 칸막이 겹 — 방수석고보드. 욕실면 타일은 기준면 필드가 생기면 그때(비대칭).",
+          "items": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "type": "array"
+          },
+          "title": "Wet Partition",
+          "type": "array"
+        }
+      },
+      "title": "Walls",
       "type": "object"
     },
     "WindowSpec": {

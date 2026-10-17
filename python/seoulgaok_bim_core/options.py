@@ -931,6 +931,10 @@ class BathFinish(BaseModel):
     wall: str = Field(default="벽타일 300×600", description="벽 마감 이름.")
     ceiling: str = Field(default="SMC 천장판", description="천장 마감 이름 — 점검구 있는 판.")
     ceiling_h: float = Field(default=2.2, description="천장고 (m) — 바닥 마감면에서 천장 마감면까지.")
+    wall_layers: list[tuple[str, float]] = Field(
+        default=[("시멘트몰탈", 0.015), ("타일", 0.01)],
+        description="벽 마감 겹 (이름, 두께 m) — 구조면→실내면 순. 콘크리트 벽의 실내면에 붙는 겹이고 `wall` 은 그 맨 바깥 이름.",
+    )
 
 
 class KitchenFinish(BaseModel):
@@ -942,6 +946,10 @@ class KitchenFinish(BaseModel):
     wall: str = Field(default="실크벽지 (싱크 상부 벽타일)", description="벽 마감 이름.")
     ceiling: str = Field(default="실크벽지", description="천장 마감 이름.")
     ceiling_h: float = Field(default=2.3, description="천장고 (m).")
+    wall_layers: list[tuple[str, float]] = Field(
+        default=[("석고보드", 0.0095)],
+        description="벽 마감 겹 (이름, 두께 m) — 구조면→실내면 순. 벽지는 두께 없이 `wall` 이름으로만.",
+    )
 
 
 class LivingFinish(BaseModel):
@@ -953,6 +961,10 @@ class LivingFinish(BaseModel):
     wall: str = Field(default="실크벽지", description="벽 마감 이름.")
     ceiling: str = Field(default="실크벽지", description="천장 마감 이름.")
     ceiling_h: float = Field(default=2.3, description="천장고 (m).")
+    wall_layers: list[tuple[str, float]] = Field(
+        default=[("석고보드", 0.0095)],
+        description="벽 마감 겹 (이름, 두께 m) — 구조면→실내면 순. 벽지는 두께 없이 `wall` 이름으로만.",
+    )
 
 
 class Finishes(BaseModel):
@@ -969,6 +981,26 @@ class Finishes(BaseModel):
     bath: BathFinish = Field(default_factory=BathFinish, description="욕실.")
     kitchen: KitchenFinish = Field(default_factory=KitchenFinish, description="주방.")
     living: LivingFinish = Field(default_factory=LivingFinish, description="거실.")
+
+
+class Walls(BaseModel):
+    """벽 구성 표준 — 세대 안 칸막이의 건식벽 겹. 엔진이 `partition` 벽의 `layers` 를 여기서 채운다(building-generator #597).
+
+    (이름, 두께 m) 목록을 한 면→반대 면 순으로. 기본값은 **초안**(구의동 57-93 차하 A11 건식벽 상세 — 석고보드 12.5 양면에
+    경량스터드, 합 100 = `concrete.interior_wall_thickness`), 소장 확인 전. 콘크리트 벽(외벽·세대경계·코어)의 실내면 마감 겹은
+    `finishes.<용도>.wall_layers` 가 정한다.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    partition: list[tuple[str, float]] = Field(
+        default=[("석고보드", 0.0125), ("경량스터드", 0.075), ("석고보드", 0.0125)],
+        description="건식 칸막이 겹 — 한 면→반대 면. 합이 벽 두께.",
+    )
+    wet_partition: list[tuple[str, float]] = Field(
+        default=[("방수석고보드", 0.0125), ("경량스터드", 0.075), ("방수석고보드", 0.0125)],
+        description="습식 구간(욕실에 면한) 칸막이 겹 — 방수석고보드. 욕실면 타일은 기준면 필드가 생기면 그때(비대칭).",
+    )
 
 
 class WindowSpec(BaseModel):
@@ -1051,6 +1083,7 @@ class Standards(BaseModel):
     dimensions: Dimensions = Field(default_factory=Dimensions)
     finishes: Finishes = Field(default_factory=Finishes)
     openings: Openings = Field(default_factory=Openings)
+    walls: Walls = Field(default_factory=Walls)
 
 
 class Business(BaseModel):
