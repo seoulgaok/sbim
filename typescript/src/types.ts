@@ -143,6 +143,12 @@ export interface DoorUserData {
   fire_exit?: boolean;
   /** 방화문 등급(건축법 시행령 제64조 ①) — IFC FireRating. 없으면 방화문 아님/미정. building-generator #578 (0.1.2) */
   fire_door?: "60+" | "60" | "30";
+  /** 사양 — `standards.openings` 의 문 유형에서 엔진이 옮긴다(0.1.4). 창호일람표 열 */
+  frame?: string;
+  finish?: string;
+  glazing?: string;
+  /** 열관류율 W/㎡K(외기에 면한 문) — IFC ThermalTransmittance */
+  u_value?: number;
   /** 스윙이 향할 실내 기준점 — 세대문=복도쪽 밖여닫이, 욕실문=거실쪽 */
   swing_into?: Point2;
   host_wall?: HostWallRef;
@@ -165,6 +171,12 @@ export interface WindowUserData {
   type?: string;
   unit_id?: string;
   host_wall?: HostWallRef;
+  /** 사양 — `standards.openings.window` 에서 엔진이 옮긴다(0.1.4). 창호일람표 "프레임·유리" 열, IFC ThermalTransmittance */
+  frame?: string;
+  /** 유리 구성식 ("THK39 (5LE+12A+5CL+12A+5LE)") */
+  glazing?: string;
+  /** 창 열관류율 W/㎡K — 없으면 소비처가 근사값을 쓰되 "근사"라고 적는다 */
+  u_value?: number;
 }
 
 export interface CoveringUserData {

@@ -146,6 +146,11 @@ class DoorUserData(_Base):
     # 방화문 등급(건축법 시행령 제64조 ①: 60+ · 60 · 30) — IFC FireRating 으로 나간다. None = 방화문 아님/미정.
     # 엔진이 피난계단 판정(영 제35조)과 묶어 채운다 — building-generator #578. 2026-10-17 추가(0.1.2).
     fire_door: Optional[Literal["60+", "60", "30"]] = None
+    # 사양 — `standards.openings` 의 문 유형(세대현관·공동현관·실내·철재)에서 엔진이 옮긴다(0.1.4). 창호일람표 열.
+    frame: Optional[str] = None      # 종류·구성 ("갑종 방화문 / 단열문")
+    finish: Optional[str] = None     # 문 마감 ("ST PL 위 불소수지도장")
+    glazing: Optional[str] = None    # 유리 구성식(유리문일 때)
+    u_value: Optional[float] = None  # 열관류율 W/㎡K(외기에 면한 문) — IFC ThermalTransmittance
     swing_into: Optional[Point2] = None  # 스윙이 향할 실내 기준점
     host_wall: Optional[HostWallRef] = None
 
@@ -162,6 +167,10 @@ class WindowUserData(_Base):
     type: Optional[str] = None
     unit_id: Optional[str] = None
     host_wall: Optional[HostWallRef] = None
+    # 사양 — `standards.openings.window` 에서 엔진이 옮긴다(0.1.4). 창호일람표 "프레임·유리" 열, IFC ThermalTransmittance.
+    frame: Optional[str] = None      # 프레임 — 재질·구성
+    glazing: Optional[str] = None    # 유리 구성식 ("THK39 (5LE+12A+5CL+12A+5LE)")
+    u_value: Optional[float] = None  # 창 열관류율 W/㎡K — 없으면 소비처가 근사값을 쓰되 "근사"라고 적는다
 
 
 class CoveringUserData(_Base):

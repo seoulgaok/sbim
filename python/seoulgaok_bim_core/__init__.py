@@ -78,7 +78,7 @@ from .types import (
 
 from .bundle import Bundle, BundleError, pack_bundle, read_bundle
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 __all__ = [
     # 설계안 묶음(.sbim)
