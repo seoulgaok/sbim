@@ -93,6 +93,9 @@ class WallUserData(_Base):
     base_z: float = 0
     top_z: float = 0
     quad: Optional[Ring] = None        # 마이터 확정 quad (emitter 단일 소스)
+    # 벽 단면 전부, 안→밖 순(내벽은 한 면→반대 면). 구조 겹은 이름에 "콘크리트" 가 든 것 — 그 앞이 실내 마감, 뒤가 단열·외장.
+    # 예 외벽 [석고보드 / 철근콘크리트 / EPS단열 / STO], 세대경계 [석고보드 / 철근콘크리트 / 석고보드], 건식 칸막이는 콘크리트 겹 없음
+    # (building-generator #597, 2026-10-18). `offset_out` = 기준선→맨 바깥 면, `t_total` = 겹 두께 합.
     layers: list[MaterialLayer] = []
 
 

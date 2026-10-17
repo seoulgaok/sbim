@@ -66,6 +66,10 @@ pub struct BathFinish {
     ///
     /// 기본값: 2.2
     pub ceiling_h: f64,
+    /// 벽 마감 겹 (이름, 두께 m) — 구조면→실내면 순. 콘크리트 벽의 실내면에 붙는 겹이고 `wall` 은 그 맨 바깥 이름.
+    ///
+    /// 기본값: [["시멘트몰탈", 0.015], ["타일", 0.01]]
+    pub wall_layers: Vec<(String, f64)>,
 }
 
 impl Default for BathFinish {
@@ -75,6 +79,7 @@ impl Default for BathFinish {
             wall: "벽타일 300×600".to_string(),
             ceiling: "SMC 천장판".to_string(),
             ceiling_h: 2.2,
+            wall_layers: vec![("시멘트몰탈".to_string(), 0.015), ("타일".to_string(), 0.01)],
         }
     }
 }
@@ -562,6 +567,10 @@ pub struct KitchenFinish {
     ///
     /// 기본값: 2.3
     pub ceiling_h: f64,
+    /// 벽 마감 겹 (이름, 두께 m) — 구조면→실내면 순. 벽지는 두께 없이 `wall` 이름으로만.
+    ///
+    /// 기본값: [["석고보드", 0.0095]]
+    pub wall_layers: Vec<(String, f64)>,
 }
 
 impl Default for KitchenFinish {
@@ -571,6 +580,7 @@ impl Default for KitchenFinish {
             wall: "실크벽지 (싱크 상부 벽타일)".to_string(),
             ceiling: "실크벽지".to_string(),
             ceiling_h: 2.3,
+            wall_layers: vec![("석고보드".to_string(), 0.0095)],
         }
     }
 }
@@ -595,6 +605,10 @@ pub struct LivingFinish {
     ///
     /// 기본값: 2.3
     pub ceiling_h: f64,
+    /// 벽 마감 겹 (이름, 두께 m) — 구조면→실내면 순. 벽지는 두께 없이 `wall` 이름으로만.
+    ///
+    /// 기본값: [["석고보드", 0.0095]]
+    pub wall_layers: Vec<(String, f64)>,
 }
 
 impl Default for LivingFinish {
@@ -604,6 +618,7 @@ impl Default for LivingFinish {
             wall: "실크벽지".to_string(),
             ceiling: "실크벽지".to_string(),
             ceiling_h: 2.3,
+            wall_layers: vec![("석고보드".to_string(), 0.0095)],
         }
     }
 }
@@ -899,6 +914,7 @@ pub struct Standards {
     pub dimensions: Dimensions,
     pub finishes: Finishes,
     pub openings: Openings,
+    pub walls: Walls,
 }
 
 impl Default for Standards {
@@ -908,6 +924,7 @@ impl Default for Standards {
             dimensions: Dimensions::default(),
             finishes: Finishes::default(),
             openings: Openings::default(),
+            walls: Walls::default(),
         }
     }
 }
@@ -939,6 +956,33 @@ impl Default for UnitSpec {
             units_per_floor: None,
             units_by_level: BTreeMap::new(),
             max_net_area: Some(60.0),
+        }
+    }
+}
+
+/// 벽 구성 표준 — 세대 안 칸막이의 건식벽 겹. 엔진이 `partition` 벽의 `layers` 를 여기서 채운다(building-generator #597).
+///
+/// (이름, 두께 m) 목록을 한 면→반대 면 순으로. 기본값은 **초안**(구의동 57-93 차하 A11 건식벽 상세 — 석고보드 12.5 양면에
+/// 경량스터드, 합 100 = `concrete.interior_wall_thickness`), 소장 확인 전. 콘크리트 벽(외벽·세대경계·코어)의 실내면 마감 겹은
+/// `finishes.<용도>.wall_layers` 가 정한다.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Walls {
+    /// 건식 칸막이 겹 — 한 면→반대 면. 합이 벽 두께.
+    ///
+    /// 기본값: [["석고보드", 0.0125], ["경량스터드", 0.075], ["석고보드", 0.0125]]
+    pub partition: Vec<(String, f64)>,
+    /// 습식 구간(욕실에 면한) 칸막이 겹 — 방수석고보드. 욕실면 타일은 기준면 필드가 생기면 그때(비대칭).
+    ///
+    /// 기본값: [["방수석고보드", 0.0125], ["경량스터드", 0.075], ["방수석고보드", 0.0125]]
+    pub wet_partition: Vec<(String, f64)>,
+}
+
+impl Default for Walls {
+    fn default() -> Self {
+        Self {
+            partition: vec![("석고보드".to_string(), 0.0125), ("경량스터드".to_string(), 0.075), ("석고보드".to_string(), 0.0125)],
+            wet_partition: vec![("방수석고보드".to_string(), 0.0125), ("경량스터드".to_string(), 0.075), ("방수석고보드".to_string(), 0.0125)],
         }
     }
 }

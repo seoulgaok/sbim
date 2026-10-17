@@ -1,7 +1,7 @@
 [package]
 name = "sbim-types"
 # 판은 python/pyproject.toml 과 같이 올린다 — python/tests/test_emit_rust.py 가 지킨다
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 description = "sbim 계약(BuildOptions · scheme · units · surroundings)의 Rust 타입 — pydantic 정본에서 생성"
 license = "Apache-2.0"

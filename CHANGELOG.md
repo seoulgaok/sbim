@@ -4,6 +4,16 @@
 규칙: 기본값이 바뀌거나 필드가 늘고 줄면 여기 한 줄 + 버전 올림. 판은 머지 뒤
 `git tag v<버전>`으로 찍는다.
 
+## 0.1.5 — 2026-10-18
+
+- 추가 `standards.finishes.{bath,kitchen,living}.wall_layers` — 콘크리트 벽 실내면의 마감 겹 (이름, 두께 m) 목록, 구조면→실내면 순
+  (기본 거실·주방 석고보드 9.5 / 욕실 시멘트몰탈 15 + 타일 10). 추가 `standards.walls` — 건식 칸막이 겹 `partition`·`wet_partition`
+  (석고보드 12.5 / 경량스터드 75 / 석고보드 12.5, 욕실 쪽은 방수석고보드). 엔진이 벽 `layers` 를 마감까지 낸다(building-generator #597).
+  기본값은 **초안**(57-93 차하 A11), 소장 확인 전.
+- 뜻 못박음 `WallUserData.layers` — 벽 단면 전부를 안→밖 순으로(내벽은 한 면→반대 면). 구조 겹은 이름에 "콘크리트" 가 든 것이고
+  그 앞이 실내 마감, 뒤가 단열·외장. 지금까지의 `[철근콘크리트 / EPS단열 / STO]` 는 그대로 맞는 꼴(실내 마감 겹이 0개).
+  `t_total` 은 겹 두께 합, `offset_out` 은 기준선→맨 바깥 면 — 필드 추가 없음.
+
 ## 0.1.4 — 2026-10-17
 
 - 추가 `standards.openings` — 창호 사양 표준(창 `window`: frame·glazing·u_value / 문 `entrance_door`·`common_door`·`interior_door`·

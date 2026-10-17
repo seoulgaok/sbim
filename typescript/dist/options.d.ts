@@ -36,6 +36,11 @@ export interface BathFinish {
      * @default 2.2
      */
     ceiling_h?: number;
+    /**
+     * 벽 마감 겹 (이름, 두께 m) — 구조면→실내면 순. 콘크리트 벽의 실내면에 붙는 겹이고 `wall` 은 그 맨 바깥 이름.
+     * @default [["시멘트몰탈", 0.015], ["타일", 0.01]]
+     */
+    wall_layers?: [string, number][];
 }
 /**
  * 사업성 — 도면과 무관한 값. 소비 UI는 접어 둘 수 있다.
@@ -411,6 +416,11 @@ export interface KitchenFinish {
      * @default 2.3
      */
     ceiling_h?: number;
+    /**
+     * 벽 마감 겹 (이름, 두께 m) — 구조면→실내면 순. 벽지는 두께 없이 `wall` 이름으로만.
+     * @default [["석고보드", 0.0095]]
+     */
+    wall_layers?: [string, number][];
 }
 /**
  * 거실 마감 넷 — 욕실·주방 외 남는 면적 전부(침실 분할 전). 천장고 2.3 은 층고 2.9·슬래브 150·바닥 구성 120 뒤의 값.
@@ -436,6 +446,11 @@ export interface LivingFinish {
      * @default 2.3
      */
     ceiling_h?: number;
+    /**
+     * 벽 마감 겹 (이름, 두께 m) — 구조면→실내면 순. 벽지는 두께 없이 `wall` 이름으로만.
+     * @default [["석고보드", 0.0095]]
+     */
+    wall_layers?: [string, number][];
 }
 export interface Massing {
     /**
@@ -671,6 +686,7 @@ export interface Standards {
     dimensions?: Dimensions;
     finishes?: Finishes;
     openings?: Openings;
+    walls?: Walls;
 }
 export interface UnitSpec {
     /**
@@ -690,6 +706,25 @@ export interface UnitSpec {
      * @empty default — None=설명에 적힌 기본 동작
      */
     max_net_area?: number | null;
+}
+/**
+ * 벽 구성 표준 — 세대 안 칸막이의 건식벽 겹. 엔진이 `partition` 벽의 `layers` 를 여기서 채운다(building-generator #597).
+ *
+ * (이름, 두께 m) 목록을 한 면→반대 면 순으로. 기본값은 **초안**(구의동 57-93 차하 A11 건식벽 상세 — 석고보드 12.5 양면에
+ * 경량스터드, 합 100 = `concrete.interior_wall_thickness`), 소장 확인 전. 콘크리트 벽(외벽·세대경계·코어)의 실내면 마감 겹은
+ * `finishes.<용도>.wall_layers` 가 정한다.
+ */
+export interface Walls {
+    /**
+     * 건식 칸막이 겹 — 한 면→반대 면. 합이 벽 두께.
+     * @default [["석고보드", 0.0125], ["경량스터드", 0.075], ["석고보드", 0.0125]]
+     */
+    partition?: [string, number][];
+    /**
+     * 습식 구간(욕실에 면한) 칸막이 겹 — 방수석고보드. 욕실면 타일은 기준면 필드가 생기면 그때(비대칭).
+     * @default [["방수석고보드", 0.0125], ["경량스터드", 0.075], ["방수석고보드", 0.0125]]
+     */
+    wet_partition?: [string, number][];
 }
 /**
  * 창 사양 — 창호일람표의 "프레임·유리" 두 열. 엔진이 `window.userData.frame·glazing·u_value` 로 그대로 옮긴다.

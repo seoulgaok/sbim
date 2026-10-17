@@ -19,7 +19,8 @@ defmodule Sbim.Options.BathFinish do
           floor: String.t(),
           wall: String.t(),
           ceiling: String.t(),
-          ceiling_h: number()
+          ceiling_h: number(),
+          wall_layers: [[String.t() | number()]]
         }
 
   defstruct [
@@ -30,7 +31,10 @@ defmodule Sbim.Options.BathFinish do
     # 천장 마감 이름 — 점검구 있는 판.
     ceiling: "SMC 천장판",
     # 천장고 (m) — 바닥 마감면에서 천장 마감면까지.
-    ceiling_h: 2.2
+    ceiling_h: 2.2,
+    # 벽 마감 겹 (이름, 두께 m) — 구조면→실내면 순. 콘크리트 벽의 실내면에 붙는 겹이고 `wall` 은
+    # 그 맨 바깥 이름.
+    wall_layers: [["시멘트몰탈", 0.015], ["타일", 0.01]]
   ]
 
   @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
@@ -51,7 +55,8 @@ defmodule Sbim.Options.BathFinish do
         {"floor", :floor, :value},
         {"wall", :wall, :value},
         {"ceiling", :ceiling, :value},
-        {"ceiling_h", :ceiling_h, :value}
+        {"ceiling_h", :ceiling_h, :value},
+        {"wall_layers", :wall_layers, :value}
       ],
       required: [],
       extra?: false,
@@ -1050,7 +1055,8 @@ defmodule Sbim.Options.KitchenFinish do
           floor: String.t(),
           wall: String.t(),
           ceiling: String.t(),
-          ceiling_h: number()
+          ceiling_h: number(),
+          wall_layers: [[String.t() | number()]]
         }
 
   defstruct [
@@ -1061,7 +1067,9 @@ defmodule Sbim.Options.KitchenFinish do
     # 천장 마감 이름.
     ceiling: "실크벽지",
     # 천장고 (m).
-    ceiling_h: 2.3
+    ceiling_h: 2.3,
+    # 벽 마감 겹 (이름, 두께 m) — 구조면→실내면 순. 벽지는 두께 없이 `wall` 이름으로만.
+    wall_layers: [["석고보드", 0.0095]]
   ]
 
   @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
@@ -1082,7 +1090,8 @@ defmodule Sbim.Options.KitchenFinish do
         {"floor", :floor, :value},
         {"wall", :wall, :value},
         {"ceiling", :ceiling, :value},
-        {"ceiling_h", :ceiling_h, :value}
+        {"ceiling_h", :ceiling_h, :value},
+        {"wall_layers", :wall_layers, :value}
       ],
       required: [],
       extra?: false,
@@ -1101,7 +1110,8 @@ defmodule Sbim.Options.LivingFinish do
           floor: String.t(),
           wall: String.t(),
           ceiling: String.t(),
-          ceiling_h: number()
+          ceiling_h: number(),
+          wall_layers: [[String.t() | number()]]
         }
 
   defstruct [
@@ -1112,7 +1122,9 @@ defmodule Sbim.Options.LivingFinish do
     # 천장 마감 이름.
     ceiling: "실크벽지",
     # 천장고 (m).
-    ceiling_h: 2.3
+    ceiling_h: 2.3,
+    # 벽 마감 겹 (이름, 두께 m) — 구조면→실내면 순. 벽지는 두께 없이 `wall` 이름으로만.
+    wall_layers: [["석고보드", 0.0095]]
   ]
 
   @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
@@ -1133,7 +1145,8 @@ defmodule Sbim.Options.LivingFinish do
         {"floor", :floor, :value},
         {"wall", :wall, :value},
         {"ceiling", :ceiling, :value},
-        {"ceiling_h", :ceiling_h, :value}
+        {"ceiling_h", :ceiling_h, :value},
+        {"wall_layers", :wall_layers, :value}
       ],
       required: [],
       extra?: false,
@@ -1391,6 +1404,56 @@ defmodule Sbim.Options.Openings do
   end
 end
 
+defmodule Sbim.Options.Walls do
+  @moduledoc ~S"""
+  벽 구성 표준 — 세대 안 칸막이의 건식벽 겹. 엔진이 `partition` 벽의 `layers` 를 여기서
+  채운다(building-generator #597).
+
+  (이름, 두께 m) 목록을 한 면→반대 면 순으로. 기본값은 **초안**(구의동 57-93 차하 A11 건식벽
+  상세 — 석고보드 12.5 양면에
+  경량스터드, 합 100 = `concrete.interior_wall_thickness`), 소장 확인 전. 콘크리트
+  벽(외벽·세대경계·코어)의 실내면 마감 겹은
+  `finishes.<용도>.wall_layers` 가 정한다.
+  """
+
+  @type t :: %__MODULE__{
+          partition: [[String.t() | number()]],
+          wet_partition: [[String.t() | number()]]
+        }
+
+  defstruct [
+    # 건식 칸막이 겹 — 한 면→반대 면. 합이 벽 두께.
+    partition: [["석고보드", 0.0125], ["경량스터드", 0.075], ["석고보드", 0.0125]],
+    # 습식 구간(욕실에 면한) 칸막이 겹 — 방수석고보드. 욕실면 타일은 기준면 필드가 생기면
+    # 그때(비대칭).
+    wet_partition: [["방수석고보드", 0.0125], ["경량스터드", 0.075], ["방수석고보드", 0.0125]]
+  ]
+
+  @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
+  @spec from_map(map()) :: {:ok, t()} | {:error, term()}
+  def from_map(map), do: Sbim.Codec.decode(__MODULE__, map)
+
+  @spec from_map!(map()) :: t()
+  def from_map!(map), do: Sbim.Codec.decode!(__MODULE__, map)
+
+  @doc "struct → 문자열 키 map(중첩 재귀). nil 은 null 로 낸다."
+  @spec to_map(t()) :: map()
+  def to_map(%__MODULE__{} = s), do: Sbim.Codec.encode(s)
+
+  @doc false
+  def __shape__ do
+    %{
+      fields: [
+        {"partition", :partition, :value},
+        {"wet_partition", :wet_partition, :value}
+      ],
+      required: [],
+      extra?: false,
+      omit_nil?: false
+    }
+  end
+end
+
 defmodule Sbim.Options.Standards do
   @moduledoc ~S"""
   회사 표준 — 사업마다 안 건드리는 값. 소비 UI는 접어 둘 수 있다.
@@ -1400,14 +1463,16 @@ defmodule Sbim.Options.Standards do
           concrete: Sbim.Options.Concrete.t(),
           dimensions: Sbim.Options.Dimensions.t(),
           finishes: Sbim.Options.Finishes.t(),
-          openings: Sbim.Options.Openings.t()
+          openings: Sbim.Options.Openings.t(),
+          walls: Sbim.Options.Walls.t()
         }
 
   defstruct [
     concrete: %Sbim.Options.Concrete{},
     dimensions: %Sbim.Options.Dimensions{},
     finishes: %Sbim.Options.Finishes{},
-    openings: %Sbim.Options.Openings{}
+    openings: %Sbim.Options.Openings{},
+    walls: %Sbim.Options.Walls{}
   ]
 
   @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
@@ -1428,7 +1493,8 @@ defmodule Sbim.Options.Standards do
         {"concrete", :concrete, {:model, Sbim.Options.Concrete}},
         {"dimensions", :dimensions, {:model, Sbim.Options.Dimensions}},
         {"finishes", :finishes, {:model, Sbim.Options.Finishes}},
-        {"openings", :openings, {:model, Sbim.Options.Openings}}
+        {"openings", :openings, {:model, Sbim.Options.Openings}},
+        {"walls", :walls, {:model, Sbim.Options.Walls}}
       ],
       required: [],
       extra?: false,
