@@ -77,6 +77,26 @@
         "max_span": 8.1,
         "cantilever": 3.0,
         "min_col_dist": 3.0
+      },
+      "finishes": {
+        "bath": {
+          "floor": "바닥타일 300×300",
+          "wall": "벽타일 300×600",
+          "ceiling": "SMC 천장판",
+          "ceiling_h": 2.2
+        },
+        "kitchen": {
+          "floor": "강마루10",
+          "wall": "실크벽지 (싱크 상부 벽타일)",
+          "ceiling": "실크벽지",
+          "ceiling_h": 2.3
+        },
+        "living": {
+          "floor": "강마루10",
+          "wall": "실크벽지",
+          "ceiling": "실크벽지",
+          "ceiling_h": 2.3
+        }
       }
     },
     "business": {

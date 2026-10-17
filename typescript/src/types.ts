@@ -599,6 +599,8 @@ export interface SiteInfo {
   parcel_polygon_z?: number[] | null;
   /** 도로 중심선 꼭짓점별 도로면 표고 m — road_centerlines 와 같은 모양 (0.1.2) */
   road_centerline_z?: number[][] | null;
+  /** 표고 원천 — ngii_dtm_90m(광역 사면만, 참고용) | ngii_dtm_5m | survey. null = 표고 없음 (0.1.3) */
+  elevation_src?: string | null;
   /** 면적 (㎡) */
   raw_parcel_area?: number;
   effective_parcel_area?: number;

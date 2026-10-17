@@ -157,6 +157,9 @@ pub struct SiteInfo {
     pub road_centerline_z: Option<Vec<Vec<f64>>>,
     /// 기본값: null
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub elevation_src: Option<String>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub raw_parcel_area: Option<f64>,
     /// 기본값: null
     #[serde(default, skip_serializing_if = "Option::is_none")]

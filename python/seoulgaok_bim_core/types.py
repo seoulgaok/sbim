@@ -580,6 +580,9 @@ class SiteInfo(_Base):
     # 평지는 전부 0. 2026-10-17 추가(0.1.2).
     parcel_polygon_z: Optional[list[float]] = None
     road_centerline_z: Optional[list[list[float]]] = None
+    # 표고 원천 — 값의 신뢰도가 원천에 따라 완전히 다르다(ngii_dtm_90m 는 광역 사면만, 옹벽·절토는 못 잡는다 → 참고용).
+    # None = 표고 없음(parcel_polygon_z 도 None). 2026-10-17 추가(0.1.3).
+    elevation_src: Optional[str] = None    # ngii_dtm_90m | ngii_dtm_5m | survey
     raw_parcel_area: Optional[float] = None
     effective_parcel_area: Optional[float] = None
     road_widening_area: Optional[float] = None

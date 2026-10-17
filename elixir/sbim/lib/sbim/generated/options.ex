@@ -7,6 +7,59 @@
 # 이행 로직은 없다 — 파이썬은 지운 키를 받아서 버리지만 여기 from_map 은 스키마에 없는 키를
 # 거부한다. 옛 저장값은 Sbim.Migrations 의 표를 먼저 적용한 뒤 from_map 에 넣는다.
 
+defmodule Sbim.Options.BathFinish do
+  @moduledoc ~S"""
+  욕실 마감 넷 — `UnitRoom.floor_finish·wall_finish·ceiling_finish·ceiling_h` 로 그대로 나간다.
+
+  용도마다 모델이 따로인 이유: 언어별 방출기(emit_rust)가 한 모델에 한 기본값만 허용한다 —
+  모양은 셋이 같다.
+  """
+
+  @type t :: %__MODULE__{
+          floor: String.t(),
+          wall: String.t(),
+          ceiling: String.t(),
+          ceiling_h: number()
+        }
+
+  defstruct [
+    # 바닥 마감 이름.
+    floor: "바닥타일 300×300",
+    # 벽 마감 이름.
+    wall: "벽타일 300×600",
+    # 천장 마감 이름 — 점검구 있는 판.
+    ceiling: "SMC 천장판",
+    # 천장고 (m) — 바닥 마감면에서 천장 마감면까지.
+    ceiling_h: 2.2
+  ]
+
+  @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
+  @spec from_map(map()) :: {:ok, t()} | {:error, term()}
+  def from_map(map), do: Sbim.Codec.decode(__MODULE__, map)
+
+  @spec from_map!(map()) :: t()
+  def from_map!(map), do: Sbim.Codec.decode!(__MODULE__, map)
+
+  @doc "struct → 문자열 키 map(중첩 재귀). nil 은 null 로 낸다."
+  @spec to_map(t()) :: map()
+  def to_map(%__MODULE__{} = s), do: Sbim.Codec.encode(s)
+
+  @doc false
+  def __shape__ do
+    %{
+      fields: [
+        {"floor", :floor, :value},
+        {"wall", :wall, :value},
+        {"ceiling", :ceiling, :value},
+        {"ceiling_h", :ceiling_h, :value}
+      ],
+      required: [],
+      extra?: false,
+      omit_nil?: false
+    }
+  end
+end
+
 defmodule Sbim.Options.Financing do
   @moduledoc ~S"""
   PF 대출(토지담보·시설자금·준공담보)과 분양 스케줄 의도.
@@ -896,6 +949,163 @@ defmodule Sbim.Options.Dimensions do
   end
 end
 
+defmodule Sbim.Options.KitchenFinish do
+  @moduledoc ~S"""
+  주방 마감 넷 — 오픈키친이라 거실과 같은 바닥·천장, 싱크 상부만 타일.
+  """
+
+  @type t :: %__MODULE__{
+          floor: String.t(),
+          wall: String.t(),
+          ceiling: String.t(),
+          ceiling_h: number()
+        }
+
+  defstruct [
+    # 바닥 마감 이름.
+    floor: "강마루10",
+    # 벽 마감 이름.
+    wall: "실크벽지 (싱크 상부 벽타일)",
+    # 천장 마감 이름.
+    ceiling: "실크벽지",
+    # 천장고 (m).
+    ceiling_h: 2.3
+  ]
+
+  @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
+  @spec from_map(map()) :: {:ok, t()} | {:error, term()}
+  def from_map(map), do: Sbim.Codec.decode(__MODULE__, map)
+
+  @spec from_map!(map()) :: t()
+  def from_map!(map), do: Sbim.Codec.decode!(__MODULE__, map)
+
+  @doc "struct → 문자열 키 map(중첩 재귀). nil 은 null 로 낸다."
+  @spec to_map(t()) :: map()
+  def to_map(%__MODULE__{} = s), do: Sbim.Codec.encode(s)
+
+  @doc false
+  def __shape__ do
+    %{
+      fields: [
+        {"floor", :floor, :value},
+        {"wall", :wall, :value},
+        {"ceiling", :ceiling, :value},
+        {"ceiling_h", :ceiling_h, :value}
+      ],
+      required: [],
+      extra?: false,
+      omit_nil?: false
+    }
+  end
+end
+
+defmodule Sbim.Options.LivingFinish do
+  @moduledoc ~S"""
+  거실 마감 넷 — 욕실·주방 외 남는 면적 전부(침실 분할 전). 천장고 2.3 은 층고 2.9·슬래브
+  150·바닥 구성 120 뒤의 값.
+  """
+
+  @type t :: %__MODULE__{
+          floor: String.t(),
+          wall: String.t(),
+          ceiling: String.t(),
+          ceiling_h: number()
+        }
+
+  defstruct [
+    # 바닥 마감 이름.
+    floor: "강마루10",
+    # 벽 마감 이름.
+    wall: "실크벽지",
+    # 천장 마감 이름.
+    ceiling: "실크벽지",
+    # 천장고 (m).
+    ceiling_h: 2.3
+  ]
+
+  @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
+  @spec from_map(map()) :: {:ok, t()} | {:error, term()}
+  def from_map(map), do: Sbim.Codec.decode(__MODULE__, map)
+
+  @spec from_map!(map()) :: t()
+  def from_map!(map), do: Sbim.Codec.decode!(__MODULE__, map)
+
+  @doc "struct → 문자열 키 map(중첩 재귀). nil 은 null 로 낸다."
+  @spec to_map(t()) :: map()
+  def to_map(%__MODULE__{} = s), do: Sbim.Codec.encode(s)
+
+  @doc false
+  def __shape__ do
+    %{
+      fields: [
+        {"floor", :floor, :value},
+        {"wall", :wall, :value},
+        {"ceiling", :ceiling, :value},
+        {"ceiling_h", :ceiling_h, :value}
+      ],
+      required: [],
+      extra?: false,
+      omit_nil?: false
+    }
+  end
+end
+
+defmodule Sbim.Options.Finishes do
+  @moduledoc ~S"""
+  실내 마감 표준 — 방 용도마다 하나. 엔진이 `units.rooms[]` 의 마감 넷을 여기서
+  채운다(building-generator #577).
+
+  착공신고 마감재료표(건축법 시행규칙 별표 4의2)와 내역서 마감 공종(수장·타일·미장, 금액의 약 35
+  %)의 전제.
+  기본값은 **초안**이다 — 류상호 BIMx 샘플(2026-07, 욕실 바닥 방통40/타일10 · 벽 방수석고보드 위
+  타일)과
+  구의동 57-93 slab layers(강마루10)에서 뽑았고 소장 확인 전이다. 사업마다 고르는 값이 아니라
+  회사가 정해 두는 값이라
+  `standards` 에 둔다. 지금 엔진이 내는 방은 욕실·주방·거실 셋뿐이라 그 셋만 있다 — 침실·현관이
+  생기면 같은 꼴로 늘린다.
+  """
+
+  @type t :: %__MODULE__{
+          bath: Sbim.Options.BathFinish.t(),
+          kitchen: Sbim.Options.KitchenFinish.t(),
+          living: Sbim.Options.LivingFinish.t()
+        }
+
+  defstruct [
+    # 욕실.
+    bath: %Sbim.Options.BathFinish{},
+    # 주방.
+    kitchen: %Sbim.Options.KitchenFinish{},
+    # 거실.
+    living: %Sbim.Options.LivingFinish{}
+  ]
+
+  @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
+  @spec from_map(map()) :: {:ok, t()} | {:error, term()}
+  def from_map(map), do: Sbim.Codec.decode(__MODULE__, map)
+
+  @spec from_map!(map()) :: t()
+  def from_map!(map), do: Sbim.Codec.decode!(__MODULE__, map)
+
+  @doc "struct → 문자열 키 map(중첩 재귀). nil 은 null 로 낸다."
+  @spec to_map(t()) :: map()
+  def to_map(%__MODULE__{} = s), do: Sbim.Codec.encode(s)
+
+  @doc false
+  def __shape__ do
+    %{
+      fields: [
+        {"bath", :bath, {:model, Sbim.Options.BathFinish}},
+        {"kitchen", :kitchen, {:model, Sbim.Options.KitchenFinish}},
+        {"living", :living, {:model, Sbim.Options.LivingFinish}}
+      ],
+      required: [],
+      extra?: false,
+      omit_nil?: false
+    }
+  end
+end
+
 defmodule Sbim.Options.Standards do
   @moduledoc ~S"""
   회사 표준 — 사업마다 안 건드리는 값. 소비 UI는 접어 둘 수 있다.
@@ -903,12 +1113,14 @@ defmodule Sbim.Options.Standards do
 
   @type t :: %__MODULE__{
           concrete: Sbim.Options.Concrete.t(),
-          dimensions: Sbim.Options.Dimensions.t()
+          dimensions: Sbim.Options.Dimensions.t(),
+          finishes: Sbim.Options.Finishes.t()
         }
 
   defstruct [
     concrete: %Sbim.Options.Concrete{},
-    dimensions: %Sbim.Options.Dimensions{}
+    dimensions: %Sbim.Options.Dimensions{},
+    finishes: %Sbim.Options.Finishes{}
   ]
 
   @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
@@ -927,7 +1139,8 @@ defmodule Sbim.Options.Standards do
     %{
       fields: [
         {"concrete", :concrete, {:model, Sbim.Options.Concrete}},
-        {"dimensions", :dimensions, {:model, Sbim.Options.Dimensions}}
+        {"dimensions", :dimensions, {:model, Sbim.Options.Dimensions}},
+        {"finishes", :finishes, {:model, Sbim.Options.Finishes}}
       ],
       required: [],
       extra?: false,

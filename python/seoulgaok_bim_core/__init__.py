@@ -27,6 +27,10 @@ from .options import (
     RegulationOverrides,
     Schedule,
     Standards,
+    Finishes,
+    BathFinish,
+    KitchenFinish,
+    LivingFinish,
     UnitSpec,
     migrate_core_type,
 )
@@ -75,7 +79,7 @@ from .types import (
 
 from .bundle import Bundle, BundleError, pack_bundle, read_bundle
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 __all__ = [
     # 설계안 묶음(.sbim)
@@ -134,6 +138,10 @@ __all__ = [
     "Core",
     "Design",
     "Standards",
+    "Finishes",
+    "BathFinish",
+    "KitchenFinish",
+    "LivingFinish",
     "Business",
     "Circulation",
     "Dimensions",
