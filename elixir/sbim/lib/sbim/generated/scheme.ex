@@ -1225,6 +1225,8 @@ defmodule Sbim.Scheme.SiteInfo do
           buildable_outline: [[number()]] | nil,
           footprint_outline: [[number()]] | nil,
           north_datum_offset: number() | nil,
+          parcel_polygon_z: [number()] | nil,
+          road_centerline_z: [[number()]] | nil,
           raw_parcel_area: number() | nil,
           effective_parcel_area: number() | nil,
           road_widening_area: number() | nil,
@@ -1243,6 +1245,8 @@ defmodule Sbim.Scheme.SiteInfo do
     buildable_outline: nil,
     footprint_outline: nil,
     north_datum_offset: nil,
+    parcel_polygon_z: nil,
+    road_centerline_z: nil,
     raw_parcel_area: nil,
     effective_parcel_area: nil,
     road_widening_area: nil,
@@ -1276,6 +1280,8 @@ defmodule Sbim.Scheme.SiteInfo do
         {"buildable_outline", :buildable_outline, :value},
         {"footprint_outline", :footprint_outline, :value},
         {"north_datum_offset", :north_datum_offset, :value},
+        {"parcel_polygon_z", :parcel_polygon_z, :value},
+        {"road_centerline_z", :road_centerline_z, :value},
         {"raw_parcel_area", :raw_parcel_area, :value},
         {"effective_parcel_area", :effective_parcel_area, :value},
         {"road_widening_area", :road_widening_area, :value},
@@ -1539,12 +1545,18 @@ defmodule Sbim.Scheme.UnitRoom do
 
   엔진은 욕실·주방과, 그 외 남는 면적을 거실 하나로 낸다(#549, 2026-10-16).
   침실·현관·발코니·다용도실·복도 는 제안.
+  마감 넷(바닥·벽·천장 이름, 천장고)은 착공신고 마감재료표(건축법 시행규칙 별표 4의2)·내역서
+  마감 공종의 전제 —
+  엔진이 회사 표준(용도별)에서 채운다, building-generator #577. 2026-10-17 벽·천장 마감
+  추가(0.1.2).
   """
 
   @type t :: %__MODULE__{
           use: String.t(),
           polygon: [[number()]],
           floor_finish: String.t() | nil,
+          wall_finish: String.t() | nil,
+          ceiling_finish: String.t() | nil,
           ceiling_h: number() | nil,
           extra: %{optional(String.t()) => term()}
         }
@@ -1553,6 +1565,8 @@ defmodule Sbim.Scheme.UnitRoom do
     use: nil,
     polygon: nil,
     floor_finish: nil,
+    wall_finish: nil,
+    ceiling_finish: nil,
     ceiling_h: nil,
     # 스키마에 없는 키 — from_map 이 여기 담고 to_map 이 도로 펼친다
     extra: %{}
@@ -1576,6 +1590,8 @@ defmodule Sbim.Scheme.UnitRoom do
         {"use", :use, :value},
         {"polygon", :polygon, :value},
         {"floor_finish", :floor_finish, :value},
+        {"wall_finish", :wall_finish, :value},
+        {"ceiling_finish", :ceiling_finish, :value},
         {"ceiling_h", :ceiling_h, :value}
       ],
       required: [],

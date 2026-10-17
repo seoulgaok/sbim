@@ -224,6 +224,39 @@
       "default": null,
       "title": "North Datum Offset"
     },
+    "parcel_polygon_z": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parcel Polygon Z"
+    },
+    "road_centerline_z": {
+      "anyOf": [
+        {
+          "items": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Road Centerline Z"
+    },
     "raw_parcel_area": {
       "anyOf": [
         {

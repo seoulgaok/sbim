@@ -437,7 +437,7 @@
     },
     "UnitRoom": {
       "additionalProperties": true,
-      "description": "방 최소 의미론 — 벽·문 기하는 geom userData가 따로 옴.\n\n엔진은 욕실·주방과, 그 외 남는 면적을 거실 하나로 낸다(#549, 2026-10-16). 침실·현관·발코니·다용도실·복도 는 제안.",
+      "description": "방 최소 의미론 — 벽·문 기하는 geom userData가 따로 옴.\n\n엔진은 욕실·주방과, 그 외 남는 면적을 거실 하나로 낸다(#549, 2026-10-16). 침실·현관·발코니·다용도실·복도 는 제안.\n마감 넷(바닥·벽·천장 이름, 천장고)은 착공신고 마감재료표(건축법 시행규칙 별표 4의2)·내역서 마감 공종의 전제 —\n엔진이 회사 표준(용도별)에서 채운다, building-generator #577. 2026-10-17 벽·천장 마감 추가(0.1.2).",
       "properties": {
         "use": {
           "default": "",
@@ -473,6 +473,30 @@
           ],
           "default": null,
           "title": "Floor Finish"
+        },
+        "wall_finish": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Wall Finish"
+        },
+        "ceiling_finish": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ceiling Finish"
         },
         "ceiling_h": {
           "anyOf": [

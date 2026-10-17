@@ -1304,14 +1304,15 @@ defmodule Sbim.Ifc do
 
         typed(c, door, "IfcWindowType", "W#{wh}", "WINDOW")
       else
+        # 피난 출구 문(옥상·기계실) · 방화문 등급(fire_door, 0.1.2) — 없으면 옛 근사
         fire = Py.truthy?(ud["fire_exit"])
-        fd = if fire, do: "FD", else: "D"
+        rating = ud["fire_door"] || if(fire, do: "을종")
+        fd = if rating, do: "FD", else: "D"
 
         pset(c, door, "Pset_DoorCommon", [
           {"IsExternal", false},
-          # 계단실 방화문 (피난 경로)
           {"FireExit", fire},
-          {"FireRating", if(fire, do: "을종")},
+          {"FireRating", rating},
           {"Reference", "#{fd}#{wh}"}
         ])
 
