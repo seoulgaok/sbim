@@ -392,22 +392,6 @@ export interface SchemeSpatial {
   /** 이 설계안을 만든 엔진 빌드 도장 (EngineStamp) — 서버 결과를 추적·재현한다.
    *  전부 문자열. 구 scheme엔 없다 — 소비처는 부재를 "구 버전"으로 처리할 것. */
   _engine_stamp?: EngineStamp;
-  /** 설비 (제안 2026-10-16, #549 — 엔진 미방출). 계통별 평면도(위생·냉난방·환기·가스·전기)의 재료.
-   *  처음엔 기기(`kind: "device"`) 자리만이어도 도면이 된다. 좌표 EPSG 절대. */
-  _mep?: MepItem[];
-}
-
-/** 설비 항목 하나 — 배관·덕트는 path, 기기는 origin. */
-export interface MepItem {
-  system: "water" | "drain" | "heating" | "vent" | "gas" | "elec" | string;
-  kind: "pipe" | "duct" | "device" | string;
-  /** 기기 이름 (급수분배기 · 온수분배기 · 전열교환기 · 배기팬 · 보일러 · 가스계량기 · 에어컨 실외기 …) */
-  name?: string;
-  floor_id?: number;
-  origin?: Point2;
-  path?: Ring;
-  /** 지름·폭 (m) */
-  size?: number;
 }
 
 export interface Scheme extends SchemeSpatial {
@@ -530,10 +514,10 @@ export interface UnitRoom {
   ceiling_h?: number;
 }
 
-/** 세대 안 가구·기구 (제안 2026-10-16, #549 — 엔진 미방출).
- *  소비처는 kind 별 2D 기호·3D 상자만 그린다 — 종류 이름과 자리·치수면 된다.
- *  kind 어휘(BIMx 샘플에서): 싱크·쿡탑·인덕션·후드·냉장고·세탁기·상부장·하부장·아일랜드식탁·
- *  세면대·대변기·샤워부스·젠다이·신발장·침대·소파·의자·식탁. */
+/** 세대 안 위생·주방 기구 자리 — 화장실 전개도·내역 기구 수량의 자료. 건축 몫(설비 아님).
+ *  제안 2026-10-16(#549), 엔진 미방출. 0.1.3 에서 뜻을 좁힘: 가구(침대·소파·식탁)는 범위 밖, 설비 계통(구 `_mep`)은 뺐다.
+ *  소비처는 kind 별 2D 기호·3D 상자만 그린다.
+ *  kind 어휘: 세면대·대변기·샤워부스·욕조·젠다이·세탁기 자리 · 싱크·쿡탑·후드·냉장고 자리·상부장·하부장. */
 export interface UnitFixture {
   kind: string;
   /** 바닥 발자국의 기준점 (EPSG 절대) — w×d 사각의 왼쪽 아래, angle_deg 로 회전 */
@@ -599,6 +583,8 @@ export interface SiteInfo {
   parcel_polygon_z?: number[] | null;
   /** 도로 중심선 꼭짓점별 도로면 표고 m — road_centerlines 와 같은 모양 (0.1.2) */
   road_centerline_z?: number[][] | null;
+  /** 표고 원천 — ngii_dtm_90m(광역 사면만, 참고용) | ngii_dtm_5m | survey. null = 표고 없음 (0.1.3) */
+  elevation_src?: string | null;
   /** 면적 (㎡) */
   raw_parcel_area?: number;
   effective_parcel_area?: number;

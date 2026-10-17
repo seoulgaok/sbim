@@ -257,6 +257,18 @@
       "default": null,
       "title": "Road Centerline Z"
     },
+    "elevation_src": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Elevation Src"
+    },
     "raw_parcel_area": {
       "anyOf": [
         {

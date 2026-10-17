@@ -96,11 +96,6 @@ pub struct Scheme {
     /// 기본값: null
     #[serde(rename = "_engine_stamp", default, skip_serializing_if = "Option::is_none")]
     pub engine_stamp: Option<EngineStamp>,
-    /// 설비 (제안 2026-10-16, #549 — 엔진 미방출). 계통별 평면도(위생·냉난방·환기·가스·전기)의 재료. 처음엔 기기(kind: "device") 자리만이어도 도면이 된다. 좌표 EPSG 절대.
-    ///
-    /// 기본값: null
-    #[serde(rename = "_mep", default, skip_serializing_if = "Option::is_none")]
-    pub mep: Option<Vec<MepItem>>,
     pub data: SchemeData,
     pub floor_plans: Vec<FloorPlan>,
     pub unit_ids: Vec<String>,
@@ -155,6 +150,9 @@ pub struct SiteInfo {
     /// 기본값: null
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub road_centerline_z: Option<Vec<Vec<f64>>>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub elevation_src: Option<String>,
     /// 기본값: null
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub raw_parcel_area: Option<f64>,
@@ -405,33 +403,6 @@ pub struct LegalCheck {
     pub extra: BTreeMap<String, serde_json::Value>,
 }
 
-/// 설비 항목 하나 (제안 2026-10-16, #549 — 엔진 미방출). 배관·덕트는 path, 기기는 origin.
-///
-/// system: water|drain|heating|vent|gas|elec · kind: pipe|duct|device · 좌표 EPSG 절대.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct MepItem {
-    pub system: String,
-    pub kind: String,
-    /// 기본값: null
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-    /// 기본값: null
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub floor_id: Option<i64>,
-    /// 기본값: null
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub origin: Option<(f64, f64)>,
-    /// 기본값: null
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub path: Option<Vec<(f64, f64)>>,
-    /// 기본값: null
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub size: Option<f64>,
-    /// 스키마에 없는 키 — 거부하지 않고 지나보낸다(extra=allow).
-    #[serde(flatten)]
-    pub extra: BTreeMap<String, serde_json::Value>,
-}
-
 /// `BuildOptions.design`과 같은 중첩 모양 — 첫수표가 채우는 필드(`empty: "auto"`)만.
 /// 잎 집합은 `options.AUTO_FIELDS`와 같다(tests/test_auto_fields.py가 지킨다).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -550,11 +521,12 @@ pub struct UnitAreaBreakdown {
     pub extra: BTreeMap<String, serde_json::Value>,
 }
 
-/// 세대 안 가구·기구 (제안 2026-10-16, #549 — 엔진 미방출).
+/// 세대 안 위생·주방 기구 자리 — 화장실 전개도(A08)·내역 기구 수량의 자료. **건축 몫**(설비 아님).
 ///
+/// 제안 2026-10-16(#549), 엔진 미방출. 2026-10-17 뜻을 좁힘(0.1.3): 가구(침대·소파·식탁)는 범위 밖, 설비 계통(배관·덕트, 구
+/// `Scheme._mep`)은 뺐다 — 설비 도면은 설비사무소 몫(57-93 「건축」 도서에 설비 0장, 견적 17 %).
 /// 소비처는 kind 별 2D 기호·3D 상자만 그린다 — 종류 이름과 자리·치수면 된다.
-/// kind 어휘(BIMx 샘플): 싱크·쿡탑·인덕션·후드·냉장고·세탁기·상부장·하부장·아일랜드식탁·
-/// 세면대·대변기·샤워부스·젠다이·신발장·침대·소파·의자·식탁.
+/// kind 어휘: 세면대·대변기·샤워부스·욕조·젠다이·세탁기 자리 · 싱크·쿡탑·후드·냉장고 자리·상부장·하부장.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnitFixture {
     pub kind: String,

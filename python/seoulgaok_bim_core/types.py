@@ -364,10 +364,6 @@ class SchemeSpatial(_Base):
         "_engine_stamp",
         "이 설계안을 만든 엔진 빌드 도장 (EngineStamp) — 서버 결과를 추적·재현한다. 전부 문자열. "
         "구 scheme엔 없다 — 소비처는 부재를 \"구 버전\"으로 처리할 것.")
-    mep: Optional[list["MepItem"]] = _spatial(
-        "_mep",
-        "설비 (제안 2026-10-16, #549 — 엔진 미방출). 계통별 평면도(위생·냉난방·환기·가스·전기)의 "
-        "재료. 처음엔 기기(kind: \"device\") 자리만이어도 도면이 된다. 좌표 EPSG 절대.")
 
     @model_serializer(mode="wrap")
     def _omit_unset_spatial(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
@@ -512,11 +508,12 @@ class UnitRoom(_Base):
 
 
 class UnitFixture(_Base):
-    """세대 안 가구·기구 (제안 2026-10-16, #549 — 엔진 미방출).
+    """세대 안 위생·주방 기구 자리 — 화장실 전개도(A08)·내역 기구 수량의 자료. **건축 몫**(설비 아님).
 
+    제안 2026-10-16(#549), 엔진 미방출. 2026-10-17 뜻을 좁힘(0.1.3): 가구(침대·소파·식탁)는 범위 밖, 설비 계통(배관·덕트, 구
+    `Scheme._mep`)은 뺐다 — 설비 도면은 설비사무소 몫(57-93 「건축」 도서에 설비 0장, 견적 17 %).
     소비처는 kind 별 2D 기호·3D 상자만 그린다 — 종류 이름과 자리·치수면 된다.
-    kind 어휘(BIMx 샘플): 싱크·쿡탑·인덕션·후드·냉장고·세탁기·상부장·하부장·아일랜드식탁·
-    세면대·대변기·샤워부스·젠다이·신발장·침대·소파·의자·식탁."""
+    kind 어휘: 세면대·대변기·샤워부스·욕조·젠다이·세탁기 자리 · 싱크·쿡탑·후드·냉장고 자리·상부장·하부장."""
     kind: str
     origin: Point2 = (0, 0)          # 발자국 기준점(EPSG 절대) — w×d 사각의 왼쪽 아래
     angle_deg: Optional[float] = None  # w 축의 각(도, 반시계) — 없으면 0
@@ -524,19 +521,6 @@ class UnitFixture(_Base):
     d: float = 0
     h: Optional[float] = None        # 없으면 종류 기본값
     room_index: Optional[int] = None  # rooms 인덱스
-
-
-class MepItem(_Base):
-    """설비 항목 하나 (제안 2026-10-16, #549 — 엔진 미방출). 배관·덕트는 path, 기기는 origin.
-
-    system: water|drain|heating|vent|gas|elec · kind: pipe|duct|device · 좌표 EPSG 절대."""
-    system: str
-    kind: str
-    name: Optional[str] = None       # 급수분배기 · 전열교환기 · 배기팬 · 보일러 …
-    floor_id: Optional[int] = None
-    origin: Optional[Point2] = None
-    path: Optional[Ring] = None
-    size: Optional[float] = None     # 지름·폭 m
 
 
 class UnitRecord(_Base):
@@ -555,7 +539,7 @@ class UnitRecord(_Base):
     balcony_polygons: Optional[list[Ring]] = None
     polygons_by_floor: Optional[dict[str, Ring]] = None  # 층 점유 (생성기 계약 ③)
     rooms: Optional[list[UnitRoom]] = None
-    fixtures: Optional[list[UnitFixture]] = None   # 가구·기구 — 제안(#549), 미방출
+    fixtures: Optional[list[UnitFixture]] = None   # 위생·주방 기구 자리 — 제안(#549), 미방출. 건축 몫
 
 
 # --- site.json (제안 2026-10-16, #549 덧붙임 — 엔진 미방출) ---------------------------------
@@ -580,6 +564,9 @@ class SiteInfo(_Base):
     # 평지는 전부 0. 2026-10-17 추가(0.1.2).
     parcel_polygon_z: Optional[list[float]] = None
     road_centerline_z: Optional[list[list[float]]] = None
+    # 표고 원천 — 값의 신뢰도가 원천에 따라 완전히 다르다(ngii_dtm_90m 는 광역 사면만, 옹벽·절토는 못 잡는다 → 참고용).
+    # None = 표고 없음(parcel_polygon_z 도 None). 2026-10-17 추가(0.1.3).
+    elevation_src: Optional[str] = None    # ngii_dtm_90m | ngii_dtm_5m | survey
     raw_parcel_area: Optional[float] = None
     effective_parcel_area: Optional[float] = None
     road_widening_area: Optional[float] = None

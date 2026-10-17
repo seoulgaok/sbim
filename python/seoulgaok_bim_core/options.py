@@ -915,6 +915,62 @@ EMPTY_MARKERS: dict[str, str] = _empty_markers()
 AUTO_FIELDS: frozenset[str] = frozenset(k for k, v in EMPTY_MARKERS.items() if v == "auto")
 
 
+# ═════════════════════════════════════════════════════════════════════
+# Finishes — 실내 마감 표준 (용도별 바닥·벽·천장·천장고)
+# ═════════════════════════════════════════════════════════════════════
+
+
+class BathFinish(BaseModel):
+    """욕실 마감 넷 — `UnitRoom.floor_finish·wall_finish·ceiling_finish·ceiling_h` 로 그대로 나간다.
+
+    용도마다 모델이 따로인 이유: 언어별 방출기(emit_rust)가 한 모델에 한 기본값만 허용한다 — 모양은 셋이 같다."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    floor: str = Field(default="바닥타일 300×300", description="바닥 마감 이름.")
+    wall: str = Field(default="벽타일 300×600", description="벽 마감 이름.")
+    ceiling: str = Field(default="SMC 천장판", description="천장 마감 이름 — 점검구 있는 판.")
+    ceiling_h: float = Field(default=2.2, description="천장고 (m) — 바닥 마감면에서 천장 마감면까지.")
+
+
+class KitchenFinish(BaseModel):
+    """주방 마감 넷 — 오픈키친이라 거실과 같은 바닥·천장, 싱크 상부만 타일."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    floor: str = Field(default="강마루10", description="바닥 마감 이름.")
+    wall: str = Field(default="실크벽지 (싱크 상부 벽타일)", description="벽 마감 이름.")
+    ceiling: str = Field(default="실크벽지", description="천장 마감 이름.")
+    ceiling_h: float = Field(default=2.3, description="천장고 (m).")
+
+
+class LivingFinish(BaseModel):
+    """거실 마감 넷 — 욕실·주방 외 남는 면적 전부(침실 분할 전). 천장고 2.3 은 층고 2.9·슬래브 150·바닥 구성 120 뒤의 값."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    floor: str = Field(default="강마루10", description="바닥 마감 이름.")
+    wall: str = Field(default="실크벽지", description="벽 마감 이름.")
+    ceiling: str = Field(default="실크벽지", description="천장 마감 이름.")
+    ceiling_h: float = Field(default=2.3, description="천장고 (m).")
+
+
+class Finishes(BaseModel):
+    """실내 마감 표준 — 방 용도마다 하나. 엔진이 `units.rooms[]` 의 마감 넷을 여기서 채운다(building-generator #577).
+
+    착공신고 마감재료표(건축법 시행규칙 별표 4의2)와 내역서 마감 공종(수장·타일·미장, 금액의 약 35 %)의 전제.
+    기본값은 **초안**이다 — 류상호 BIMx 샘플(2026-07, 욕실 바닥 방통40/타일10 · 벽 방수석고보드 위 타일)과
+    구의동 57-93 slab layers(강마루10)에서 뽑았고 소장 확인 전이다. 사업마다 고르는 값이 아니라 회사가 정해 두는 값이라
+    `standards` 에 둔다. 지금 엔진이 내는 방은 욕실·주방·거실 셋뿐이라 그 셋만 있다 — 침실·현관이 생기면 같은 꼴로 늘린다.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    bath: BathFinish = Field(default_factory=BathFinish, description="욕실.")
+    kitchen: KitchenFinish = Field(default_factory=KitchenFinish, description="주방.")
+    living: LivingFinish = Field(default_factory=LivingFinish, description="거실.")
+
+
 class Standards(BaseModel):
     """회사 표준 — 사업마다 안 건드리는 값. 소비 UI는 접어 둘 수 있다."""
 
@@ -922,6 +978,7 @@ class Standards(BaseModel):
 
     concrete: Concrete = Field(default_factory=Concrete)
     dimensions: Dimensions = Field(default_factory=Dimensions)
+    finishes: Finishes = Field(default_factory=Finishes)
 
 
 class Business(BaseModel):

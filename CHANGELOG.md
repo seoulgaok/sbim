@@ -4,6 +4,18 @@
 규칙: 기본값이 바뀌거나 필드가 늘고 줄면 여기 한 줄 + 버전 올림. 판은 머지 뒤
 `git tag v<버전>`으로 찍는다.
 
+## 0.1.3 — 2026-10-17
+
+- 추가 `standards.finishes` — 실내 마감 표준(용도별 `RoomFinish`: floor·wall·ceiling·ceiling_h), 지금은 bath·kitchen·living 셋.
+  엔진이 `units.rooms[]` 의 마감 넷(0.1.2)을 여기서 채운다(building-generator #577). 기본값은 **초안**(류상호 BIMx 샘플·57-93 실측,
+  소장 확인 전). 안 보내던 소비처는 기본값이 들어가므로 출력 units.json 에 마감 넷이 새로 실린다.
+- 추가 `SiteInfo.elevation_src` — `parcel_polygon_z`·`road_centerline_z` 의 원천(`ngii_dtm_90m` 는 광역 사면만 잡는 참고값 —
+  옹벽·절토 같은 국지 단차는 없다, 인허가엔 수준측량). 소비처(종·횡단면)는 이 값으로 "참고" 표기를 가른다(building-generator #581).
+- 삭제 `Scheme._mep`·`MepItem` — 설비(배관·덕트·기기 계통)는 계약 범위 밖(설비 도면은 설비사무소 몫; 57-93 「건축」 도서에 설비 0장,
+  견적의 17 %). 엔진은 낸 적 없고, 옛 파일의 `_mep` 키는 거부하지 않고 지나간다.
+- `UnitFixture`(`UnitRecord.fixtures`)는 **위생·주방 기구 자리**로 뜻을 좁힘 — 화장실 전개도·기구 수량의 자료, 건축 몫. 필드는 그대로,
+  kind 어휘에서 가구(침대·소파·식탁)를 뺐다.
+
 ## 0.1.2 — 2026-10-17
 
 - 추가(전부 선택 필드, 기존 파일 그대로 읽힌다) — 허가·착공 도서 대조(sbim-editor `docs/big_picture_57-93.md` 6절)에서 나온
