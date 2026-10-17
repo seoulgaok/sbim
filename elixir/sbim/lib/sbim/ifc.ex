@@ -1289,11 +1289,11 @@ defmodule Sbim.Ifc do
       wh = "#{Py.round0(w * 1000)}x#{Py.round0(hgt * 1000)}"
 
       if window? do
-        # 로이 복층유리 근사 (W/㎡K)
+        # 자료값(u_value, 0.1.4) — 없으면 로이 복층유리 근사 (W/㎡K)
         pset(c, door, "Pset_WindowCommon", [
           {"IsExternal", true},
           {"Reference", "W#{wh}"},
-          {"ThermalTransmittance", 1.5}
+          {"ThermalTransmittance", ud["u_value"] || 1.5}
         ])
 
         qto(c, door, "Qto_WindowBaseQuantities", [

@@ -156,6 +156,30 @@
           "ceiling": "실크벽지",
           "ceiling_h": 2.3
         }
+      },
+      "openings": {
+        "window": {
+          "frame": "알루미늄 시스템창 (단열바)",
+          "glazing": "THK39 (5LE+12A+5CL+12A+5LE) 로이 삼중유리",
+          "u_value": 1.42
+        },
+        "entrance_door": {
+          "frame": "갑종 방화문 / 단열문 (Single, With Sill)",
+          "finish": "ST PL 위 불소수지도장(지정색) / 문짝 단열충진",
+          "fire_door": "60+"
+        },
+        "common_door": {
+          "frame": "단열 자동문 (시스템 알루미늄)",
+          "glazing": "THK39 (5LE+12A+5CL+12A+5LE) 로이 삼중유리",
+          "u_value": 1.42
+        },
+        "interior_door": {
+          "frame": "목재 여닫이문 (ABS)"
+        },
+        "service_door": {
+          "frame": "철재 여닫이문",
+          "finish": "ST PL 위 불소수지도장(지정색) / 문짝 단열충진"
+        }
       }
     },
     "business": {

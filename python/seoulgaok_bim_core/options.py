@@ -971,6 +971,77 @@ class Finishes(BaseModel):
     living: LivingFinish = Field(default_factory=LivingFinish, description="거실.")
 
 
+class WindowSpec(BaseModel):
+    """창 사양 — 창호일람표의 "프레임·유리" 두 열. 엔진이 `window.userData.frame·glazing·u_value` 로 그대로 옮긴다.
+
+    용도마다 모델이 따로인 이유는 `Finishes` 와 같다(언어별 방출기가 한 모델에 한 기본값만 허용)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    frame: str = Field(default="알루미늄 시스템창 (단열바)", description="프레임 — 재질·구성.")
+    glazing: str = Field(default="THK39 (5LE+12A+5CL+12A+5LE) 로이 삼중유리", description="유리 구성식.")
+    u_value: float = Field(default=1.42, description="창 열관류율 (W/㎡K) — 유리+프레임 전체.")
+
+
+class EntranceDoorSpec(BaseModel):
+    """세대 현관문(`door_type` 없음) 사양 — 방화문 등급은 `DoorUserData.fire_door` 로 그대로 나간다."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    frame: str = Field(default="갑종 방화문 / 단열문 (Single, With Sill)", description="문 — 종류·구성.")
+    finish: str = Field(default="ST PL 위 불소수지도장(지정색) / 문짝 단열충진", description="문 마감.")
+    # 값 집합은 `DoorUserData.fire_door`(Literal "60+"|"60"|"30")가 지킨다 — 여기선 문자열(언어별 방출기가 "60+" 를
+    # 식별자로 못 만든다).
+    fire_door: Optional[str] = Field(
+        default="60+", description="방화문 등급(영 제64조 ①): \"60+\" | \"60\" | \"30\". None = 방화문 아님.")
+
+
+class CommonDoorSpec(BaseModel):
+    """공동현관문(`door_type` = 공동현관) 사양."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    frame: str = Field(default="단열 자동문 (시스템 알루미늄)", description="문 — 종류·구성.")
+    glazing: str = Field(default="THK39 (5LE+12A+5CL+12A+5LE) 로이 삼중유리", description="유리 구성식.")
+    u_value: float = Field(default=1.42, description="열관류율 (W/㎡K).")
+
+
+class InteriorDoorSpec(BaseModel):
+    """세대 안 문(`door_type` = 욕실 등) 사양."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    frame: str = Field(default="목재 여닫이문 (ABS)", description="문 — 종류·구성.")
+
+
+class ServiceDoorSpec(BaseModel):
+    """설비·옥상 등 철재문(`door_type` = 기계실·옥상) 사양."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    frame: str = Field(default="철재 여닫이문", description="문 — 종류·구성.")
+    finish: str = Field(default="ST PL 위 불소수지도장(지정색) / 문짝 단열충진", description="문 마감.")
+
+
+class Openings(BaseModel):
+    """창호 사양 표준 — 창·문 유형마다 하나. 엔진이 창·문 userData(`frame`·`glazing`·`u_value`·`finish`·`fire_door`)를 여기서
+    채운다. 창호일람표(차하 A10 식: 타입 / 유리 / 기타)의 "프레임·유리" 열, 단열계획도·IFC `ThermalTransmittance` 의 창 U값이
+    이 표에서 나온다 — 지금 IFC 는 1.5 를 박아 쓴다.
+
+    기본값은 **초안** — 구의동 57-93 차하 실시설계도서 A10.10~12(2025-04: 알루미늄 로이 삼중유리 1.411~1.421, 세대현관 갑종
+    방화문/단열문, 공동현관 단열 자동문, 실내 목재 ABS, 철재 여닫이)에서 뽑았고 소장 확인 전이다. 사업마다 고르는 값이 아니라
+    회사가 정하는 값이라 `standards` 에 둔다(2026-10-17, 0.1.4).
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    window: WindowSpec = Field(default_factory=WindowSpec, description="창(전부).")
+    entrance_door: EntranceDoorSpec = Field(default_factory=EntranceDoorSpec, description="세대 현관문.")
+    common_door: CommonDoorSpec = Field(default_factory=CommonDoorSpec, description="공동현관문.")
+    interior_door: InteriorDoorSpec = Field(default_factory=InteriorDoorSpec, description="세대 안 문(욕실 등).")
+    service_door: ServiceDoorSpec = Field(default_factory=ServiceDoorSpec, description="기계실·옥상 등 철재문.")
+
+
 class Standards(BaseModel):
     """회사 표준 — 사업마다 안 건드리는 값. 소비 UI는 접어 둘 수 있다."""
 
@@ -979,6 +1050,7 @@ class Standards(BaseModel):
     concrete: Concrete = Field(default_factory=Concrete)
     dimensions: Dimensions = Field(default_factory=Dimensions)
     finishes: Finishes = Field(default_factory=Finishes)
+    openings: Openings = Field(default_factory=Openings)
 
 
 class Business(BaseModel):

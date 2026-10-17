@@ -4,6 +4,15 @@
 규칙: 기본값이 바뀌거나 필드가 늘고 줄면 여기 한 줄 + 버전 올림. 판은 머지 뒤
 `git tag v<버전>`으로 찍는다.
 
+## 0.1.4 — 2026-10-17
+
+- 추가 `standards.openings` — 창호 사양 표준(창 `window`: frame·glazing·u_value / 문 `entrance_door`·`common_door`·`interior_door`·
+  `service_door`: frame·finish·glazing·u_value·fire_door). 엔진이 창·문 userData 에 옮긴다 — 아래 필드. 기본값은 **초안**(구의동 57-93
+  차하 A10.10~12: 알루미늄 로이 삼중유리 THK39 1.42, 세대현관 갑종 방화문/단열문 60+, 공동현관 단열 자동문, 실내 목재 ABS), 소장 확인 전.
+- 추가 `WindowUserData.frame`·`glazing`·`u_value`, `DoorUserData.frame`·`finish`·`glazing`·`u_value` — 전부 선택. 창호일람표
+  "프레임·유리" 열과 단열계획도의 창 U값이 여기서 나온다. IFC `Pset_WindowCommon.ThermalTransmittance` 는 `u_value` 가 있으면 그 값,
+  없으면 옛 근사 1.5 그대로(파이썬·Elixir 둘 다).
+
 ## 0.1.3 — 2026-10-17
 
 - 추가 `standards.finishes` — 실내 마감 표준(용도별 `RoomFinish`: floor·wall·ceiling·ceiling_h), 지금은 bath·kitchen·living 셋.

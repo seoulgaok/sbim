@@ -54,6 +54,26 @@ export interface Circulation {
      */
     corridor_mode?: "carve" | "edge";
 }
+/**
+ * 공동현관문(`door_type` = 공동현관) 사양.
+ */
+export interface CommonDoorSpec {
+    /**
+     * 문 — 종류·구성.
+     * @default "단열 자동문 (시스템 알루미늄)"
+     */
+    frame?: string;
+    /**
+     * 유리 구성식.
+     * @default "THK39 (5LE+12A+5CL+12A+5LE) 로이 삼중유리"
+     */
+    glazing?: string;
+    /**
+     * 열관류율 (W/㎡K).
+     * @default 1.42
+     */
+    u_value?: number;
+}
 export interface Concrete {
     /**
      * 외벽 두께 (m). 다세대 표준 0.20 (단열 포함).
@@ -242,6 +262,26 @@ export interface Dimensions {
     min_col_dist?: number;
 }
 /**
+ * 세대 현관문(`door_type` 없음) 사양 — 방화문 등급은 `DoorUserData.fire_door` 로 그대로 나간다.
+ */
+export interface EntranceDoorSpec {
+    /**
+     * 문 — 종류·구성.
+     * @default "갑종 방화문 / 단열문 (Single, With Sill)"
+     */
+    frame?: string;
+    /**
+     * 문 마감.
+     * @default "ST PL 위 불소수지도장(지정색) / 문짝 단열충진"
+     */
+    finish?: string;
+    /**
+     * 방화문 등급(영 제64조 ①): "60+" | "60" | "30". None = 방화문 아님.
+     * @default "60+"
+     */
+    fire_door?: string | null;
+}
+/**
  * 외장 — 외벽 마감과 창 스타일. 한 필드 클래스 둘(Windows·Exterior)을 합쳤다.
  */
 export interface Exterior {
@@ -338,6 +378,16 @@ export interface Finishes {
     living?: LivingFinish;
 }
 /**
+ * 세대 안 문(`door_type` = 욕실 등) 사양.
+ */
+export interface InteriorDoorSpec {
+    /**
+     * 문 — 종류·구성.
+     * @default "목재 여닫이문 (ABS)"
+     */
+    frame?: string;
+}
+/**
  * 주방 마감 넷 — 오픈키친이라 거실과 같은 바닥·천장, 싱크 상부만 타일.
  */
 export interface KitchenFinish {
@@ -410,6 +460,37 @@ export interface Massing {
      * @empty auto — None=첫수표가 정한다(resolved_options 에 나온다)
      */
     mass_axis?: "road" | "sunlight" | null;
+}
+/**
+ * 창호 사양 표준 — 창·문 유형마다 하나. 엔진이 창·문 userData(`frame`·`glazing`·`u_value`·`finish`·`fire_door`)를 여기서
+ * 채운다. 창호일람표(차하 A10 식: 타입 / 유리 / 기타)의 "프레임·유리" 열, 단열계획도·IFC `ThermalTransmittance` 의 창 U값이
+ * 이 표에서 나온다 — 지금 IFC 는 1.5 를 박아 쓴다.
+ *
+ * 기본값은 **초안** — 구의동 57-93 차하 실시설계도서 A10.10~12(2025-04: 알루미늄 로이 삼중유리 1.411~1.421, 세대현관 갑종
+ * 방화문/단열문, 공동현관 단열 자동문, 실내 목재 ABS, 철재 여닫이)에서 뽑았고 소장 확인 전이다. 사업마다 고르는 값이 아니라
+ * 회사가 정하는 값이라 `standards` 에 둔다(2026-10-17, 0.1.4).
+ */
+export interface Openings {
+    /**
+     * 창(전부).
+     */
+    window?: WindowSpec;
+    /**
+     * 세대 현관문.
+     */
+    entrance_door?: EntranceDoorSpec;
+    /**
+     * 공동현관문.
+     */
+    common_door?: CommonDoorSpec;
+    /**
+     * 세대 안 문(욕실 등).
+     */
+    interior_door?: InteriorDoorSpec;
+    /**
+     * 기계실·옥상 등 철재문.
+     */
+    service_door?: ServiceDoorSpec;
 }
 /**
  * 주차 — 어떤 축으로 어디에 깔까. 대수는 결과다(법정 대수는 regulations.ratio_mode).
@@ -568,12 +649,28 @@ export interface Schedule {
     start_year_month?: string | null;
 }
 /**
+ * 설비·옥상 등 철재문(`door_type` = 기계실·옥상) 사양.
+ */
+export interface ServiceDoorSpec {
+    /**
+     * 문 — 종류·구성.
+     * @default "철재 여닫이문"
+     */
+    frame?: string;
+    /**
+     * 문 마감.
+     * @default "ST PL 위 불소수지도장(지정색) / 문짝 단열충진"
+     */
+    finish?: string;
+}
+/**
  * 회사 표준 — 사업마다 안 건드리는 값. 소비 UI는 접어 둘 수 있다.
  */
 export interface Standards {
     concrete?: Concrete;
     dimensions?: Dimensions;
     finishes?: Finishes;
+    openings?: Openings;
 }
 export interface UnitSpec {
     /**
@@ -593,6 +690,28 @@ export interface UnitSpec {
      * @empty default — None=설명에 적힌 기본 동작
      */
     max_net_area?: number | null;
+}
+/**
+ * 창 사양 — 창호일람표의 "프레임·유리" 두 열. 엔진이 `window.userData.frame·glazing·u_value` 로 그대로 옮긴다.
+ *
+ * 용도마다 모델이 따로인 이유는 `Finishes` 와 같다(언어별 방출기가 한 모델에 한 기본값만 허용).
+ */
+export interface WindowSpec {
+    /**
+     * 프레임 — 재질·구성.
+     * @default "알루미늄 시스템창 (단열바)"
+     */
+    frame?: string;
+    /**
+     * 유리 구성식.
+     * @default "THK39 (5LE+12A+5CL+12A+5LE) 로이 삼중유리"
+     */
+    glazing?: string;
+    /**
+     * 창 열관류율 (W/㎡K) — 유리+프레임 전체.
+     * @default 1.42
+     */
+    u_value?: number;
 }
 /**
  * 다세대주택 파라메트릭 설계 입력 — 속성 창.

@@ -956,7 +956,7 @@ def generate_ifc(scheme_json, units, parcel_center=None, out_path=None, meta=Non
             _pset(f, door, "Pset_WindowCommon", {
                 "IsExternal": True,
                 "Reference": f"W{round(w*1000)}x{round(hgt*1000)}",
-                "ThermalTransmittance": 1.5,   # 로이 복층유리 근사 (W/㎡K)
+                "ThermalTransmittance": ud.get("u_value") or 1.5,   # 자료값(0.1.4) — 없으면 로이 복층유리 근사
             })
             _qto(f, door, "Qto_WindowBaseQuantities", [
                 ("L", "Width", w), ("L", "Height", hgt), ("A", "Area", w * hgt)])

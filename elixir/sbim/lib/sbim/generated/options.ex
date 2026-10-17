@@ -314,6 +314,52 @@ defmodule Sbim.Options.Circulation do
   end
 end
 
+defmodule Sbim.Options.CommonDoorSpec do
+  @moduledoc ~S"""
+  공동현관문(`door_type` = 공동현관) 사양.
+  """
+
+  @type t :: %__MODULE__{
+          frame: String.t(),
+          glazing: String.t(),
+          u_value: number()
+        }
+
+  defstruct [
+    # 문 — 종류·구성.
+    frame: "단열 자동문 (시스템 알루미늄)",
+    # 유리 구성식.
+    glazing: "THK39 (5LE+12A+5CL+12A+5LE) 로이 삼중유리",
+    # 열관류율 (W/㎡K).
+    u_value: 1.42
+  ]
+
+  @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
+  @spec from_map(map()) :: {:ok, t()} | {:error, term()}
+  def from_map(map), do: Sbim.Codec.decode(__MODULE__, map)
+
+  @spec from_map!(map()) :: t()
+  def from_map!(map), do: Sbim.Codec.decode!(__MODULE__, map)
+
+  @doc "struct → 문자열 키 map(중첩 재귀). nil 은 null 로 낸다."
+  @spec to_map(t()) :: map()
+  def to_map(%__MODULE__{} = s), do: Sbim.Codec.encode(s)
+
+  @doc false
+  def __shape__ do
+    %{
+      fields: [
+        {"frame", :frame, :value},
+        {"glazing", :glazing, :value},
+        {"u_value", :u_value, :value}
+      ],
+      required: [],
+      extra?: false,
+      omit_nil?: false
+    }
+  end
+end
+
 defmodule Sbim.Options.Concrete do
   @type t :: %__MODULE__{
           wall_thickness: number(),
@@ -949,6 +995,52 @@ defmodule Sbim.Options.Dimensions do
   end
 end
 
+defmodule Sbim.Options.EntranceDoorSpec do
+  @moduledoc ~S"""
+  세대 현관문(`door_type` 없음) 사양 — 방화문 등급은 `DoorUserData.fire_door` 로 그대로 나간다.
+  """
+
+  @type t :: %__MODULE__{
+          frame: String.t(),
+          finish: String.t(),
+          fire_door: String.t() | nil
+        }
+
+  defstruct [
+    # 문 — 종류·구성.
+    frame: "갑종 방화문 / 단열문 (Single, With Sill)",
+    # 문 마감.
+    finish: "ST PL 위 불소수지도장(지정색) / 문짝 단열충진",
+    # 방화문 등급(영 제64조 ①): "60+" | "60" | "30". None = 방화문 아님.
+    fire_door: "60+"
+  ]
+
+  @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
+  @spec from_map(map()) :: {:ok, t()} | {:error, term()}
+  def from_map(map), do: Sbim.Codec.decode(__MODULE__, map)
+
+  @spec from_map!(map()) :: t()
+  def from_map!(map), do: Sbim.Codec.decode!(__MODULE__, map)
+
+  @doc "struct → 문자열 키 map(중첩 재귀). nil 은 null 로 낸다."
+  @spec to_map(t()) :: map()
+  def to_map(%__MODULE__{} = s), do: Sbim.Codec.encode(s)
+
+  @doc false
+  def __shape__ do
+    %{
+      fields: [
+        {"frame", :frame, :value},
+        {"finish", :finish, :value},
+        {"fire_door", :fire_door, :value}
+      ],
+      required: [],
+      extra?: false,
+      omit_nil?: false
+    }
+  end
+end
+
 defmodule Sbim.Options.KitchenFinish do
   @moduledoc ~S"""
   주방 마감 넷 — 오픈키친이라 거실과 같은 바닥·천장, 싱크 상부만 타일.
@@ -1106,6 +1198,199 @@ defmodule Sbim.Options.Finishes do
   end
 end
 
+defmodule Sbim.Options.InteriorDoorSpec do
+  @moduledoc ~S"""
+  세대 안 문(`door_type` = 욕실 등) 사양.
+  """
+
+  @type t :: %__MODULE__{
+          frame: String.t()
+        }
+
+  defstruct [
+    # 문 — 종류·구성.
+    frame: "목재 여닫이문 (ABS)"
+  ]
+
+  @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
+  @spec from_map(map()) :: {:ok, t()} | {:error, term()}
+  def from_map(map), do: Sbim.Codec.decode(__MODULE__, map)
+
+  @spec from_map!(map()) :: t()
+  def from_map!(map), do: Sbim.Codec.decode!(__MODULE__, map)
+
+  @doc "struct → 문자열 키 map(중첩 재귀). nil 은 null 로 낸다."
+  @spec to_map(t()) :: map()
+  def to_map(%__MODULE__{} = s), do: Sbim.Codec.encode(s)
+
+  @doc false
+  def __shape__ do
+    %{
+      fields: [
+        {"frame", :frame, :value}
+      ],
+      required: [],
+      extra?: false,
+      omit_nil?: false
+    }
+  end
+end
+
+defmodule Sbim.Options.ServiceDoorSpec do
+  @moduledoc ~S"""
+  설비·옥상 등 철재문(`door_type` = 기계실·옥상) 사양.
+  """
+
+  @type t :: %__MODULE__{
+          frame: String.t(),
+          finish: String.t()
+        }
+
+  defstruct [
+    # 문 — 종류·구성.
+    frame: "철재 여닫이문",
+    # 문 마감.
+    finish: "ST PL 위 불소수지도장(지정색) / 문짝 단열충진"
+  ]
+
+  @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
+  @spec from_map(map()) :: {:ok, t()} | {:error, term()}
+  def from_map(map), do: Sbim.Codec.decode(__MODULE__, map)
+
+  @spec from_map!(map()) :: t()
+  def from_map!(map), do: Sbim.Codec.decode!(__MODULE__, map)
+
+  @doc "struct → 문자열 키 map(중첩 재귀). nil 은 null 로 낸다."
+  @spec to_map(t()) :: map()
+  def to_map(%__MODULE__{} = s), do: Sbim.Codec.encode(s)
+
+  @doc false
+  def __shape__ do
+    %{
+      fields: [
+        {"frame", :frame, :value},
+        {"finish", :finish, :value}
+      ],
+      required: [],
+      extra?: false,
+      omit_nil?: false
+    }
+  end
+end
+
+defmodule Sbim.Options.WindowSpec do
+  @moduledoc ~S"""
+  창 사양 — 창호일람표의 "프레임·유리" 두 열. 엔진이 `window.userData.frame·glazing·u_value` 로
+  그대로 옮긴다.
+
+  용도마다 모델이 따로인 이유는 `Finishes` 와 같다(언어별 방출기가 한 모델에 한 기본값만 허용).
+  """
+
+  @type t :: %__MODULE__{
+          frame: String.t(),
+          glazing: String.t(),
+          u_value: number()
+        }
+
+  defstruct [
+    # 프레임 — 재질·구성.
+    frame: "알루미늄 시스템창 (단열바)",
+    # 유리 구성식.
+    glazing: "THK39 (5LE+12A+5CL+12A+5LE) 로이 삼중유리",
+    # 창 열관류율 (W/㎡K) — 유리+프레임 전체.
+    u_value: 1.42
+  ]
+
+  @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
+  @spec from_map(map()) :: {:ok, t()} | {:error, term()}
+  def from_map(map), do: Sbim.Codec.decode(__MODULE__, map)
+
+  @spec from_map!(map()) :: t()
+  def from_map!(map), do: Sbim.Codec.decode!(__MODULE__, map)
+
+  @doc "struct → 문자열 키 map(중첩 재귀). nil 은 null 로 낸다."
+  @spec to_map(t()) :: map()
+  def to_map(%__MODULE__{} = s), do: Sbim.Codec.encode(s)
+
+  @doc false
+  def __shape__ do
+    %{
+      fields: [
+        {"frame", :frame, :value},
+        {"glazing", :glazing, :value},
+        {"u_value", :u_value, :value}
+      ],
+      required: [],
+      extra?: false,
+      omit_nil?: false
+    }
+  end
+end
+
+defmodule Sbim.Options.Openings do
+  @moduledoc ~S"""
+  창호 사양 표준 — 창·문 유형마다 하나. 엔진이 창·문
+  userData(`frame`·`glazing`·`u_value`·`finish`·`fire_door`)를 여기서
+  채운다. 창호일람표(차하 A10 식: 타입 / 유리 / 기타)의 "프레임·유리" 열, 단열계획도·IFC
+  `ThermalTransmittance` 의 창 U값이
+  이 표에서 나온다 — 지금 IFC 는 1.5 를 박아 쓴다.
+
+  기본값은 **초안** — 구의동 57-93 차하 실시설계도서 A10.10~12(2025-04: 알루미늄 로이 삼중유리
+  1.411~1.421, 세대현관 갑종
+  방화문/단열문, 공동현관 단열 자동문, 실내 목재 ABS, 철재 여닫이)에서 뽑았고 소장 확인 전이다.
+  사업마다 고르는 값이 아니라
+  회사가 정하는 값이라 `standards` 에 둔다(2026-10-17, 0.1.4).
+  """
+
+  @type t :: %__MODULE__{
+          window: Sbim.Options.WindowSpec.t(),
+          entrance_door: Sbim.Options.EntranceDoorSpec.t(),
+          common_door: Sbim.Options.CommonDoorSpec.t(),
+          interior_door: Sbim.Options.InteriorDoorSpec.t(),
+          service_door: Sbim.Options.ServiceDoorSpec.t()
+        }
+
+  defstruct [
+    # 창(전부).
+    window: %Sbim.Options.WindowSpec{},
+    # 세대 현관문.
+    entrance_door: %Sbim.Options.EntranceDoorSpec{},
+    # 공동현관문.
+    common_door: %Sbim.Options.CommonDoorSpec{},
+    # 세대 안 문(욕실 등).
+    interior_door: %Sbim.Options.InteriorDoorSpec{},
+    # 기계실·옥상 등 철재문.
+    service_door: %Sbim.Options.ServiceDoorSpec{}
+  ]
+
+  @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
+  @spec from_map(map()) :: {:ok, t()} | {:error, term()}
+  def from_map(map), do: Sbim.Codec.decode(__MODULE__, map)
+
+  @spec from_map!(map()) :: t()
+  def from_map!(map), do: Sbim.Codec.decode!(__MODULE__, map)
+
+  @doc "struct → 문자열 키 map(중첩 재귀). nil 은 null 로 낸다."
+  @spec to_map(t()) :: map()
+  def to_map(%__MODULE__{} = s), do: Sbim.Codec.encode(s)
+
+  @doc false
+  def __shape__ do
+    %{
+      fields: [
+        {"window", :window, {:model, Sbim.Options.WindowSpec}},
+        {"entrance_door", :entrance_door, {:model, Sbim.Options.EntranceDoorSpec}},
+        {"common_door", :common_door, {:model, Sbim.Options.CommonDoorSpec}},
+        {"interior_door", :interior_door, {:model, Sbim.Options.InteriorDoorSpec}},
+        {"service_door", :service_door, {:model, Sbim.Options.ServiceDoorSpec}}
+      ],
+      required: [],
+      extra?: false,
+      omit_nil?: false
+    }
+  end
+end
+
 defmodule Sbim.Options.Standards do
   @moduledoc ~S"""
   회사 표준 — 사업마다 안 건드리는 값. 소비 UI는 접어 둘 수 있다.
@@ -1114,13 +1399,15 @@ defmodule Sbim.Options.Standards do
   @type t :: %__MODULE__{
           concrete: Sbim.Options.Concrete.t(),
           dimensions: Sbim.Options.Dimensions.t(),
-          finishes: Sbim.Options.Finishes.t()
+          finishes: Sbim.Options.Finishes.t(),
+          openings: Sbim.Options.Openings.t()
         }
 
   defstruct [
     concrete: %Sbim.Options.Concrete{},
     dimensions: %Sbim.Options.Dimensions{},
-    finishes: %Sbim.Options.Finishes{}
+    finishes: %Sbim.Options.Finishes{},
+    openings: %Sbim.Options.Openings{}
   ]
 
   @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `{:error, {:unknown_keys, 경로, 키들}}` 다."
@@ -1140,7 +1427,8 @@ defmodule Sbim.Options.Standards do
       fields: [
         {"concrete", :concrete, {:model, Sbim.Options.Concrete}},
         {"dimensions", :dimensions, {:model, Sbim.Options.Dimensions}},
-        {"finishes", :finishes, {:model, Sbim.Options.Finishes}}
+        {"finishes", :finishes, {:model, Sbim.Options.Finishes}},
+        {"openings", :openings, {:model, Sbim.Options.Openings}}
       ],
       required: [],
       extra?: false,

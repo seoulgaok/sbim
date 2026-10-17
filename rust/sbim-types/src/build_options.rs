@@ -114,6 +114,34 @@ impl Default for Circulation {
     }
 }
 
+/// 공동현관문(`door_type` = 공동현관) 사양.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct CommonDoorSpec {
+    /// 문 — 종류·구성.
+    ///
+    /// 기본값: "단열 자동문 (시스템 알루미늄)"
+    pub frame: String,
+    /// 유리 구성식.
+    ///
+    /// 기본값: "THK39 (5LE+12A+5CL+12A+5LE) 로이 삼중유리"
+    pub glazing: String,
+    /// 열관류율 (W/㎡K).
+    ///
+    /// 기본값: 1.42
+    pub u_value: f64,
+}
+
+impl Default for CommonDoorSpec {
+    fn default() -> Self {
+        Self {
+            frame: "단열 자동문 (시스템 알루미늄)".to_string(),
+            glazing: "THK39 (5LE+12A+5CL+12A+5LE) 로이 삼중유리".to_string(),
+            u_value: 1.42,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Concrete {
@@ -351,6 +379,34 @@ impl Default for Dimensions {
     }
 }
 
+/// 세대 현관문(`door_type` 없음) 사양 — 방화문 등급은 `DoorUserData.fire_door` 로 그대로 나간다.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct EntranceDoorSpec {
+    /// 문 — 종류·구성.
+    ///
+    /// 기본값: "갑종 방화문 / 단열문 (Single, With Sill)"
+    pub frame: String,
+    /// 문 마감.
+    ///
+    /// 기본값: "ST PL 위 불소수지도장(지정색) / 문짝 단열충진"
+    pub finish: String,
+    /// 방화문 등급(영 제64조 ①): "60+" | "60" | "30". None = 방화문 아님.
+    ///
+    /// 기본값: "60+"
+    pub fire_door: Option<String>,
+}
+
+impl Default for EntranceDoorSpec {
+    fn default() -> Self {
+        Self {
+            frame: "갑종 방화문 / 단열문 (Single, With Sill)".to_string(),
+            finish: "ST PL 위 불소수지도장(지정색) / 문짝 단열충진".to_string(),
+            fire_door: Some("60+".to_string()),
+        }
+    }
+}
+
 /// 외장 — 외벽 마감과 창 스타일. 한 필드 클래스 둘(Windows·Exterior)을 합쳤다.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
@@ -468,6 +524,24 @@ impl Default for Finishes {
     }
 }
 
+/// 세대 안 문(`door_type` = 욕실 등) 사양.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct InteriorDoorSpec {
+    /// 문 — 종류·구성.
+    ///
+    /// 기본값: "목재 여닫이문 (ABS)"
+    pub frame: String,
+}
+
+impl Default for InteriorDoorSpec {
+    fn default() -> Self {
+        Self {
+            frame: "목재 여닫이문 (ABS)".to_string(),
+        }
+    }
+}
+
 /// 주방 마감 넷 — 오픈키친이라 거실과 같은 바닥·천장, 싱크 상부만 타일.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
@@ -566,6 +640,40 @@ impl Default for Massing {
             first_floor_height: None,
             floor_use: BTreeMap::new(),
             mass_axis: None,
+        }
+    }
+}
+
+/// 창호 사양 표준 — 창·문 유형마다 하나. 엔진이 창·문 userData(`frame`·`glazing`·`u_value`·`finish`·`fire_door`)를 여기서
+/// 채운다. 창호일람표(차하 A10 식: 타입 / 유리 / 기타)의 "프레임·유리" 열, 단열계획도·IFC `ThermalTransmittance` 의 창 U값이
+/// 이 표에서 나온다 — 지금 IFC 는 1.5 를 박아 쓴다.
+///
+/// 기본값은 **초안** — 구의동 57-93 차하 실시설계도서 A10.10~12(2025-04: 알루미늄 로이 삼중유리 1.411~1.421, 세대현관 갑종
+/// 방화문/단열문, 공동현관 단열 자동문, 실내 목재 ABS, 철재 여닫이)에서 뽑았고 소장 확인 전이다. 사업마다 고르는 값이 아니라
+/// 회사가 정하는 값이라 `standards` 에 둔다(2026-10-17, 0.1.4).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct Openings {
+    /// 창(전부).
+    pub window: WindowSpec,
+    /// 세대 현관문.
+    pub entrance_door: EntranceDoorSpec,
+    /// 공동현관문.
+    pub common_door: CommonDoorSpec,
+    /// 세대 안 문(욕실 등).
+    pub interior_door: InteriorDoorSpec,
+    /// 기계실·옥상 등 철재문.
+    pub service_door: ServiceDoorSpec,
+}
+
+impl Default for Openings {
+    fn default() -> Self {
+        Self {
+            window: WindowSpec::default(),
+            entrance_door: EntranceDoorSpec::default(),
+            common_door: CommonDoorSpec::default(),
+            interior_door: InteriorDoorSpec::default(),
+            service_door: ServiceDoorSpec::default(),
         }
     }
 }
@@ -760,6 +868,29 @@ impl Default for Schedule {
     }
 }
 
+/// 설비·옥상 등 철재문(`door_type` = 기계실·옥상) 사양.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct ServiceDoorSpec {
+    /// 문 — 종류·구성.
+    ///
+    /// 기본값: "철재 여닫이문"
+    pub frame: String,
+    /// 문 마감.
+    ///
+    /// 기본값: "ST PL 위 불소수지도장(지정색) / 문짝 단열충진"
+    pub finish: String,
+}
+
+impl Default for ServiceDoorSpec {
+    fn default() -> Self {
+        Self {
+            frame: "철재 여닫이문".to_string(),
+            finish: "ST PL 위 불소수지도장(지정색) / 문짝 단열충진".to_string(),
+        }
+    }
+}
+
 /// 회사 표준 — 사업마다 안 건드리는 값. 소비 UI는 접어 둘 수 있다.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
@@ -767,6 +898,7 @@ pub struct Standards {
     pub concrete: Concrete,
     pub dimensions: Dimensions,
     pub finishes: Finishes,
+    pub openings: Openings,
 }
 
 impl Default for Standards {
@@ -775,6 +907,7 @@ impl Default for Standards {
             concrete: Concrete::default(),
             dimensions: Dimensions::default(),
             finishes: Finishes::default(),
+            openings: Openings::default(),
         }
     }
 }
@@ -806,6 +939,36 @@ impl Default for UnitSpec {
             units_per_floor: None,
             units_by_level: BTreeMap::new(),
             max_net_area: Some(60.0),
+        }
+    }
+}
+
+/// 창 사양 — 창호일람표의 "프레임·유리" 두 열. 엔진이 `window.userData.frame·glazing·u_value` 로 그대로 옮긴다.
+///
+/// 용도마다 모델이 따로인 이유는 `Finishes` 와 같다(언어별 방출기가 한 모델에 한 기본값만 허용).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct WindowSpec {
+    /// 프레임 — 재질·구성.
+    ///
+    /// 기본값: "알루미늄 시스템창 (단열바)"
+    pub frame: String,
+    /// 유리 구성식.
+    ///
+    /// 기본값: "THK39 (5LE+12A+5CL+12A+5LE) 로이 삼중유리"
+    pub glazing: String,
+    /// 창 열관류율 (W/㎡K) — 유리+프레임 전체.
+    ///
+    /// 기본값: 1.42
+    pub u_value: f64,
+}
+
+impl Default for WindowSpec {
+    fn default() -> Self {
+        Self {
+            frame: "알루미늄 시스템창 (단열바)".to_string(),
+            glazing: "THK39 (5LE+12A+5CL+12A+5LE) 로이 삼중유리".to_string(),
+            u_value: 1.42,
         }
     }
 }
