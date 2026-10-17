@@ -618,109 +618,6 @@
       "title": "LegalCheck",
       "type": "object"
     },
-    "MepItem": {
-      "additionalProperties": true,
-      "description": "설비 항목 하나 (제안 2026-10-16, #549 — 엔진 미방출). 배관·덕트는 path, 기기는 origin.\n\nsystem: water|drain|heating|vent|gas|elec · kind: pipe|duct|device · 좌표 EPSG 절대.",
-      "properties": {
-        "system": {
-          "title": "System",
-          "type": "string"
-        },
-        "kind": {
-          "title": "Kind",
-          "type": "string"
-        },
-        "name": {
-          "anyOf": [
-            {
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Name"
-        },
-        "floor_id": {
-          "anyOf": [
-            {
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Floor Id"
-        },
-        "origin": {
-          "anyOf": [
-            {
-              "maxItems": 2,
-              "minItems": 2,
-              "prefixItems": [
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "number"
-                }
-              ],
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Origin"
-        },
-        "path": {
-          "anyOf": [
-            {
-              "items": {
-                "maxItems": 2,
-                "minItems": 2,
-                "prefixItems": [
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "number"
-                  }
-                ],
-                "type": "array"
-              },
-              "type": "array"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Path"
-        },
-        "size": {
-          "anyOf": [
-            {
-              "type": "number"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "default": null,
-          "title": "Size"
-        }
-      },
-      "required": [
-        "system",
-        "kind"
-      ],
-      "title": "MepItem",
-      "type": "object"
-    },
     "ResolvedDesign": {
       "additionalProperties": true,
       "description": "`BuildOptions.design`과 같은 중첩 모양 — 첫수표가 채우는 필드(`empty: \"auto\"`)만.\n잎 집합은 `options.AUTO_FIELDS`와 같다(tests/test_auto_fields.py가 지킨다).",
@@ -1550,22 +1447,6 @@
       ],
       "default": null,
       "description": "이 설계안을 만든 엔진 빌드 도장 (EngineStamp) — 서버 결과를 추적·재현한다. 전부 문자열. 구 scheme엔 없다 — 소비처는 부재를 \"구 버전\"으로 처리할 것."
-    },
-    "_mep": {
-      "anyOf": [
-        {
-          "items": {
-            "$ref": "#/$defs/MepItem"
-          },
-          "type": "array"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "설비 (제안 2026-10-16, #549 — 엔진 미방출). 계통별 평면도(위생·냉난방·환기·가스·전기)의 재료. 처음엔 기기(kind: \"device\") 자리만이어도 도면이 된다. 좌표 EPSG 절대.",
-      "title": "Mep"
     },
     "data": {
       "$ref": "#/$defs/SchemeData"

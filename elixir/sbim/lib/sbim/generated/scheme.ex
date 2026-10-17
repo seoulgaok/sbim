@@ -686,66 +686,6 @@ defmodule Sbim.Scheme.LegalCheck do
   end
 end
 
-defmodule Sbim.Scheme.MepItem do
-  @moduledoc ~S"""
-  설비 항목 하나 (제안 2026-10-16, #549 — 엔진 미방출). 배관·덕트는 path, 기기는 origin.
-
-  system: water|drain|heating|vent|gas|elec · kind: pipe|duct|device · 좌표 EPSG 절대.
-  """
-
-  @type t :: %__MODULE__{
-          system: String.t(),
-          kind: String.t(),
-          name: String.t() | nil,
-          floor_id: integer() | nil,
-          origin: [number()] | nil,
-          path: [[number()]] | nil,
-          size: number() | nil,
-          extra: %{optional(String.t()) => term()}
-        }
-
-  defstruct [
-    system: nil,
-    kind: nil,
-    name: nil,
-    floor_id: nil,
-    origin: nil,
-    path: nil,
-    size: nil,
-    # 스키마에 없는 키 — from_map 이 여기 담고 to_map 이 도로 펼친다
-    extra: %{}
-  ]
-
-  @doc "문자열 키 map → struct(중첩 재귀). 스키마에 없는 키는 `extra` 에 담는다."
-  @spec from_map(map()) :: {:ok, t()} | {:error, term()}
-  def from_map(map), do: Sbim.Codec.decode(__MODULE__, map)
-
-  @spec from_map!(map()) :: t()
-  def from_map!(map), do: Sbim.Codec.decode!(__MODULE__, map)
-
-  @doc "struct → 문자열 키 map(중첩 재귀). nil 인 선택 필드는 뺀다(없음 ≠ null); extra 는 펼친다."
-  @spec to_map(t()) :: map()
-  def to_map(%__MODULE__{} = s), do: Sbim.Codec.encode(s)
-
-  @doc false
-  def __shape__ do
-    %{
-      fields: [
-        {"system", :system, :value},
-        {"kind", :kind, :value},
-        {"name", :name, :value},
-        {"floor_id", :floor_id, :value},
-        {"origin", :origin, :value},
-        {"path", :path, :value},
-        {"size", :size, :value}
-      ],
-      required: ["system", "kind"],
-      extra?: true,
-      omit_nil?: true
-    }
-  end
-end
-
 defmodule Sbim.Scheme.ResolvedCore do
   @type t :: %__MODULE__{
           type: 1 | 2 | 3 | 4 | 5 | 6 | 7 | nil,
@@ -1091,7 +1031,6 @@ defmodule Sbim.Scheme.Scheme do
           _legal_checks: [Sbim.Scheme.LegalCheck.t()] | nil,
           _compile_errors: [Sbim.Scheme.CompileError.t()] | nil,
           _engine_stamp: Sbim.Scheme.EngineStamp.t() | nil,
-          _mep: [Sbim.Scheme.MepItem.t()] | nil,
           data: Sbim.Scheme.SchemeData.t(),
           floor_plans: [Sbim.Scheme.FloorPlan.t()],
           unit_ids: [String.t()],
@@ -1147,9 +1086,6 @@ defmodule Sbim.Scheme.Scheme do
     # 이 설계안을 만든 엔진 빌드 도장 (EngineStamp) — 서버 결과를 추적·재현한다. 전부 문자열. 구
     # scheme엔 없다 — 소비처는 부재를 "구 버전"으로 처리할 것.
     _engine_stamp: nil,
-    # 설비 (제안 2026-10-16, #549 — 엔진 미방출). 계통별 평면도(위생·냉난방·환기·가스·전기)의
-    # 재료. 처음엔 기기(kind: "device") 자리만이어도 도면이 된다. 좌표 EPSG 절대.
-    _mep: nil,
     data: nil,
     floor_plans: nil,
     unit_ids: nil,
@@ -1192,7 +1128,6 @@ defmodule Sbim.Scheme.Scheme do
         {"_legal_checks", :_legal_checks, {:list, {:model, Sbim.Scheme.LegalCheck}}},
         {"_compile_errors", :_compile_errors, {:list, {:model, Sbim.Scheme.CompileError}}},
         {"_engine_stamp", :_engine_stamp, {:model, Sbim.Scheme.EngineStamp}},
-        {"_mep", :_mep, {:list, {:model, Sbim.Scheme.MepItem}}},
         {"data", :data, {:model, Sbim.Scheme.SchemeData}},
         {"floor_plans", :floor_plans, {:list, {:model, Sbim.Scheme.FloorPlan}}},
         {"unit_ids", :unit_ids, :value},
@@ -1482,11 +1417,15 @@ end
 
 defmodule Sbim.Scheme.UnitFixture do
   @moduledoc ~S"""
-  세대 안 가구·기구 (제안 2026-10-16, #549 — 엔진 미방출).
+  세대 안 위생·주방 기구 자리 — 화장실 전개도(A08)·내역 기구 수량의 자료. **건축 몫**(설비
+  아님).
 
+  제안 2026-10-16(#549), 엔진 미방출. 2026-10-17 뜻을 좁힘(0.1.3): 가구(침대·소파·식탁)는 범위
+  밖, 설비 계통(배관·덕트, 구
+  `Scheme._mep`)은 뺐다 — 설비 도면은 설비사무소 몫(57-93 「건축」 도서에 설비 0장, 견적 17 %).
   소비처는 kind 별 2D 기호·3D 상자만 그린다 — 종류 이름과 자리·치수면 된다.
-  kind 어휘(BIMx 샘플): 싱크·쿡탑·인덕션·후드·냉장고·세탁기·상부장·하부장·아일랜드식탁·
-  세면대·대변기·샤워부스·젠다이·신발장·침대·소파·의자·식탁.
+  kind 어휘: 세면대·대변기·샤워부스·욕조·젠다이·세탁기 자리 · 싱크·쿡탑·후드·냉장고
+  자리·상부장·하부장.
   """
 
   @type t :: %__MODULE__{
