@@ -4,6 +4,15 @@
 규칙: 기본값이 바뀌거나 필드가 늘고 줄면 여기 한 줄 + 버전 올림. 판은 머지 뒤
 `git tag v<버전>`으로 찍는다.
 
+## 0.1.2 — 2026-10-17
+
+- 추가(전부 선택 필드, 기존 파일 그대로 읽힌다) — 허가·착공 도서 대조(sbim-editor `docs/big_picture_57-93.md` 6절)에서 나온
+  자료 공백 셋. 엔진이 채우는 일은 building-generator #577·#578·#581.
+  - `UnitRoom.wall_finish`·`ceiling_finish` — 방 마감 넷(바닥·벽·천장 이름, 천장고) 완성. 착공 마감재료표·내역서 마감 공종의 전제.
+  - `DoorUserData.fire_door` — 방화문 등급 `"60+"|"60"|"30"`(영 제64조 ①). IFC `Pset_DoorCommon.FireRating` 으로 나간다
+    (없으면 옛 근사 "을종"/fire_exit 그대로). `fire_exit` 는 피난 출구 문(IFC FireExit)이지 방화 등급이 아니라고 적음.
+  - `SiteInfo.parcel_polygon_z`·`road_centerline_z` — 꼭짓점별 표고(m, GL 기준). 허가 배치도 "대지의 종·횡단면도"의 자료.
+
 ## 0.1.1 — 2026-10-17
 
 - 기본값 `massing.first_floor_height` 가 비었을 때 1층이 필로티(기본 용도)면 **3.5 m** (`PILOTI_FLOOR_HEIGHT`,

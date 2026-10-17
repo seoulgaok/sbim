@@ -151,6 +151,12 @@ pub struct SiteInfo {
     pub north_datum_offset: Option<f64>,
     /// 기본값: null
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parcel_polygon_z: Option<Vec<f64>>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub road_centerline_z: Option<Vec<Vec<f64>>>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub raw_parcel_area: Option<f64>,
     /// 기본값: null
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -578,6 +584,8 @@ pub struct UnitFixture {
 /// 방 최소 의미론 — 벽·문 기하는 geom userData가 따로 옴.
 ///
 /// 엔진은 욕실·주방과, 그 외 남는 면적을 거실 하나로 낸다(#549, 2026-10-16). 침실·현관·발코니·다용도실·복도 는 제안.
+/// 마감 넷(바닥·벽·천장 이름, 천장고)은 착공신고 마감재료표(건축법 시행규칙 별표 4의2)·내역서 마감 공종의 전제 —
+/// 엔진이 회사 표준(용도별)에서 채운다, building-generator #577. 2026-10-17 벽·천장 마감 추가(0.1.2).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnitRoom {
     /// 기본값: ""
@@ -589,6 +597,12 @@ pub struct UnitRoom {
     /// 기본값: null
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub floor_finish: Option<String>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wall_finish: Option<String>,
+    /// 기본값: null
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ceiling_finish: Option<String>,
     /// 기본값: null
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ceiling_h: Option<f64>,

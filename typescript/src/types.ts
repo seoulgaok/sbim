@@ -137,9 +137,12 @@ export interface DoorUserData {
   width: number;
   height: number;
   unit_id?: string;
-  /** "공동현관" | "욕실" | "옥상" 등 — 없으면 세대 현관 */
+  /** "공동현관" | "욕실" | "옥상" | "기계실" — 없으면 세대 현관 */
   door_type?: string;
+  /** 피난 출구 문인가(IFC Pset_DoorCommon.FireExit) — 엔진은 옥상·기계실 출입문에 true. 방화 등급이 아니다 */
   fire_exit?: boolean;
+  /** 방화문 등급(건축법 시행령 제64조 ①) — IFC FireRating. 없으면 방화문 아님/미정. building-generator #578 (0.1.2) */
+  fire_door?: "60+" | "60" | "30";
   /** 스윙이 향할 실내 기준점 — 세대문=복도쪽 밖여닫이, 욕실문=거실쪽 */
   swing_into?: Point2;
   host_wall?: HostWallRef;
@@ -517,9 +520,13 @@ export interface UnitRoom {
   /** 엔진은 욕실·주방과, 그 외 남는 면적을 `거실` 하나로 낸다(#549, 2026-10-16). 침실·현관 등은 제안. */
   use: "욕실" | "주방" | "거실" | "침실" | "현관" | "발코니" | "다용도실" | "복도" | string;
   polygon: Ring;
-  /** 바닥 마감 이름 (강마루10 · 타일10 …) — 제안, 미방출 */
+  /** 바닥 마감 이름 (강마루 · 타일 …) — 마감 넷은 마감재료표(별표 4의2)·내역서의 전제, building-generator #577 */
   floor_finish?: string;
-  /** 천장고 m — 제안, 미방출 */
+  /** 벽 마감 이름 (벽지 · 타일 · 페인트 …) (0.1.2) */
+  wall_finish?: string;
+  /** 천장 마감 이름 (0.1.2) */
+  ceiling_finish?: string;
+  /** 천장고 m(바닥 마감면 → 천장 마감면) */
   ceiling_h?: number;
 }
 
@@ -588,6 +595,10 @@ export interface SiteInfo {
   footprint_outline?: Ring | null;
   /** 정북 기산면 보정 — scheme._north_datum_offset 과 같은 값 */
   north_datum_offset?: number | null;
+  /** 꼭짓점별 표고 m(GL 기준, parcel_polygon 과 같은 순서·개수) — 배치도 대지 종·횡단면의 자료, building-generator #581 (0.1.2) */
+  parcel_polygon_z?: number[] | null;
+  /** 도로 중심선 꼭짓점별 도로면 표고 m — road_centerlines 와 같은 모양 (0.1.2) */
+  road_centerline_z?: number[][] | null;
   /** 면적 (㎡) */
   raw_parcel_area?: number;
   effective_parcel_area?: number;

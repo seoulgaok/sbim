@@ -140,8 +140,12 @@ class DoorUserData(_Base):
     width: float = 0
     height: float = 0
     unit_id: Optional[str] = None
-    door_type: Optional[str] = None    # 공동현관 | 욕실 | 옥상 | None=세대현관
+    door_type: Optional[str] = None    # 공동현관 | 욕실 | 옥상 | 기계실 | None=세대현관
+    # 피난 출구 문인가(IFC Pset_DoorCommon.FireExit) — 엔진은 옥상·기계실 출입문에 True. 방화 등급이 아니다.
     fire_exit: Optional[bool] = None
+    # 방화문 등급(건축법 시행령 제64조 ①: 60+ · 60 · 30) — IFC FireRating 으로 나간다. None = 방화문 아님/미정.
+    # 엔진이 피난계단 판정(영 제35조)과 묶어 채운다 — building-generator #578. 2026-10-17 추가(0.1.2).
+    fire_door: Optional[Literal["60+", "60", "30"]] = None
     swing_into: Optional[Point2] = None  # 스윙이 향할 실내 기준점
     host_wall: Optional[HostWallRef] = None
 
@@ -496,11 +500,15 @@ class UnitAreaBreakdown(_Base):
 class UnitRoom(_Base):
     """방 최소 의미론 — 벽·문 기하는 geom userData가 따로 옴.
 
-    엔진은 욕실·주방과, 그 외 남는 면적을 거실 하나로 낸다(#549, 2026-10-16). 침실·현관·발코니·다용도실·복도 는 제안."""
+    엔진은 욕실·주방과, 그 외 남는 면적을 거실 하나로 낸다(#549, 2026-10-16). 침실·현관·발코니·다용도실·복도 는 제안.
+    마감 넷(바닥·벽·천장 이름, 천장고)은 착공신고 마감재료표(건축법 시행규칙 별표 4의2)·내역서 마감 공종의 전제 —
+    엔진이 회사 표준(용도별)에서 채운다, building-generator #577. 2026-10-17 벽·천장 마감 추가(0.1.2)."""
     use: str = ""           # 욕실 | 주방 | 거실 | 침실 | 현관 | 발코니 | 다용도실 | 복도
     polygon: Ring = []
-    floor_finish: Optional[str] = None   # 바닥 마감 이름 — 제안, 미방출
-    ceiling_h: Optional[float] = None    # 천장고 m — 제안, 미방출
+    floor_finish: Optional[str] = None   # 바닥 마감 이름 (강마루 · 타일 …)
+    wall_finish: Optional[str] = None    # 벽 마감 이름 (벽지 · 타일 · 페인트 …)
+    ceiling_finish: Optional[str] = None # 천장 마감 이름 (벽지 · 석고보드 위 페인트 …)
+    ceiling_h: Optional[float] = None    # 천장고 m(바닥 마감면 → 천장 마감면)
 
 
 class UnitFixture(_Base):
@@ -567,6 +575,11 @@ class SiteInfo(_Base):
     buildable_outline: Optional[Ring] = None
     footprint_outline: Optional[Ring] = None
     north_datum_offset: Optional[float] = None
+    # 표고(m, GL 기준 — north_datum_offset 과 같은 체계). 허가 도서 배치도 "대지의 종·횡단면도"의 자료 — building-generator #581.
+    # parcel_polygon 과 같은 순서·개수의 꼭짓점 표고 / road_centerlines 와 같은 모양(중심선마다 꼭짓점별)의 도로면 표고.
+    # 평지는 전부 0. 2026-10-17 추가(0.1.2).
+    parcel_polygon_z: Optional[list[float]] = None
+    road_centerline_z: Optional[list[list[float]]] = None
     raw_parcel_area: Optional[float] = None
     effective_parcel_area: Optional[float] = None
     road_widening_area: Optional[float] = None

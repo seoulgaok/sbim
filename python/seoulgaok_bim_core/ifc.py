@@ -963,12 +963,13 @@ def generate_ifc(scheme_json, units, parcel_center=None, out_path=None, meta=Non
             _typed(door, "IfcWindowType",
                    f"W{round(w*1000)}x{round(hgt*1000)}", "WINDOW")
             return door
-        _fire = bool(ud.get("fire_exit"))
+        _fire = bool(ud.get("fire_exit"))          # 피난 출구 문 (옥상·기계실)
+        _rating = ud.get("fire_door") or ("을종" if _fire else None)   # 방화문 등급(0.1.2) — 없으면 옛 근사
         _pset(f, door, "Pset_DoorCommon", {
             "IsExternal": False,
-            "FireExit": _fire,                       # 계단실 방화문 (피난 경로)
-            "FireRating": "을종" if _fire else None,
-            "Reference": f"{'FD' if _fire else 'D'}{round(w*1000)}x{round(hgt*1000)}",
+            "FireExit": _fire,
+            "FireRating": _rating,
+            "Reference": f"{'FD' if _rating else 'D'}{round(w*1000)}x{round(hgt*1000)}",
         })
         _qto(f, door, "Qto_DoorBaseQuantities", [
             ("L", "Width", w), ("L", "Height", hgt), ("A", "Area", w * hgt),
